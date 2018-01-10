@@ -1,0 +1,43 @@
+///////////////////////////////////////////////////////////////////////////////
+//	PSTR_A_arrangeAll            //
+///////////////////////////////////////////////////////////////////////////////
+//
+//	AUTHOR: 		goto kazufumi
+//
+//	CREATION DATE:	2013_04_15
+//	UPDATED DATE:		2016_07_13
+//
+//	VERSION:			1.1
+//
+//	HOW TO USE:		run "PSTR_A_arrangeAll();"
+//
+//////////////////////////////////////////////////////////////////
+
+global proc PSTR_A_arrangeAll(){
+
+	PSTR_ALP_arrangeLocatorParent; //ロケータのペアレント再現
+	PSTR_A_arrangeSpine; //背骨から頭部にかけてのリグの調整
+	PSTR_A_arrangeLLeg; //左足のリグの調整
+	PSTR_A_arrangeLArm; //左腕のリグの調整
+	PSTR_A_arrangeLHand; //左手のリグの調整
+	PSTR_A_arrangeRLeg; //右足のリグの調整
+	PSTR_A_arrangeRArm; //右腕のリグの調整
+	PSTR_A_arrangeRHand; //右手のリグの調整
+	PSTR_A_arrangeAdjustWaist; //腰のリグの調整
+	PSTR_A_arrangeAdjustNeck; //襟の調整リグの調整
+	PSTR_A_arrangeAdjustElbow; //肘の調整リグの調整
+	PSTR_A_arrangeAdjustBreast; //胸の調整リグの調整
+	PSTR_A_arrangeAdjustPocket; //ポケットの調整リグの調整
+	PSTR_A_arrangeAdjustBelly; //腹の調整リグの調整
+	PSTR_A_arrangeAdjustHip; //尻の調整リグの調整
+	PSTR_A_arrangeAdjustScapula; //肩甲骨の調整リグの調整
+	PSTR_A_arrangeAdjustShoulder; //肩の調整リグの調整
+	
+
+}
+
+
+
+
+
+

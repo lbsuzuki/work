@@ -1,0 +1,435 @@
+///////////////////////////////////////////////////////////////////////////////
+//	PSTC_CBS_createBlendShape            //	ブレンドシェイプ作成
+///////////////////////////////////////////////////////////////////////////////
+//
+//	AUTHOR: 		goto kazufumi
+//
+//	CREATION DATE:	2013_04_11
+//	UPDATED DATE:	2013_10_11
+//
+//	VERSION:			1.1
+//
+//	HOW TO USE:		run "PSTC_CBS_createBlendShape();"
+//
+//////////////////////////////////////////////////////////////////
+
+global proc PSTC_CBS_createBlendShape(){
+
+	if( `window -q -exists PSTC_CBS_window` ) deleteUI PSTC_CBS_window;
+
+	window	-title "ブレンド シェイプ 作成"
+				PSTC_CBS_window;
+		frameLayout -label "ブレンドシェイプ名 入力" -borderStyle "etchedOut" PSTC_CBS_flAll;
+			formLayout PSTC_CBS_folAll;
+				formLayout PSTC_CBS_folBlendShapeName;
+					text -label "ブレンドシェイプ名を入力してください。\nオブジェクトとヌルの名前の基準とします。" PSTC_CBS_tExp;
+					text -h 25 -label "ブレンドシェイプ名" PSTC_CBS_tBlendShapeName;
+					textField -h 25 -text "" PSTC_CBS_tfBlendShapeName;
+					text -h 25 -label "ナイスネーム" PSTC_CBS_tNiceName;
+					textField -h 25 -text "" PSTC_CBS_tfNiceName;
+				setParent..;
+				formLayout PSTC_CBS_folButton;
+					button -label "適用" -command "PSTC_CBS_assign()" PSTC_CBS_btnAssign;
+					button -label "キャンセル" -command "deleteUI PSTC_CBS_window" PSTC_CBS_btnCancel;
+				setParent..;
+			setParent..;
+		setParent..;
+	showWindow;
+	
+	
+	formLayout -e
+	
+		-af	PSTC_CBS_folBlendShapeName		"top"			0
+		-af	PSTC_CBS_folBlendShapeName		"left"			0
+		-af	PSTC_CBS_folBlendShapeName		"right"		0
+		
+		-af	PSTC_CBS_folButton						"left"			0
+		-af	PSTC_CBS_folButton						"right"		0
+		-af	PSTC_CBS_folButton						"bottom"	0
+	
+	PSTC_CBS_folAll;
+	
+
+	formLayout -e
+	
+		-af	PSTC_CBS_tExp							"top"		5
+		-af	PSTC_CBS_tExp							"left"		0
+		-af	PSTC_CBS_tExp							"right"	0
+		
+		-ac	PSTC_CBS_tBlendShapeName		"top"		5	PSTC_CBS_tExp
+		-ac	PSTC_CBS_tBlendShapeName		"right"	3	PSTC_CBS_tfBlendShapeName
+		
+		-ac	PSTC_CBS_tfBlendShapeName		"top"		5	PSTC_CBS_tExp
+		-af	PSTC_CBS_tfBlendShapeName		"left"		100
+		-af	PSTC_CBS_tfBlendShapeName		"right"	20
+		
+		-ac	PSTC_CBS_tNiceName					"top"		5	PSTC_CBS_tBlendShapeName
+		-ac	PSTC_CBS_tNiceName					"right"	3	PSTC_CBS_tfNiceName
+		
+		-ac	PSTC_CBS_tfNiceName					"top"		5	PSTC_CBS_tBlendShapeName
+		-af	PSTC_CBS_tfNiceName					"left"		100
+		-af	PSTC_CBS_tfNiceName					"right"	20
+
+	PSTC_CBS_folBlendShapeName;
+	
+	formLayout -e
+	
+		-af	PSTC_CBS_btnAssign					"top"		0
+		-af	PSTC_CBS_btnAssign					"left"		0
+		-ap	PSTC_CBS_btnAssign					"right"	0	50
+		
+		-af	PSTC_CBS_btnCancel					"top"		0
+		-ap	PSTC_CBS_btnCancel					"left"		0	50
+		-af	PSTC_CBS_btnCancel					"right"	0
+		
+	PSTC_CBS_folButton;
+	
+	window -e -width 410 -height 120 PSTC_CBS_window;
+	
+}
+
+global proc PSTC_CBS_assign(){
+
+	string $input = ` textField -q -text PSTC_CBS_tfBlendShapeName `;
+	string $nice = ` textField -q -text PSTC_CBS_tfNiceName `;
+	PSTC_CBS_run($input, $nice);
+
+}
+	
+global proc PSTC_CBS_run( string $input , string $nice ){
+
+	string $mesh[] = `ls -type transform -sl`;
+	string $meshOne;
+	
+	string $cord = `textField -q -text PST_tfCordName`;
+	int $size = `size $cord`;
+	string $last = `substring $cord $size $size`;
+	if( $last != "_" ){
+		$cord += "_";
+	}
+		
+	string $parts[];
+	int $token = `tokenize $cord ":" $parts`;
+	
+	
+	if( $token == 1 ){
+
+		//リグのhead01_crvの名前を取得
+		string $CTRL_crv = $cord + "CTRL_crv";
+		
+		//ブレンドグループの存在を調査
+		string $blendGrp = $cord + "blend_grp";
+		string $newGrp;
+		int $result = `objExists $blendGrp`;
+		if( !$result ){
+			$newGrp = `group -em`;
+			xform -os -piv 0 0 0;
+			rename $newGrp $blendGrp;
+			parent $blendGrp ($cord + "mesh_grp");
+		}
+
+	
+		//inputグループの存在を調査
+		string $inputGrp = $cord + $input + "Blend_grp";
+		string $newGrp;
+		int $result = `objExists $inputGrp`;
+		if( !$result ){
+			$newGrp = `group -em`;
+			xform -os -piv 0 0 0;
+			rename $newGrp $inputGrp;
+			parent $inputGrp $blendGrp;
+		}
+		
+	
+		string $subBlendShape[];
+		string $targets[];
+		string $basename;
+		string $subBlend;
+		int $wSize;
+		for( $meshOne in $mesh ){
+		
+			//名前の最後の"_"より下の文字列を削除
+			string $parts[];
+			int $token = `tokenize $meshOne "_" $parts`;
+			for( $i=0; $i<($token-1); $i++ ){
+				if( $i == 0  ){
+					$basename = $parts[0];
+				}else{				
+					$basename = $basename + "_" + $parts[$i];				
+				}
+			}
+			
+
+			//名前からネームスペースを削除
+			string $parts[];
+			int $token = `tokenize $basename ":" $parts`;
+			if( $token != 1 ){
+				$basename = $parts[$token-1];
+			}
+			
+			//サブブレンド名を形成
+			$subBlend = $basename + "_subBlend";
+			//サブブレンドが存在するかを調査
+			//存在するとき、ターゲットを追加
+			//存在しないとき、サブブレンド名を持ったブレンドシェイプを適用し、ターゲットを追加
+			string $blendShape[];
+			int $result = `objExists $subBlend`;
+			if( $result ){
+				select -r $meshOne;
+				blendShapeAddBaseTarget($subBlend);		
+			}else{
+				select -r $meshOne;
+				$blendShape = `blendShape -n $subBlend`;
+				blendShapeAddBaseTarget($blendShape[0]);
+			}
+			
+			//ブレンドシェイプのターゲット名を取得
+			//最後のターゲット名をリネーム
+			$targets = `listAttr -multi -string "weight" $subBlend`;
+			int $tSize = `size $targets`;
+			
+			//ターゲットを$inputGrpの子とする
+			//座標を0にする
+			parent $targets[$tSize-1] $inputGrp;
+			move 0 0 0 $targets[$tSize-1];
+			
+			
+			int $size = `size $subBlendShape`;
+			$subBlendShape[$size] = $subBlend;
+			
+			$wSize = `blendShape -q -weightCount $subBlend`;
+			
+		}
+
+		
+		if( !$result ){
+		
+			select -r $CTRL_crv;
+			string $CTRL_crv_full[] = `ls -l -sl`;
+			
+			string $eval;
+			$eval += "addAttr -ln \"";
+			$eval += $input;
+			$eval += "_atr\" ";
+			
+			if( size($nice) != 0 ){
+				$eval += "-nn \"";
+				$eval += $nice;
+				$eval += "\" ";
+			}
+			
+			$eval += "-at double -min 0 -max 1 -dv 0 ";
+			$eval += $CTRL_crv_full[0];
+			$eval += ";";
+			$eval += "setAttr -e -keyable 1 ";
+			$eval += $CTRL_crv_full[0];
+			$eval += ".";
+			$eval += $input;
+			$eval += "_atr";
+			$eval += ";";
+			
+			eval $eval;
+			
+			int $size = ` size $mesh `;
+			for( $i=0; $i<size($mesh); $i++ ){
+			
+				clear $parts;
+				int $token = ` tokenize $mesh[$i] ":" $parts `;
+				if( $token != 1 ){
+					$w[$i] = $parts[$token-1];
+				}
+			
+				connectAttr -f ( $CTRL_crv + "." + $input + "_atr" ) ( $subBlendShape[$i] + ".w[" + $wSize + "]" );
+			
+			}
+			
+			int $size = `size $targets`;
+			aliasAttr ( $basename + "_" + $input + "BlendMesh" ) ( $subBlend + "." + $targets[$size-1] );
+			rename $meshOne ( $basename + "_" + $input + "BlendMesh" );		
+			
+			select -r $inputGrp;
+		
+		}else{
+			warning "すでに同じブレンド名が存在するのでマージしました。\n";
+		}
+	
+	}else{
+	
+		//ネームスペースつきコードネームを$ncに取得
+		string $nc = $cord;
+	
+		//$cordからネームスペースを削除
+		string $parts[];
+		int $token = `tokenize $cord ":" $parts`;
+		if( $token != 1 ){
+			$cord = $parts[$token-1];
+		}
+	
+		//リグのhead01_crvの名前を取得
+		string $CTRL_crv = $nc + "CTRL_crv";
+		
+		//ブレンドグループの存在を調査
+		string $ncBlendGrp = $nc + "blend_grp";
+		string $blendGrp = $cord + "blend_grp";
+		string $newGrp;
+		int $bResult = `objExists $ncBlendGrp`;
+		if( !$bResult ){
+			$newGrp = `group -em`;
+			xform -os -piv 0 0 0;
+			rename $newGrp $blendGrp;
+			parent $blendGrp ($cord + "mesh_grp");
+		}
+	
+		//inputグループの存在を調査
+		string $ncInputGrp = $nc + $input + "Blend_grp";
+		string $inputGrp = $cord + $input + "Blend_grp";
+		string $newGrp;
+		int $iResult = `objExists $ncInputGrp`;
+		if( !$iResult ){
+			$newGrp = `group -em`;
+			xform -os -piv 0 0 0;
+			rename $newGrp $inputGrp;
+			if( $bResult ){
+				parent $inputGrp $ncBlendGrp;
+			}else{
+				parent $inputGrp $blendGrp;
+			}
+		}
+	
+		string $subBlendShape[];
+		string $targets[];
+		string $basename;
+		string $subBlend;
+		int $wSize;
+		for( $meshOne in $mesh ){
+		
+			//名前の最後の"_"より下の文字列を削除
+			string $parts[];
+			int $token = `tokenize $meshOne "_" $parts`;
+			for( $i=0; $i<($token-1); $i++ ){
+				if( $i == 0  ){
+					$basename = $parts[0];
+				}else{				
+					$basename = $basename + "_" + $parts[$i];				
+				}
+			}
+			
+
+			
+			//サブブレンド名を形成
+			$subBlend = $basename + "_subBlend";
+			//サブブレンドが存在するかを調査
+			//存在するとき、ターゲットを追加
+			//存在しないとき、サブブレンド名を持ったブレンドシェイプを適用し、ターゲットを追加
+			string $blendShape[];
+			int $result = `objExists $subBlend`;
+			if( $result ){
+				select -r $meshOne;
+				blendShapeAddBaseTarget($subBlend);		
+			}else{
+				select -r $meshOne;
+				$blendShape = `blendShape -n $subBlend`;
+				blendShapeAddBaseTarget($blendShape[0]);
+			}
+			
+			//ブレンドシェイプのターゲット名を取得
+			//最後のターゲット名をリネーム
+			$targets = `blendShape -q -target $subBlend`;
+			int $tSize = `size $targets`;
+			
+			//ターゲットを$inputGrpの子とする
+			//座標を0にする
+			if( $iResult ){
+				parent $targets[$tSize-1] $ncInputGrp;
+			}else{
+				parent $targets[$tSize-1] $inputGrp;
+			}
+			move 0 0 0 $targets[$tSize-1];
+			
+			string $targetParts[];
+			int $targetToken = `tokenize $targets[$tSize-1] "_" $targetParts`;
+			string $rename;
+			for( $i=0; $i<($targetToken-1); $i++ ){
+				if( $i==0 ){
+					$rename = $targetParts[0];
+				}else{
+					$rename = $rename + "_" + $targetParts[$i];
+				}
+			}
+			$rename += "_";
+			$rename += $input;
+			$rename += "BlendMesh";
+			
+			
+			rename $targets[$tSize-1] $rename;
+			
+			
+			int $size = `size $subBlendShape`;
+			$subBlendShape[$size] = $subBlend;
+			
+			$wSize = `blendShape -q -weightCount $subBlend`;
+			
+		}
+		
+		if( !$iResult ){
+		
+			select -r $CTRL_crv;
+			string $CTRL_crv_full[] = `ls -l -sl`;
+			
+			string $eval;
+			$eval += "addAttr -ln \"";
+			$eval += $input;
+			$eval += "_atr\" ";
+			
+			if( size($nice) != 0 ){
+				$eval += "-nn \"";
+				$eval += $nice;
+				$eval += "\" ";
+			}
+			
+			$eval += "-at double -min 0 -max 1 -dv 0 ";
+			$eval += $CTRL_crv_full[0];
+			$eval += ";";
+			$eval += "setAttr -e -keyable 1 ";
+			$eval += $CTRL_crv_full[0];
+			$eval += ".";
+			$eval += $input;
+			$eval += "_atr";
+			$eval += ";";
+			
+			eval $eval;
+			
+			int $size = ` size $mesh `;
+			for( $i=0; $i<size($mesh); $i++ ){
+			
+				clear $parts;
+				int $token = ` tokenize $mesh[$i] ":" $parts `;
+				if( $token != 1 ){
+					$w[$i] = $parts[$token-1];
+				}
+			
+				connectAttr -f ( $CTRL_crv + "." + $input + "_atr" ) ( $subBlendShape[$i] + ".w[" + $wSize + "]" );
+			
+			}
+			
+			int $size = `size $targets`;
+			aliasAttr ( $basename + "_" + $input + "BlendMesh" ) ( $subBlend + "." + $targets[$size-1] );
+			rename $meshOne ( $basename + "_" + $input + "BlendMesh" );		
+			
+			select -r $inputGrp;
+			
+			select -r $inputGrp;
+		
+		}else{
+			warning "すでに同じブレンド名が存在するのでマージしました。\n";
+		}
+		
+		
+	
+	}
+	
+}
+
+
+
+

@@ -1,0 +1,156 @@
+///////////////////////////////////////////////////////////////////////////////
+//	LS_loadScene.res
+///////////////////////////////////////////////////////////////////////////////
+//
+//	AUTHOR: 		goto kazufumi
+//
+//	CREATION DATE:	2013_12_10
+//	UPDATED DATE:	2013_12_10
+//
+//	VERSION:				1.0
+//
+//////////////////////////////////////////////////////////////////
+
+/*================================================================
+
+	"Load Scene" Resource of English version
+
+================================================================*/
+
+/*================================================================
+
+	UPDATE
+
+================================================================*/
+
+/*---------------------------------------------------------------------
+	Main UI
+---------------------------------------------------------------------*/
+displayString -r -v "Load Scene" zm_LS.windowTitle;
+displayString -r -v "Config" zm_LS.mConfig;
+displayString -r -v "Add Title" zm_LS.miAddTitle;
+displayString -r -v "Edit Title" zm_LS.miEditTitle;
+displayString -r -v "Delete Title" zm_LS.miDeleteTitle;
+displayString -r -v "Auto Set Project" zm_LS.miAutoSetProject;
+displayString -r -v "Delete All History" zm_LS.miDeleteAllHistory;
+displayString -r -v "Directory" zm_LS.tDirectory;
+displayString -r -v "Title" zm_LS.flTitle;
+displayString -r -v "Hierarchy" zm_LS.flHierarchy;
+displayString -r -v "LOAD" zm_LS.btnLoadButton;
+
+
+/*---------------------------------------------------------------------
+	Error
+---------------------------------------------------------------------*/
+	/*---------------------------------------------------------------------
+		Other Error
+	---------------------------------------------------------------------*/
+	displayString -r -v "Not Found.\n" zm_LS_gotoDiretory.eThereIsNo;
+	displayString -r -v "ma or mb file is not chosen.Please LOAD after choosing it.\n" zm_LS_loadSceneRun.eFileIsNotChosen;
+
+	/*---------------------------------------------------------------------
+		Edit Title Error
+	---------------------------------------------------------------------*/
+	/*---------------------------------------------------------------------
+		Delete Title Error
+	---------------------------------------------------------------------*/
+/*---------------------------------------------------------------------
+	Save Confirm UI
+---------------------------------------------------------------------*/
+displayString -r -v "Confirm" zm_LS_loadSceneRun.confirmTitle;
+displayString -r -v "Do you save the current scene?" zm_LS_loadSceneRun.confirmExp;
+displayString -r -v "Save" zm_LS_loadSceneRun.confirmSave;
+displayString -r -v "Don't Save" zm_LS_loadSceneRun.confirmNotSave;
+displayString -r -v "Cancel" zm_LS_loadSceneRun.confirmCancel;
+
+/*---------------------------------------------------------------------
+	Add Title
+---------------------------------------------------------------------*/
+	/*---------------------------------------------------------------------
+		Add Title UI
+	---------------------------------------------------------------------*/
+	displayString -r -v "Add Title" zm_LS_addTitle.windowTitle;
+	displayString -r -v "Please input title and folder full path." zm_LS_addTitle.tCaption;
+	displayString -r -v "Title" zm_LS_addTitle.tTitle;
+	displayString -r -v "Full path" zm_LS_addTitle.tFullPath;
+	displayString -r -v "Add" zm_LS_addTitle.btnAdd;
+	displayString -r -v "Cancel" zm_LS_addTitle.btnCancel;
+
+	displayString -r -v "Get path" zm_LS_addTitleFolderPathDialog.caption;
+
+	/*---------------------------------------------------------------------
+		Add Title Error
+	---------------------------------------------------------------------*/
+	displayString -r -v "Please input title.\n" zm_LS_addNewTitle.ePleaseInputTitle;
+	displayString -r -v "Please input folder full path.\n" zm_LS_addNewTitle.ePleaseInputFullPath;
+	displayString -r -v "Duplication title exists.Please input another name.\n" zm_LS_addNewTitle.eDuplicationTitle;
+	
+	/*---------------------------------------------------------------------
+		Add Title Message
+	---------------------------------------------------------------------*/
+	displayString -r -v "was added to " zm_LS_addNewTitle.message01;
+	displayString -r -v "\n" zm_LS_addNewTitle.message02;
+
+/*---------------------------------------------------------------------
+	Edit Title
+---------------------------------------------------------------------*/
+	/*---------------------------------------------------------------------
+		Edit Title UI
+	---------------------------------------------------------------------*/
+	displayString -r -v "Edit Title" zm_LS_editTitle.windowTitle;
+	displayString -r -v "Title List" zm_LS_editTitle.tTitleList;
+	displayString -r -v "Reload" zm_LS_editTitle.btnReload;
+	displayString -r -v "Title Name" zm_LS_editTitle.tTitleName;
+	displayString -r -v "Full Path" zm_LS_editTitle.tFullPath;
+	displayString -r -v "Edit it by these contents." zm_LS_editTitle.tExp;
+	displayString -r -v "Edit" zm_LS_editTitle.btnEdit;
+	displayString -r -v "Cancel" zm_LS_editTitle.btnCancel;
+
+	displayString -r -v "Get path" zm_LS_editTitleFolderPathDialog.caption;
+	
+	/*---------------------------------------------------------------------
+		Edit Title Error
+	---------------------------------------------------------------------*/
+	displayString -r -v "The txt file with the file name that you chose from a list does not exist.\n" zm_LS_editTitle.eTxtFileDoesNotExist;
+	displayString -r -v "Please input title name. Please input folder path.\n" zm_LS_editTitle.ePleaseInputTitleAndFullPath;
+	displayString -r -v "Please input title name.\n" zm_LS_editTitle.ePleaseInputTitle;
+	displayString -r -v "Please input folder path.\n" zm_LS_editTitle.ePleaseInputFullPath;
+	
+	/*---------------------------------------------------------------------
+		Edit Title Message
+	---------------------------------------------------------------------*/
+	displayString -r -v "Editing finished.\n" zm_LS_editTitle.editingCompletion;
+
+/*---------------------------------------------------------------------
+	Delete Title
+---------------------------------------------------------------------*/
+	/*---------------------------------------------------------------------
+		Delete Title UI
+	---------------------------------------------------------------------*/
+	displayString -r -v "Delete Title" zm_LS_deleteTitle.windowTitle;
+	displayString -r -v "Title List" zm_LS_deleteTitle.tTitleList;
+	displayString -r -v "Reload" zm_LS_deleteTitle.btnReload;
+	displayString -r -v "Delete the title chosen among a list" zm_LS_deleteTitle.tExp;
+	displayString -r -v "Delete" zm_LS_deleteTitle.btnDelete;
+	displayString -r -v "Cancel" zm_LS_deleteTitle.btnCancel;
+
+	displayString -r -v "Confirm" zm_LS_deleteTitle.confirmTitle;
+	displayString -r -v "Delete the title.This action is not undoable." zm_LS_deleteTitle.confirmExp;
+	displayString -r -v "Delete" zm_LS_deleteTitle.confirmDelete;
+	displayString -r -v "Cancel" zm_LS_deleteTitle.confirmNotDelete;
+
+	/*---------------------------------------------------------------------
+		Delete Title Error
+	---------------------------------------------------------------------*/
+	displayString -r -v "Please choose title that is deleted from list." zm_LS_deleteTitle.ePleaseSelecctTitle;
+	displayString -r -v "  An according file is not found." zm_LS_deleteTitle.NotFoundFile;
+
+
+
+
+
+
+
+
+
+

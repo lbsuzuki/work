@@ -1,0 +1,40 @@
+///////////////////////////////////////////////////////////////////////////////
+//	PSTN_CBHS_connectBackHairSine            //		å„ÇÎîØÉTÉCÉìÇ∆îØÉäÉOÇê⁄ë±
+///////////////////////////////////////////////////////////////////////////////
+//
+//	AUTHOR: 		goto kazufumi
+//
+//	CREATION DATE:	2013_09_04
+//	UPDATED DATE:	2013_09_04
+//
+//	VERSION:			1.1
+//
+//	HOW TO USE:		run "PSTN_CBHS_connectBackHairSine();"
+//
+//////////////////////////////////////////////////////////////////
+
+global proc PSTN_CBHS_connectBackHairSine(){
+
+	string $cord = `textField -q -text PST_tfCordName`;
+	int $size = `size $cord`;
+	string $last = `substring $cord $size $size`;
+	if( $last != "_" ){
+		$cord += "_";
+	}
+	
+	string $common = "BHS";
+
+	string $deforms[] = ` ls -sl -type "nonLinear"`;
+	for( $deformOne in $deforms ){
+
+		int $result = ` isConnected -iuc ( $cord + "hairCTRL_crv.envelope_atr" )   ( $deformOne + ".envelope" ) `;
+		if( !$result ){
+			connectAttr -f ( $cord + "hairCTRL_crv.envelope_atr" ) ( $deformOne + ".envelope" );
+		}
+		connectAttr -f ( $cord + "hairCTRL_crv." + $common + "Amplitude_atr" )   ( $deformOne + ".amplitude" );
+		connectAttr -f ( $cord + "hairCTRL_crv." + $common + "Wavelength_atr" )   ( $deformOne + ".wavelength" );
+		connectAttr -f ( $cord + "hairCTRL_crv." + $common + "Offset_atr" )   ( $deformOne + ".offset" );
+
+	}
+
+}

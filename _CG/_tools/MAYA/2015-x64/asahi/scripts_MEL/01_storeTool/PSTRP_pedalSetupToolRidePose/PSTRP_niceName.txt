@@ -1,0 +1,10 @@
+PSTRP_RMBC_rideMamaBicycleConstraint>>乗車コンストレイント（ママチャリver）>>245 145 184
+PSTRP_RRBC_rideRoadBicycleConstraint>>乗車コンストレイント（ロードバイクver）>>245 145 184
+PSTRP_SABL_symmetricArmBaseL>>腕　シンメトリー　左基準>>133 122 176
+PSTRP_SABR_symmetricArmBaseR>>腕　シンメトリー　右基準>>133 122 176
+PSTRP_SASBL_symmetricAdjustShoulderBaseL>>肩の調整リグ　シンメトリー　左基準>>202 221 141
+PSTRP_SASBR_symmetricAdjustShoulderBaseR>>肩の調整リグ　シンメトリー　右基準>>202 221 141
+PSTRP_RAN_referanceAutomaticNamespace>>リファレンス 自動ネームスペース>>245 145 151
+PSTRP_RRBC_rideRoadBicycleConstraintWithoutCN>>乗車コンストレイント（ロードバイクver）（コードネームなしver）>>245 145 151
+PSTRP_EAFP_exportAtomForPose>>Atom 書き出し（ポーズ専用）>>245 145 151
+PSTRP_IAFP_importAtomForPose>>Atom 読み込み（ポーズ専用）>>245 145 151

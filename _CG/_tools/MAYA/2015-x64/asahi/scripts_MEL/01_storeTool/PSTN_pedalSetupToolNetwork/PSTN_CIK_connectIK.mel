@@ -1,0 +1,33 @@
+///////////////////////////////////////////////////////////////////////////////
+//	PSTN_CIK_connectIK            //		IKハンドルと開発者用コントローラの接続
+///////////////////////////////////////////////////////////////////////////////
+//
+//	AUTHOR: 		goto kazufumi
+//
+//	CREATION DATE:	2013_09_08
+//	UPDATED DATE:	2013_09_08
+//
+//	VERSION:			1.1
+//
+//	HOW TO USE:		run "PSTN_CIK_connectIK();"
+//
+//////////////////////////////////////////////////////////////////
+
+global proc PSTN_CIK_connectIK(){
+
+	string $cord = `textField -q -text PST_tfCordName`;
+	int $size = `size $cord`;
+	string $last = `substring $cord $size $size`;
+	if( $last != "_" ){
+		$cord += "_";
+	}
+
+	string $ik[] = ` ls -sl -type "ikHandle"`;
+	for( $ikOne in $ik ){
+		int $result = ` isConnected -iuc ( $cord + "developerCTRL_crv.rigIKHandleVisible_atr" )   ( $ikOne + ".visibility" ) `;
+		if( !$result ){
+			connectAttr -f ( $cord + "developerCTRL_crv.rigIKHandleVisible_atr" )   ( $ikOne + ".visibility" );
+		}
+	}
+	
+}

@@ -1,0 +1,1780 @@
+////////////////////////////////////////////////////////////////////////////
+//	ML_modelLoader            //     モデルローダ ツール　　 //
+////////////////////////////////////////////////////////////////////////////
+//
+//	AUTHOR: 		goto kazufumi
+//
+//	CREATION DATE: 		2016_05_01
+//	UPDATED DATE:			2016_07_11
+//
+//	VERSION:					0.96
+//
+//	HOW TO USE:		run "ML_modelLoader();"
+//
+//////////////////////////////////////////////////////////////////
+
+/*=====================================================
+
+	モデルを一括で読み込むことができます
+	
+=====================================================*/
+
+/*------------------------------------------------------------------------------------------------
+
+	更新:
+	
+		0.96		"<<<mbAll"をチェックボックスラベルの代わりに記述することで
+					そのタブ（フォルダ）内のmbファイル全てを読み込むようにしました
+		0.952	"ネームスペース付きインポート時、読み込み直後ネームスペースを削除"チェックボックスとその説明文を追加
+		0.951	インポート時、リファレンスが保持されるように修正
+
+------------------------------------------------------------------------------------------------*/
+
+
+/*------------------------------------------------------------------------------------------------
+
+	ML_modelLoader
+
+	ﾓﾃﾞﾙローダウインドウを開きます。
+
+------------------------------------------------------------------------------------------------*/
+
+
+global proc ML_modelLoader(){
+
+	//ツール・バージョン
+	string $title = "モデルローダ";
+	string $version = "0.96";
+	
+	//テンプレート定義
+	if( !` uiTemplate -exists ML_uiTempInput ` ){
+		uiTemplate ML_uiTempInput;
+	}
+	
+	text -dt ML_uiTempInput -h 25;
+	button -dt ML_uiTempInput -w 40 -h 25;
+	textField -dt ML_uiTempInput -h 25 -w 150;
+	checkBox -dt ML_uiTempInput -h 25;
+	optionMenu -dt ML_uiTempInput -w 150 -h 25;
+	radioButton -dt ML_uiTempInput -h 25;
+	intField -dt ML_uiTempInput -h 25;
+	frameLayout -dt ML_uiTempInput -w 100;
+
+
+	//重複ウィンドウ調査
+	if( ` window -q -exists ML_window ` ){
+		deleteUI ML_window;
+	}
+
+
+	window	-title ( $title + "(v" + $version + ")" )
+			-menuBar 1
+			-sizeable 1
+			ML_window;
+			
+		setUITemplate -pst ML_uiTempInput;
+		
+		menu -l "設定" ML_mSetting;
+			menuItem -l "編集" ML_miSetting;
+		menu -l "ヘルプ" ML_mHelp;
+			menuItem -l "melファイルを編集" -c "ZIN_OM_openMel( ` whatIs ML_modelLoader ` )" ML_miOpenMel;
+			menuItem -l "ツールフォルダを開く" -c "ZIN_OMF_openMelFolder( ` whatIs ML_modelLoader ` )" ML_miOpenMelFolder;
+			
+		frameLayout -lv 0 -bs etchedOut ML_flAll;
+			formLayout ML_folAll;
+			
+				//情報指定---------------------------------------------------------------------------------------
+
+				frameLayout -l "情報指定" -bs etchedOut -collapsable 1 ML_flInfo;
+				
+					formLayout ML_folInfo;
+					
+						text -l "作品ファイルパス" ML_tTitleFilePath;
+						textField -cc "ML_inputOmTitle(\"\");ML_inputTfAssetPath();ML_inputOmModelList();ML_saveSetting();" ML_tfTitleFilePath;
+						button -l "..." -c "ML_titleFilePathDialog()" ML_btnTitleFilePath;
+						
+						text -l "作品名" ML_tTitle;
+						optionMenu -cc "ML_inputTfAssetPath();ML_inputOmModelList();ML_saveSetting();" ML_omTitle;
+						
+						text -l "アセットパス" ML_tAssetPath;
+						textField -cc "ML_inputOmModelList();ML_saveSetting();" ML_tfAssetPath;
+						button -l "開く" -c "ML_openAssetPath()" ML_btnAssetPath;
+						
+						text -l "モデルリスト フォルダ" ML_tModelListFolder;
+						textField -cc "" ML_tfModelListFolder;
+
+						text -l "モデルリスト 選択" ML_tSelectModelList;
+						optionMenu -cc "ML_saveSetting()" ML_omSelectModelList;
+						button -l "編集" -c "ML_editModelListTxt()" ML_btnEditTxt;
+						
+						button -l "リスト読み込み" -w 100 -c "ML_createList()" -bgc 0.65 0.65 0.85 ML_btnLoadList;
+						
+						formLayout -e
+							
+							-af ML_tTitleFilePath		"top"		5
+							-ac ML_tTitleFilePath		"right"	5	ML_tfTitleFilePath
+							
+							-af ML_tfTitleFilePath		"top"		5
+							-af ML_tfTitleFilePath		"left"		150
+							-ac ML_tfTitleFilePath		"right"	5	ML_btnTitleFilePath
+							
+							-af ML_btnTitleFilePath	"top"		5
+							-af ML_btnTitleFilePath	"right"	5
+							
+							-ac ML_tTitle					"top"		2	ML_tfTitleFilePath
+							-ac ML_tTitle					"right"	5	ML_omTitle
+							
+							-ac ML_omTitle				"top"		2	ML_tfTitleFilePath
+							-af ML_omTitle				"left"		150
+							
+							-ac ML_tAssetPath			"top"		2	ML_omTitle
+							-ac ML_tAssetPath			"right"	5	ML_tfAssetPath
+							
+							-ac ML_tfAssetPath			"top"		2	ML_omTitle
+							-af ML_tfAssetPath			"left"		150
+							-ac ML_tfAssetPath			"right"	5	ML_btnAssetPath
+							
+							-ac ML_btnAssetPath		"top"		2	ML_omTitle
+							-af ML_btnAssetPath		"right"	5
+							
+							-ac ML_tModelListFolder	"top"		2	ML_tfAssetPath
+							-ac ML_tModelListFolder	"right"	5	ML_tfModelListFolder
+							
+							-ac ML_tfModelListFolder	"top"		2	ML_tfAssetPath
+							-af ML_tfModelListFolder	"left"		150
+							
+							-ac ML_omSelectModelList				"top"		2	ML_tfModelListFolder
+							-af ML_omSelectModelList				"left"		150
+							
+							-ac ML_btnEditTxt			"top"		2	ML_tfModelListFolder
+							-ac ML_btnEditTxt			"left"		5	ML_omSelectModelList
+							
+							-ac ML_tSelectModelList					"top"		2	ML_tfModelListFolder
+							-ac ML_tSelectModelList					"right"	5	ML_omSelectModelList
+							
+							-ac ML_btnLoadList			"top"		2	ML_omSelectModelList
+							-af ML_btnLoadList			"left"		150
+							-af ML_btnLoadList			"bottom"	5
+							
+							
+							ML_folInfo;
+
+					setParent..;
+				setParent..;
+				
+				//読込方法---------------------------------------------------------------------------------------
+				
+				frameLayout -l "読込方法" -bs etchedOut -collapsable 1 ML_flLoadSetting;
+					formLayout ML_folLoadSetting;
+						text -l "読込方法" ML_tLoadSetting;
+						radioCollection ML_rcLoadSetting;
+							radioButton -l "インポート" -cc "ML_saveSetting()" ML_rbImport;
+							radioButton -l "リファレンス" -sl -cc "ML_saveSetting()" ML_rbReference;
+							
+						text -l "ネームスペース" ML_tNamespace;
+						checkBox -l "ネームスペースの使用" -v 1 -cc "ML_changeLoadSetting();ML_saveSetting()" ML_cbUseNamespace;
+						
+						radioCollection ML_rcNamespace;
+							radioButton -l "コードネーム" -sl -cc "ML_changeLoadSetting();ML_saveSetting()" ML_rbCordName;
+							radioButton -l "任意" -cc "ML_changeLoadSetting();ML_saveSetting()" ML_rbAny;
+							radioButton -l "ファイル名" -cc "ML_changeLoadSetting();ML_saveSetting()" ML_rbFileName;
+						checkBox -l "+ 番号" -v 1 -cc "ML_changeLoadSetting();ML_saveSetting()" ML_cbNum;
+						textField -w 40 -tx "0" -cc "ML_saveSetting()" ML_tfNum;
+						textField -w 150 -cc "ML_saveSetting()" ML_tfAny;
+						separator -style "in" -horizontal 0 ML_sep01;
+						text -l "読み込み数" ML_tLoadNum;
+						intField -w 40 -v 1 -min 1 -cc "ML_saveSetting()" ML_ifLoadNum;
+						button -w 150 -l "チェックボックスを全てオフ" -c "ML_allCbOFF()" ML_btnAllCbOff;
+						checkBox -l "ネームスペース付きインポート時、読み込み直後ネームスペースを削除" -v 0 -cc "ML_saveSetting()"  -bgc 0.7 0.4 0.4 ML_cbRemoveNewNS;
+						text -l "既にリファレンスがされているシーンファイルを\n「複数」インポートしてくるときに使用してください。\n例：弱虫ペダルの乗車モデル" -h 40 -al left ML_tRemoveNewNS;
+						
+						formLayout -e
+							
+							-af ML_tLoadSetting		"top"			5
+							-ac ML_tLoadSetting		"right"		5	ML_rbImport
+							
+							-af ML_rbImport				"top"			5
+							-af ML_rbImport				"left"			150
+							
+							-af ML_rbReference			"top"			5
+							-ac ML_rbReference			"left"			60	ML_rbImport
+							
+							-ac ML_tNamespace			"top"			0	ML_rbImport
+							-ac ML_tNamespace			"right"		5	ML_cbUseNamespace
+							
+							-ac ML_cbUseNamespace	"top"			0	ML_rbImport
+							-af ML_cbUseNamespace	"left"			150
+							
+							-ac ML_rbCordName			"top"			0	ML_cbUseNamespace
+							-af ML_rbCordName			"left"			180
+							
+							-ac ML_cbNum				"top"			0	ML_cbUseNamespace
+							-ac ML_cbNum				"left"			20	ML_rbCordName
+							
+							-ac ML_tfNum					"top"			0	ML_cbUseNamespace
+							-ac ML_tfNum					"left"			5	ML_cbNum
+							
+							-ac ML_rbAny					"top"			0	ML_rbCordName
+							-af ML_rbAny					"left"			180
+							
+							-ac ML_tfAny					"top"			0	ML_rbCordName
+							-ac ML_tfAny					"left"			10	ML_rbAny
+							
+							-ac ML_rbFileName			"top"			0	ML_rbAny
+							-af ML_rbFileName			"left"			180
+							-af ML_rbFileName			"bottom"	5
+							
+							-af ML_sep01					"top"			0
+							-ac ML_sep01					"left"			10 ML_tfAny
+							-af ML_sep01					"bottom"	0
+							
+							-af ML_tLoadNum			"top"			5
+							-ac ML_tLoadNum			"left"			20 ML_sep01
+							
+							-af ML_ifLoadNum			"top"			5
+							-ac ML_ifLoadNum			"left"			5	ML_tLoadNum
+							
+							-ac ML_btnAllCbOff			"top"			5	ML_ifLoadNum
+							-ac ML_btnAllCbOff			"left"			5	ML_tLoadNum
+							
+							-ac ML_cbRemoveNewNS	"top"			5	ML_btnAllCbOff
+							-ac ML_cbRemoveNewNS	"left"			5	ML_tLoadNum
+							
+							-ac ML_tRemoveNewNS	"top"			2	ML_cbRemoveNewNS
+							-ac ML_tRemoveNewNS	"left"			22	ML_tLoadNum
+							ML_folLoadSetting;
+						
+					setParent..;
+				setParent..;
+				
+				frameLayout -l "リスト" -bs etchedOut ML_flList;
+					formLayout ML_folList;
+					setParent..;
+				setParent..;
+				
+				
+				
+				
+				//読込コマンド---------------------------------------------------------------------------------------
+				
+				frameLayout -l "読込コマンド" -bs etchedOut ML_flLoad;
+					formLayout ML_folLoad;
+						button -l "ロード" -c "ML_load()" -h 30 -bgc 1.0 0.55 0.55 ML_btnLoad;
+						
+						formLayout -e
+						
+							-af ML_btnLoad	"top"			0
+							-af ML_btnLoad	"left"			0
+							-af ML_btnLoad	"right"		0
+							-af ML_btnLoad	"bottom"	0
+							
+							ML_folLoad;
+						
+					setParent..;
+				setParent..;
+			setParent..;
+		setParent..;
+	showWindow;
+
+
+
+
+	formLayout -e
+
+		-af ML_flInfo			"top"			0
+		-af ML_flInfo			"left"			0
+		-af ML_flInfo			"right"		0
+
+		-ac ML_flLoadSetting	"top"		0	ML_flInfo
+		-af ML_flLoadSetting	"left"		0
+		-af ML_flLoadSetting	"right"	0
+
+		-ac ML_flList			"top"			0	ML_flLoadSetting
+		-af ML_flList			"left"			0
+		-af ML_flList			"right"		0
+		-ac ML_flList			"bottom"	0	ML_flLoad
+
+		-af ML_flLoad			"left"			0
+		-af ML_flLoad			"right"		0
+		-af ML_flLoad			"bottom"	0
+
+
+		ML_folAll;
+		
+	
+	ML_prefSetting();
+	ML_changeLoadSetting();
+	
+
+}
+
+
+/*------------------------------------------------------------------------------------------------
+
+	ML_changeLoadSetting()
+
+	読み込み方法の設定でコントローラの有効無効を制御します
+
+------------------------------------------------------------------------------------------------*/
+
+global proc ML_changeLoadSetting(){
+
+	int $cbUseNamespace = ` checkBox -q -v ML_cbUseNamespace `;
+	string $rcNamespace = ` radioCollection -q -sl ML_rcNamespace `;
+	int $cbNum = ` checkBox -q -v ML_cbNum `;
+	string $tfNum = ` textField -q -tx ML_tfNum `;
+	string $tfAny = ` textField -q -tx ML_tfAny `;
+	
+	if( $cbUseNamespace == 0 ){
+		radioButton -e -enable 0 ML_rbCordName;
+		radioButton -e -enable 0 ML_rbAny;
+		radioButton -e -enable 0 ML_rbFileName;
+		checkBox -e -enable 0 ML_cbNum;
+		textField -e -enable 0 ML_tfNum;
+		textField -e -enable 0 ML_tfAny;
+	}else{
+		radioButton -e -enable 1 ML_rbCordName;
+		radioButton -e -enable 1 ML_rbAny;
+		radioButton -e -enable 1 ML_rbFileName;
+		if( $rcNamespace == "ML_rbCordName" ){
+			checkBox -e -enable 1 ML_cbNum;
+			if( $cbNum ){
+				textField -e -enable 1 ML_tfNum;
+			}else{
+				textField -e -enable 0 ML_tfNum;
+			}
+			textField -e -enable 0 ML_tfAny;
+		}else if( $rcNamespace == "ML_rbAny" ){
+			checkBox -e -enable 0 ML_cbNum;
+			textField -e -enable 0 ML_tfNum;
+			textField -e -enable 1 ML_tfAny;
+		}else if( $rcNamespace == "ML_rbFileName" ){
+			checkBox -e -enable 0 ML_cbNum;
+			textField -e -enable 0 ML_tfNum;
+			textField -e -enable 0 ML_tfAny;
+		}
+				
+	}
+
+	
+	
+}
+
+
+/*------------------------------------------------------------------------------------------------
+
+	ML_saveSetting()
+
+	設定を保存します
+
+------------------------------------------------------------------------------------------------*/
+
+global proc ML_saveSetting(){
+
+	//情報指定
+	string $tfTitleFilePathPref = ` textField -q -tx ML_tfTitleFilePath `;
+	string $titleMi[] = ` optionMenu -q -itemListShort ML_omTitle `;
+	string $omTitlePref;
+	if( size($titleMi) != 0 ){
+		$omTitlePref = ` optionMenu -q -value ML_omTitle `;
+	}
+	string $mlMi[] = ` optionMenu -q -itemListShort ML_omSelectModelList `;
+	string $omSelectModelListPref;
+	if( size($mlMi) != 0 ){
+		$omSelectModelListPref = ` optionMenu -q -value ML_omSelectModelList `;
+	}
+	
+	optionVar -stringValue ML_tfTitleFilePath $tfTitleFilePathPref;
+	optionVar -stringValue ML_omTitle $omTitlePref;
+	optionVar -stringValue ML_omSelectModelList $omSelectModelListPref;
+	
+	//読込方法
+	string $rcLoadSetting = ` radioCollection -q -sl ML_rcLoadSetting `;
+	int $cbUseNamespace = ` checkBox -q -v ML_cbUseNamespace `;
+	string $rcNamespace = ` radioCollection -q -sl ML_rcNamespace `;
+	int $cbNum = ` checkBox -q -v ML_cbNum `;
+	string $tfNum = ` textField -q -tx ML_tfNum `;
+	string $tfAny = ` textField -q -tx ML_tfAny `;
+	int $ifLoadNum = ` intField -q -v ML_ifLoadNum `;
+	int $cbRemoveNewNS = ` checkBox -q -v ML_cbRemoveNewNS `;
+	
+	optionVar -stringValue ML_rcLoadSetting $rcLoadSetting;
+	optionVar -intValue ML_cbUseNamespace $cbUseNamespace;
+	optionVar -stringValue ML_rcNamespace $rcNamespace;
+	optionVar -intValue ML_cbNum $cbNum;
+	optionVar -stringValue ML_tfNum $tfNum;
+	optionVar -stringValue ML_tfAny $tfAny;
+	optionVar -intValue ML_ifLoadNum $ifLoadNum;
+	optionVar -intValue ML_cbRemoveNewNS $cbRemoveNewNS;
+	
+}
+
+
+
+/*------------------------------------------------------------------------------------------------
+
+	ML_prefSetting()
+
+	保存した設定を取得しコントローラに反映します
+
+------------------------------------------------------------------------------------------------*/
+
+global proc ML_prefSetting(){
+
+	
+	//情報指定
+	//入力項目設定用の変数を作成
+	string $tfTitleFilePathPref = "";
+	string $omTitlePref = "";
+	string $omSelectModelListPref = "";
+
+	
+	//保存された入力項目の読込
+	if( ` optionVar -exists ML_tfTitleFilePath ` ){
+		$tfTitleFilePathPref = ` optionVar -q ML_tfTitleFilePath `;
+	}
+	
+	if( ` optionVar -exists ML_omTitle ` ){
+		$omTitlePref = ` optionVar -q ML_omTitle `;
+	}
+	
+	if( ` optionVar -exists ML_omSelectModelList ` ){
+		$omSelectModelListPref = ` optionVar -q ML_omSelectModelList `;
+	}
+	
+	if( size($tfTitleFilePathPref) != 0 ){
+		textField -e -tx $tfTitleFilePathPref ML_tfTitleFilePath;
+	}
+	
+	ML_inputOmTitle($tfTitleFilePathPref);
+	
+	string $titleMi[] = ` optionMenu -q -itemListShort ML_omTitle `;
+	if( size($omTitlePref) != 0 ){
+		if( size($titleMi) != 0 ){
+			for( $one in $titleMi ){
+				if( $omTitlePref == ` menuItem -q -l $one ` ){
+					optionMenu -e -value $omTitlePref ML_omTitle;
+				}
+			}
+		}
+	}
+	
+	ML_inputTfAssetPath();
+	ML_inputOmModelList();
+	
+	string $mlMi[] = ` optionMenu -q -itemListShort ML_omSelectModelList `;
+	if( size($omSelectModelListPref) != 0 ){
+		if( size($mlMi) != 0 ){
+			for( $one in $mlMi ){
+				if( $omSelectModelListPref == ` menuItem -q -l $one ` ){
+					optionMenu -e -value $omSelectModelListPref ML_omSelectModelList;
+				}
+			}
+		}
+	}
+	
+	
+	
+	//読込方法
+	string $rcLoadSetting = "";
+	int $cbUseNamespace = 1;
+	string $rcNamespace = "";
+	int $cbNum = 1;
+	string $tfNum = "0";
+	string $tfAny = "";
+	int $ifLoadNum = 1;
+	int $cbRemoveNewNS = 0;
+	
+	//保存された入力項目の読込
+	if( ` optionVar -exists ML_rcLoadSetting ` ){
+		$rcLoadSetting = ` optionVar -q ML_rcLoadSetting `;
+	}
+	
+	if( ` optionVar -exists ML_cbUseNamespace ` ){
+		$cbUseNamespace = ` optionVar -q ML_cbUseNamespace `;
+	}
+	
+	if( ` optionVar -exists ML_rcNamespace ` ){
+		$rcNamespace = ` optionVar -q ML_rcNamespace `;
+	}
+	
+	if( ` optionVar -exists ML_cbNum ` ){
+		$cbNum = ` optionVar -q ML_cbNum `;
+	}
+	
+	if( ` optionVar -exists ML_tfNum ` ){
+		$tfNum = ` optionVar -q ML_tfNum `;
+	}
+	
+	if( ` optionVar -exists ML_tfAny ` ){
+		$tfAny = ` optionVar -q ML_tfAny `;
+	}
+	
+	if( ` optionVar -exists ML_ifLoadNum ` ){
+		$ifLoadNum = ` optionVar -q ML_ifLoadNum `;
+	}
+	
+	if( ` optionVar -exists ML_cbRemoveNewNS ` ){
+		$cbRemoveNewNS = ` optionVar -q ML_cbRemoveNewNS `;
+	}
+	
+	
+	
+	//設定編集
+	if( size($rcLoadSetting) != 0 ){
+		radioButton -e -sl $rcLoadSetting;
+	}
+	
+	checkBox -e -v $cbUseNamespace ML_cbUseNamespace;
+	
+	if( size($rcNamespace) != 0 ){
+		radioButton -e -sl $rcNamespace;
+	}
+	
+	checkBox -e -v $cbNum ML_cbNum;
+	textField -e -tx $tfNum ML_tfNum;
+	textField -e -tx $tfAny ML_tfAny;
+	intField -e -v $ifLoadNum ML_ifLoadNum;
+	checkBox -e -v $cbRemoveNewNS ML_cbRemoveNewNS;
+	
+
+}
+
+/*------------------------------------------------------------------------------------------------
+
+	ML_getModelListPath
+	
+	戻り値：string
+
+	モデルリストファイルまでのパスを戻り値として返します。
+
+------------------------------------------------------------------------------------------------*/
+
+global proc string ML_getModelListPath(){
+
+	string $asset = ` textField -q -tx ML_tfAssetPath `;
+	if( !` size($asset) ` ){
+		error "アセットパスが入力されていません。\n";
+	}
+	
+	string $mlFolder = ` textField -q -tx ML_tfModelListFolder `;
+	if( !` size($mlFolder) ` ){
+		error "クールテキストフォルダが入力されていません。\n";
+	}
+	
+	string $omV = ` optionMenu -q -value ML_omSelectModelList `;
+	if( !` size($omV) ` ){
+		error "クール選択が空です。\n";
+	}
+	
+	string $path = $asset + "/" + $mlFolder + "/" + $omV + ".txt";
+	
+	return $path;
+
+}
+
+/*------------------------------------------------------------------------------------------------
+
+	ML_loadLine( string ファイルフルパス )
+
+	ファイルに書き込まれている文字列を配列で返します
+
+------------------------------------------------------------------------------------------------*/
+
+global proc string[] ML_loadLine( string $path ){
+
+	string $return[];
+	
+	$path = substituteAllString( $path , "\\" , "/" );
+
+	if( size($path) != 0 ){
+
+		if( ` filetest -f $path ` ){
+			int $id = ` fopen $path "r" `;
+			while( !` feof $id ` ){
+				string $line = ` fgetline $id `;
+				if( size($line) ){
+					$return[size($return)] = $line;
+				}
+			}
+		
+			fclose $id;
+		}
+	}
+	
+	return $return;
+
+}
+
+
+
+/*------------------------------------------------------------------------------------------------
+
+	ML_tokenInequality( string[] 文章, int 0～2のどれか )
+
+	不等号【>>】の前後の文を配列として返します。
+	引数0のとき　　【>>】で分かれた1番目にある文を配列としてすべて返します
+	引数1のとき　　【>>】で分かれた2番目にある文を配列としてすべて返します
+	引数2のとき　　【>>】で分かれた3番目にある文を配列としてすべて返します
+
+------------------------------------------------------------------------------------------------*/
+
+global proc string[] ML_tokenInequality( string $line[] , int $value ){
+
+	string $return[];
+	
+	for( $one in $line ){
+		string $parts[];
+		if( ` gmatch $one "*>>*" ` ){
+			int $token = ` tokenize $one ">>" $parts `;
+			if( $value == 0 ){
+				if( $token > 0 ){
+					$return[size($return)] = $parts[0];
+				}else{
+					$return[size($return)] = "";
+				}
+			}else if( $value == 1 ){
+				if( $token > 1 ){
+					$return[size($return)] = $parts[1];
+				}else{
+					$return[size($return)] = "";
+				}
+			}else if( $value == 2 ){
+				if( $token > 2 ){
+					$return[size($return)] = $parts[2];
+				}else{
+					if( size($parts[0]) != 0  &&  size($parts[1]) != 0 ){
+						$return[size($return)] = "_modelLists";
+					}else{
+						$return[size($return)] = "";
+					}
+				}
+			}
+		}
+	}
+	
+	return $return;
+	
+	
+}
+
+
+/*------------------------------------------------------------------------------------------------
+
+	ML_inputOmTitle( string パス )
+
+	タイトルオプションメニューに作品名を入力します
+
+------------------------------------------------------------------------------------------------*/
+
+global proc ML_inputOmTitle( string $path ){
+
+	//引数の作品ファイルパスが空のときテキストフィールドから取得します
+	if( size($path) == 0 ){
+		$path = ` textField -q -tx ML_tfTitleFilePath `;
+	}
+	
+	//作品名オプションメニューをリセットします
+	string $mi[] = ` optionMenu -q -itemListShort ML_omTitle `;
+	for( $one in $mi ){
+		deleteUI $one;
+	}
+	
+	//アセットパステキストフィールドをリセットします
+	textField -e -tx "" ML_tfAssetPath;
+	
+	//クール選択オプションメニューをリセットします
+	string $mi[] = ` optionMenu -q -itemListShort ML_omSelectModelList `;
+	for( $one in $mi ){
+		deleteUI $one;
+	}
+	
+	//作品ファイルパスが空でないとき
+	if( size($path) != 0 ){
+		//作品ファイルパスが存在するとき
+		if( ` filetest -f $path ` ){
+			//ファイルから文章を取得
+			string $lines[] = ML_loadLine( $path );
+			//文章が空でないとき
+			if( size($lines) != 0 ){
+				//文章から作品名だけを取得
+				string $title[] = ML_tokenInequality( $lines , 0 );
+				//取得した作品の数が0でないとき
+				if( size($title) != 0 ){
+					//メニューアイテム名用の番号
+					int $n = 1;
+					//作品名を持ったメニューアイテムを作成
+					for( $one in $title ){
+						menuItem -l $one -parent ML_omTitle ( "title" + string($n) );
+						$n += 1;
+					}
+				}
+			}
+		}
+	}
+}
+
+/*------------------------------------------------------------------------------------------------
+
+	ML_inputTfAssetPath()
+
+	アセットパステキストフィールドに作品のアセットパスを入力します
+
+------------------------------------------------------------------------------------------------*/
+
+global proc ML_inputTfAssetPath(){
+
+	//タイトルファイルパスを取得
+	string $path = ` textField -q -tx ML_tfTitleFilePath `;
+	if( size($path) != 0 ){
+		//作品ファイルパスが存在するとき
+		if( ` filetest -f $path ` ){
+			//作品名を取得
+			string $title = ` optionMenu -q -v ML_omTitle `;
+			if( size($title) != 0 ){
+				//タイトルファイルからタイトル配列とアセットパス配列を取得
+				string $lines[] = ML_loadLine( $path );
+				string $txtTitle[] = ML_tokenInequality( $lines , 0 );
+				string $txtPath[] = ML_tokenInequality( $lines , 1 );
+				string $txtFolder[] = ML_tokenInequality( $lines , 2 );
+				
+				//取得した作品名とタイトル配列が一致したとき
+				//タイトル配列と同じ番号に格納されたアセットパス配列をテキストフィールドに入力
+				int $n = 0;
+				int $result = -1;
+				for( $one in $txtTitle ){
+				
+					//一致したとき$resultに番号を取得
+					if( $one == $title ){
+						$result = $n;
+					}
+					
+					//$resultが-1のままのとき$nに1足し
+					if( $result == -1 ){
+						$n += 1;
+					}
+				}
+				
+				//$resultが-1以外のときテキストフィールドにアセットパスを入力
+				if( $result != -1 ){
+				
+					if( ` gmatch $txtPath[$n] "*\n" ` ){
+						string $parts[];
+						tokenize $txtPath[$n] "\n" $parts;
+						$txtPath[$n] =  $parts[0];
+					}
+					
+					if( ` gmatch $txtFolder[$n] "*\n" ` ){
+						string $parts[];
+						tokenize $txtFolder[$n] "\n" $parts;
+						$txtFolder[$n] =  $parts[0];
+					}
+					
+					$txtPath[$n] = substituteAllString( $txtPath[$n] , "\\" , "/" );
+					$txtFolder[$n] = substituteAllString( $txtFolder[$n] , "\\" , "/" );
+					
+					textField -e -tx $txtPath[$n] ML_tfAssetPath;
+					textField -e -tx $txtFolder[$n] ML_tfModelListFolder;
+				}
+			}
+		}
+	}
+}
+
+
+
+
+/*------------------------------------------------------------------------------------------------
+
+	ML_titleFilePathDialog()
+
+	タイトルファイルパスを取得するためのダイアログを表示します
+
+------------------------------------------------------------------------------------------------*/
+
+global proc ML_titleFilePathDialog(){
+
+	string $fullPath = ` textField -q -tx ML_tfTitleFilePath `;
+	string $startDir;
+	if( size($fullPath) != 0 ){
+		$startDir = dirname($fullPath);
+	}
+	
+	if( size($startDir) == 0 ){
+		$startDir = ` file -q -sceneName `;
+	}
+	
+	string $path[] = ` fileDialog2
+						-dialogStyle 1
+						-startingDirectory $startDir
+						-caption "タイトルファイルパス取得"
+						-okCaption "取得"
+						-fileMode 1 `;
+	
+	if( size($path[0]) != 0 ){
+		textField -e -tx $path[0] ML_tfTitleFilePath;
+		ML_inputOmTitle("");
+		ML_inputTfAssetPath();
+		ML_inputOmModelList();
+		ML_saveSetting();
+	}
+}
+
+/*------------------------------------------------------------------------------------------------
+
+	ML_openAssetPath()
+
+	アセットパスフォルダを開きます。
+
+------------------------------------------------------------------------------------------------*/
+
+global proc ML_openAssetPath(){
+	
+	string $path = ` textField -q -tx ML_tfAssetPath `;
+	if( !` filetest -e $path ` ){
+		error ( "フォルダが存在しません。" + $path );
+	}
+	system ( "load " + $path );
+
+	
+}
+
+
+
+
+
+/*------------------------------------------------------------------------------------------------
+
+	ML_inputOmModelList()
+
+	クール選択オプションメニューにクール数を入力します
+
+------------------------------------------------------------------------------------------------*/
+
+global proc ML_inputOmModelList(){
+	
+	//クール選択オプションメニューをリセットします
+	string $mi[] = ` optionMenu -q -itemListShort ML_omSelectModelList `;
+	for( $one in $mi ){
+		deleteUI $one;
+	}
+	
+	string $assetPath = ` textField -q -tx ML_tfAssetPath `;
+	if( size($assetPath) == 0 ){
+		error "アセットパスがありません。\n";
+	}
+	
+	string $mlFolder = ` textField -q -tx ML_tfModelListFolder `;
+	string $mlFolderPath = $assetPath + "/" + $mlFolder;
+	int $exists = ` filetest -e $mlFolderPath `;
+	if( !$exists ){
+		error ( "フォルダが存在しません。" + $mlFolderPath + "\n" );
+	}else{
+		string $mlFile[] = ` getFileList -folder $mlFolderPath -filespec "*.txt" `;
+		$mlFile = ` sort $mlFile `;
+		for( $one in $mlFile ){
+			string $basename = ` basenameEx $one `;
+			menuItem -l $basename -parent ML_omSelectModelList ( "ML_miModelList" + $basename );
+		}
+	}
+}
+
+
+/*------------------------------------------------------------------------------------------------
+
+	ML_getModelListInfo()
+
+	戻り値：string[] 文章の行ごとに配列で返します
+	
+	クール選択ファイルの中身を返します
+
+------------------------------------------------------------------------------------------------*/
+
+global proc string[] ML_getModelListInfo(){
+	
+	string $return[];
+	
+	string $assetPath = ` textField -q -tx ML_tfAssetPath `;
+	if( size($assetPath) == 0 ){
+		error "アセットパスがありません。";
+	}
+	
+	string $mlFolder = ` textField -q -tx ML_tfModelListFolder `;
+	string $mlFolderPath = $assetPath + "/" + $mlFolder;
+	int $exists = ` filetest -e $mlFolderPath `;
+	if( !$exists ){
+		error ( "フォルダが存在しません。" + $mlFolderPath );
+	}else{
+		string $mlFile[] = ` getFileList -folder $mlFolderPath -filespec "*.txt" `;
+		string $mi[] = ` optionMenu -q -itemListShort ML_omSelectModelList `;
+		string $omSelectModelList = "";
+		if( size($mi) != 0 ){
+			$omSelectModelList = ` optionMenu -q -v ML_omSelectModelList `;
+			$omSelectModelList += ".txt";
+		}
+		
+		for( $one in $mlFile ){
+			if( $omSelectModelList == $one ){
+				string $file = $mlFolderPath + "\\" + $one;
+				int $id = ` fopen $file "r" `;
+				while( !`feof $id` ){
+					string $line = ` fgetline $id `;
+					if( size($line) != 0 && $line != "\n"  ){
+						$line = substituteAllString( $line , "\n" , "" );
+						$return[size($return)] = $line;
+					}
+				}
+				fclose $id;
+			}
+		}
+	}
+	
+	return $return;
+	
+}
+
+
+/*------------------------------------------------------------------------------------------------
+
+	ML_createList()
+
+	アセットパス＋_modelListsフォルダ内にある「数字_～.txt」ファイルの中身から
+	「===」のついた文を検索しリストとしてframeLayout、formLayout、scrollLayout、tabLayoutを作成します。
+	「---」のついた文を検索しcolumnLayoutを作成、tabLayoutにタブを追加します。
+
+------------------------------------------------------------------------------------------------*/
+
+global proc ML_createList(){
+
+	//ML_folListの子を取得し、リセットする
+	string $children[] = ` formLayout -q -childArray ML_folList `;
+	if( size($children) != 0 ){
+		for( $child in $children ){
+			deleteUI $child;
+		}
+	}
+
+	//テキストから文章を取得
+	string $lines[] = ML_getModelListInfo();
+	
+	
+	//文章からリスト名を取得
+	string $lists[];
+	$lists = ML_getList( $lines );
+	
+	
+	//リストの数ぶん繰り返し
+	int $m = 0;
+	for( $i=0; $i<size($lists); $i++ ){
+		
+		//タブ用変数
+		string $tabs[] = ML_getTab( $lists[$i] , $lines );
+		
+
+		//frameLayout用の名前
+		string $fl = "ML_flList" + string($m);
+		//formLayout用の名前
+		string $fol = "ML_folList" + string($m);
+		//scrollLayout用の名前
+		string $sl = "ML_slList" + string($m);
+		//tabLayout用の名前
+		string $tl = "ML_tlList" + string($m);
+		
+		//リスト用のレイアウト作成
+		frameLayout -parent ML_folList -l $lists[$i] -bs etchedOut $fl;
+			formLayout $fol;
+				scrollLayout -childResizable 1 $sl;
+					tabLayout $tl;
+					setParent..;
+				setParent..;
+			setParent..;
+		setParent..;
+		
+		formLayout -e
+			-af $sl "top"		0
+			-af $sl "left"		0
+			-af $sl "right"		0
+			-af $sl "bottom"	0
+			$fol;
+		
+		//formLayout内での左右のアタッチ場所を計算
+		//係数
+		int $coe = 100/(size($lists));
+		//left
+		int $left = $coe*$i;
+		//right
+		int $right = ($coe*$i)+$coe;
+		if( $i == (size($lists)-1) ){
+			$right = 100;
+		}
+	
+		
+		//formLayout編集
+		formLayout -e
+			-af $fl "top" 		0
+			-ap $fl "left"		0	$left
+			-ap $fl "right"		0	$right
+			-af $fl "bottom"	0
+			ML_folList;
+		
+		//formLayoutを作成しtabLayoutに追加
+		int $n = 0;
+		for( $tab in $tabs ){
+			
+			string $tabFull = $tab;
+			$tab = substituteAllString( $tab , "/" , "\\" );
+			if( ` gmatch $tab "*\*" ` ){
+				string $parts1[];
+				int $token = ` tokenize $tab "\\" $parts1 `;
+				$tab = $parts1[$token-1];
+			}
+			
+
+			
+			string $folTab = "ML_folTab_" + string($m) + "_" + string($n);
+			formLayout -parent $tl $folTab;
+			
+				string $tabText = "ML_tTab_" + string($m) + "_" + string($n);
+				text -l $tab -visible 0 $tabText;
+				
+				string $tabFullMemo = "ML_tFullTab_" + string($m) + "_" + string($n);
+				text -l $tabFull -vis 0 $tabFullMemo;
+				
+				string $modelCord = "ML_tModelCord_" + string($m) + "_" + string($n);
+				text -l "     (cord)" -al "left" -bgc 0 0.2 0.3 -w 145 -h 15 $modelCord;
+				string $modelComment = "ML_tModelComment_" + string($m) + "_" + string($n);
+				text -l " (comment)" -al "left" -bgc 0 0.2 0.3 -h 15 $modelComment;
+				
+				formLayout -e
+				
+					-af	$modelCord				"top"		0
+					-af	$modelCord				"left"		0
+					
+					-af	$modelComment		"top"		0
+					-ac	$modelComment		"left"		0	$modelCord
+					-af	$modelComment		"right"	0
+					
+					$folTab;
+				
+				string $lineCbs[] = ML_getCb( $lists[$i] , $tab , $lines );
+				int $last;
+				if( size($lineCbs) != 0 ){
+					$last = size($lineCbs)-1;
+					if( ` gmatch $lineCbs[$last] "*<<<*" ` ){
+						$lineCbs[$last] = "<<<mbAll";
+					}
+				}
+				int $o = 1;
+				for( $lineCb in $lineCbs ){
+					if( $lineCb != "<<<mbAll" ){
+						string $cb;
+						string $tx;
+						string $parts1[];
+						int $token1 = ` tokenize $lineCb "\t" $parts1 `;
+						if( $token1 < 2 ){
+							string $parts2[];
+							int $token2 = ` tokenize $parts1[0] " " $parts2 `;
+							if( $token2 < 2 ){
+								$cb = $parts2[0];
+							}else{
+								$cb = $parts2[0];
+								$tx = $parts2[1];
+							}
+						}else{
+							$cb = substituteAllString( $parts1[0] , " " , "" );
+							$tx = substituteAllString( $parts1[1] , " " , "" );
+						}
+						
+						string $cbName = "ML_cb_" + string($m) + "_" + string($n) + "_" + string($o);
+						string $txName = "ML_tx_" + string($m) + "_" + string($n) + "_" + string($o);
+						
+						checkBox -l $cb -h 15 $cbName;
+						text -l ( "( " + $tx + " )" ) -h 20 $txName;
+						
+						int $top = 20*$o;
+						
+						formLayout -e
+							-af $cbName "top"		$top
+							-af $cbName "left"		0
+							-af $txName "top"		$top
+							-af $txName "left"		145
+							$folTab;
+
+							
+						string $mb = ML_getLastMb( $lists[$i] , $tab , $cb , $lines );
+						if( size($lineCbs) != 0 ){
+							if( $lineCbs[$last] == "<<<mbAll" ){
+								$mb = "mbAll";
+							}
+						}
+						if( size($mb) != 0 ){
+							checkBox -e -bgc 0 0.5 0 $cbName;
+						}else{
+							checkBox -e -enable 0 $cbName;
+						}
+							
+						$o += 1;
+					}
+				}
+				
+			setParent..;
+			
+			tabLayout -e -tabLabel $folTab $tab $tl;
+			
+			$n+=1;
+		
+		}
+		$m+=1;
+	}
+
+	
+}
+
+
+/*------------------------------------------------------------------------------------------------
+
+	ML_editModelListTxt()
+
+	クールテキストを開きます。
+
+------------------------------------------------------------------------------------------------*/
+
+global proc ML_editModelListTxt(){
+
+	string $assetPath = ` textField -q -tx ML_tfAssetPath `;
+	string $mlFolder = ` textField -q -tx ML_tfModelListFolder `;
+	string $mlFolderPath = $assetPath + "/" + $mlFolder;
+	
+	if( !` filetest -e $mlFolderPath ` ){
+		error ( "フォルダが存在しません。" + $mlFolderPath );
+	}
+	
+	string $mlFile[] = ` getFileList -folder $mlFolderPath -filespec "*.txt" `;
+	string $mi[] = ` optionMenu -q -itemListShort ML_omSelectModelList `;
+	string $omSelectModelList = "";
+	if( size($mi) != 0 ){
+		$omSelectModelList = ` optionMenu -q -v ML_omSelectModelList `;
+		$omSelectModelList += ".txt";
+	}
+	
+	for( $one in $mlFile ){
+		if( $omSelectModelList == $one ){
+			string $file = $mlFolderPath + "/" + $one;
+			if( !` filetest -f $file ` ){
+				error ( "ファイルが存在しません。" + $file );
+			}
+			system ( "load " + $file );
+		}
+	}
+
+}
+
+
+
+
+/*------------------------------------------------------------------------------------------------
+
+	ML_getList( string[] 文章 )
+
+	戻り値：string[]
+	
+	リストとなりうる文字列を配列で返します。
+
+------------------------------------------------------------------------------------------------*/
+
+global proc string[] ML_getList( string $lines[] ){
+	
+	string $return[];
+	
+	//文章からリスト名を取得
+	for( $i=0; $i<size($lines); $i++ ){
+		if( ` gmatch $lines[$i] "*===*" ` ){
+			$list = substituteAllString( $lines[$i] , "===" , "" );
+			$list = substituteAllString( $list , "\n" , "" );
+			$return[size($return)] = $list;
+		}
+	}
+	
+	return $return;
+	
+}
+
+
+/*------------------------------------------------------------------------------------------------
+
+	ML_getTab( string $list , string[] 文章 )
+
+	戻り値：string[]
+	
+	指定されたリストのタブとなりうる文字列を返します。
+
+------------------------------------------------------------------------------------------------*/
+
+global proc string[] ML_getTab( string $targetList , string $lines[] ){
+	
+	string $return[];
+	
+	string $tabs[];
+	for( $i=0; $i<size($lines); $i++ ){
+		if( ` gmatch $lines[$i] "*===*" ` ){
+			$list = substituteAllString( $lines[$i] , "===" , "" );
+			$list = substituteAllString( $list , "\n" , "" );
+			if( $targetList == $list ){
+				for( $j=$i+1; $j<size($lines); $j++ ){
+					if( !` gmatch $lines[$j] "*===*" ` ){
+						if( ` gmatch $lines[$j] "*---*" ` ){
+							string $parts[];
+							tokenize $lines[$j] ">>" $parts;
+							$tab = $parts[0];
+							$tab = substituteAllString( $tab , "---" , "" );
+							$tab = substituteAllString( $tab , "\n" , "" );
+							$return[size($return)] = $tab;
+						}
+					}else{
+						break;
+					}
+				}
+			}
+		}
+	}
+
+	return $return;
+	
+}
+
+/*------------------------------------------------------------------------------------------------
+
+	ML_getCb( string リスト , string タブ , string[] 文章 )
+
+	戻り値：string[]
+	
+	指定されたリストとタブのチェックボックスとなりうる文字列を返します。
+
+------------------------------------------------------------------------------------------------*/
+
+global proc string[] ML_getCb( string $targetList , string $targetTab , string $lines[] ){
+	
+	string $return[];
+	
+	string $tabs[];
+	int $L = 0;	//リスト
+	int $T = 0;	//タブ
+	int $mbAll = 0;
+	string $path;
+	for( $i=0; $i<size($lines); $i++ ){
+		if( ` gmatch $lines[$i] "*===*" ` ){
+			$list = substituteAllString( $lines[$i] , "===" , "" );
+			$list = substituteAllString( $list , "\n" , "" );
+			if( $targetList == $list ){
+				for( $j=$i+1; $j<size($lines); $j++ ){
+					if( !` gmatch $lines[$j] "*===*" ` ){
+						if( ` gmatch $lines[$j] "*---*" ` ){
+							string $parts[];
+							tokenize $lines[$j] ">>" $parts;
+							$tab = $parts[0];
+							$tab = substituteAllString( $tab , "---" , "" );
+							$tab = substituteAllString( $tab , "\n" , "" );
+
+							$tab = substituteAllString( $tab , "/" , "\\" );
+							string $pathParts;
+							if( ` gmatch $tab "*\*" ` ){
+								$pathParts = $tab;
+								string $parts1[];
+								int $token = ` tokenize $tab "\\" $parts1 `;
+								$tab = $parts1[$token-1];
+							}
+							
+							if( $targetTab == $tab ){
+								for( $k=$j+1; $k<size($lines); $k++ ){
+									if( !` gmatch $lines[$k] "*===*" `  &&  $L == 0  &&  $T == 0 ){
+										if( !` gmatch $lines[$k] "*---*" `  &&  $L == 0  &&  $T == 0 ){
+											
+											if( $k==$j+1 ){
+												if( ` gmatch $lines[$k] "*<<<mbAll*" ` ){
+													$path = ` textField -q -tx ML_tfAssetPath `;
+													$path += "/";
+													$path += $pathParts;
+													string $file[] = ` getFileList -folder $path -filespec "*.mb" `;
+													for( $fileone in $file ){
+														$return[size($return)] = $fileone;
+													}
+													$mbAll = 1;
+													break;
+												}
+											}
+											
+											$return[size($return)] = $lines[$k];
+										}else{
+											$T = 1;
+										}
+									}else{
+										$L = 1;
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	if( $mbAll ){
+		$return = ` sort $return `;
+		$return[size($return)] = $path + "<<<mbAll";
+	}
+	
+	return $return;
+	
+}
+
+
+/*------------------------------------------------------------------------------------------------
+
+	ML_getMbFolder( string リスト , string タブ , string[] 文章 )
+	
+	戻り値：string
+
+	mbファイルが保存されているフォルダ名を返します。
+	空白が返された場合、コードネーム名のついたフォルダがmbファイル保存フォルダに値します。
+
+------------------------------------------------------------------------------------------------*/
+
+global proc string ML_getMbFolder( string $targetList , string $targetTab , string $lines[] ){
+	
+	string $return;
+	
+	string $tabs[];
+	int $stop = 0;
+	for( $i=0; $i<size($lines); $i++ ){
+		if( ` gmatch $lines[$i] "*===*" ` ){
+			$list = substituteAllString( $lines[$i] , "===" , "" );
+			$list = substituteAllString( $list , "\n" , "" );
+			if( $targetList == $list ){
+				for( $j=$i+1; $j<size($lines); $j++ ){
+					if( $stop == 0 ){
+						if( !` gmatch $lines[$j] "*===*" ` ){
+							if( ` gmatch $lines[$j] "*---*" ` ){
+								string $parts[];
+								tokenize $lines[$j] ">>" $parts;
+								$tab = $parts[0];
+								$tab = substituteAllString( $tab , "---" , "" );
+								$tab = substituteAllString( $tab , "\n" , "" );
+								$tab = substituteAllString( $tab , "/" , "\\" );
+								if( ` gmatch $tab "*\*" ` ){
+									string $parts1[];
+									int $token = ` tokenize $tab "\\" $parts1 `;
+									$tab = $parts1[$token-1];
+								}
+								if( $targetTab == $tab ){
+									if( size($parts[1]) != 0 ){
+										$parts[1] = substituteAllString( $parts[1] , "\n" , "" );
+										$return = $parts[1];
+									}else{
+										$return = "";
+									}
+									$stop = 1;
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	return $return;
+	
+}
+
+
+
+
+/*------------------------------------------------------------------------------------------------
+
+	ML_getLastMb( string リスト , string タブ , string コードチェックボックス , string[] 文章 )
+
+	戻り値：string
+	
+	指定されたチェックボックスの最新mbファイル名を返します。
+
+------------------------------------------------------------------------------------------------*/
+
+global proc string ML_getLastMb( string $targetList , string $targetTab , string $targetCb , string $lines[] ){
+	
+	string $return;
+	
+	string $path = ` textField -q -tx ML_tfAssetPath `;
+	int $size = ` size $path `;
+	string $last = ` substring $path $size $size `;
+	if( $last != "/"  &&  $last != "\\" ){
+		$path += "/";
+	}
+	
+	$path += $targetTab;
+	$path += "/";
+	
+	$path += $targetCb;
+	$path += "/";	
+	
+	string $mbFolder = ML_getMbFolder( $targetList , $targetTab , $lines );
+	if( size($mbFolder) != 0 ){
+		$path += $mbFolder;
+		$path += "/";
+	}
+    string $files[] = ` getFileList -folder $path -filespec ( $targetCb + "*_F*.mb" ) `;
+	
+	if( size($files) != 0 ){
+		$files = ` sort $files `;
+		$return = $files[(size($files)-1)];
+	}
+	
+	return $return;
+	
+}
+
+
+/*------------------------------------------------------------------------------------------------
+
+	ML_getCbInfo( string リクエスト )
+
+	引数
+	"list"
+	"tab"
+	"checkBox"
+	"checkBoxPath" でチェックボックスがＯＮになっているモデルのmbファイルまでのパスを返します
+	"checkBoxName"　でＯＮになっているチェックボックスの名前を返します
+
+------------------------------------------------------------------------------------------------*/
+global proc string[] ML_getCbInfo( string $request ){
+
+	string $list[] = ` formLayout -q -ca ML_folList `;
+	
+	string $listLabel[];
+    string $tabLabel[];
+	string $cbLabel[];
+	string $cbName[];
+	string $fullTab[];
+
+	if( size($list) != 0 ){
+	    int $j = 0;
+		for( $listOne in $list ){
+			string $flTab[] = ` frameLayout -q -ca $listOne `;
+			if( size($flTab) != 0 ){
+				string $folTab[] = ` tabLayout -q -ca ( "ML_tlList" + string($j) ) `;
+				if( size($folTab) != 0 ){
+					for( $folTabOne in $folTab ){
+						string $children[] = ` formLayout -q -ca $folTabOne `;
+						if( size($children) != 0 ){
+							for( $child in $children ){
+								string $type = ` objectTypeUI $child `;
+								if( $type == "checkBox" ){
+									if( ` checkBox -q -v $child `){
+										
+										$listLabel[size($listLabel)] = ` frameLayout -q -l $listOne `;
+										
+    								    string $tabAdd;
+									    string $test1 = ` objectTypeUI $children[0] `;
+        								if( $test1 == "staticText" ){
+        								    if( ` gmatch $children[0] "*ML_tTab*" ` ){
+        								        $tabAdd = ` text -q -l $children[0] `;
+        								    }
+        								}
+										
+										string $fullTabAdd;
+									    string $test2 = ` objectTypeUI $children[1] `;
+        								if( $test2 == "staticText" ){
+        								    if( ` gmatch $children[1] "*ML_tFullTab*" ` ){
+        								        $fullTabAdd = ` text -q -l $children[1] `;
+        								    }
+        								}
+									    
+									    $tabLabel[size($tabLabel)] = $tabAdd;
+										$fullTab[size($fullTab)] = $fullTabAdd;
+										$cbLabel[size($cbLabel)] = ` checkBox -q -l $child `;
+										$cbName[size($cbName)] = $child;
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		    $j += 1;
+		}
+	}
+
+	
+	string $return[];
+	
+	if( size($cbLabel) != 0 ){
+	
+		switch ( $request ){
+		
+			case "list":
+			
+				$return = $listLabel;
+				
+			break;
+			case "tab":
+			
+				$return = $tabLabel;
+				
+			break;
+			case "checkBox":
+			
+				$return = $cbLabel;
+				
+			break;
+			case "checkBoxName":
+			
+				$return = $cbName;
+				
+			break;
+			case "checkBoxPath":
+				
+				string $textFile = ML_getModelListPath();
+				string $lines[] = ML_loadLine( $textFile );
+				for( $i=0; $i<size($cbLabel); $i++ ){
+					string $pathAdd = ` textField -q -tx ML_tfAssetPath `;
+					int $size = ` size $pathAdd  `;
+					string $last = ` substring $pathAdd  $size $size `;
+					if( $last != "/"  &&  $last != "\\" ){
+						$pathAdd += "/";
+					}
+					
+					$pathAdd += $fullTab[$i];
+					$pathAdd += "/";
+					$pathAdd += $cbLabel[$i];
+					$pathAdd += "/";
+					
+					string $mbFolder = ML_getMbFolder( $listLabel[$i] , $tabLabel[$i] , $lines );
+					if( size($mbFolder) != 0 ){
+						$pathAdd += $mbFolder;
+						$pathAdd += "/";
+					}
+					
+					$pathAdd = substituteAllString( $pathAdd , "/" , "\\" );
+					
+					$return[$i] = $pathAdd;
+					
+				}
+				
+			break;
+
+
+			
+		}
+	}
+
+	return $return;
+	
+}
+
+
+/*------------------------------------------------------------------------------------------------
+
+	ML_load
+
+	チェックボックスの入ったモデルを読み込みます。
+
+------------------------------------------------------------------------------------------------*/
+
+global proc ML_load(){
+	string $list[] = ML_getCbInfo("list");
+	string $tab[] = ML_getCbInfo("tab");
+	string $cb[] = ML_getCbInfo("checkBox");
+	string $cbName[] = ML_getCbInfo("checkBoxName");
+	string $cbPath[] = ML_getCbInfo("checkBoxPath");
+	string $modelListPath = ML_getModelListPath();
+	string $lines[] = ML_loadLine( $modelListPath );
+	
+	string $rcLoadSetting = ` radioCollection -q -sl ML_rcLoadSetting `;
+	int $cbUseNamespace = ` checkBox -q -v ML_cbUseNamespace `;
+	string $rcNamespace = ` radioCollection -q -sl ML_rcNamespace `;
+	int $cbNum = ` checkBox -q -v ML_cbNum `;
+	string $tfNum = ` textField -q -tx ML_tfNum `;
+	string $tfAny = ` textField -q -tx ML_tfAny `;
+	int $ifLoadNum = ` intField -q -v ML_ifLoadNum `;
+	int $cbRemoveNewNS = ` checkBox -q -v ML_cbRemoveNewNS `;
+	
+	string $rmNS[];
+	int $import = 0;
+	for( $i=0; $i<size($cb); $i++ ){
+		string $mb = ML_getLastMb( $list[$i],$tab[$i],$cb[$i],$lines );
+		
+		string $lineCbs[] = ML_getCb( $list[$i] , $tab[$i] , $lines );
+		string $path="";
+		int $last;
+		if( size($lineCbs) != 0 ){
+			$last = size($lineCbs)-1;
+			if( ` gmatch $lineCbs[$last] "*<<<*" ` ){
+				$mb = ` checkBox -q -l $cbName[$i] `;
+				string $parts[];
+				tokenize $lineCbs[$last] "<<<" $parts;
+				$path = $parts[0];
+			}
+		}
+		
+			
+		if( size($mb) != 0 ){
+			
+			for( $j=0; $j<$ifLoadNum; $j++ ){
+			
+				string $eval = "";
+				string $namespace = "";
+				
+				string $nslist[] = ` namespaceInfo -listOnlyNamespaces `;
+				
+				//ネームスペース形成
+				if( $cbUseNamespace ){
+					switch( $rcNamespace ){
+						case "ML_rbCordName":
+							if( size($path) == 0 ){
+								if( $cbNum ){
+									$namespace = $cb[$i] + $tfNum;
+								}else{
+									$namespace = $cb[$i];
+								}
+							}else{
+								string $fileName = basenameEx($mb);
+								$namespace = $fileName;
+							}
+						break;
+						case "ML_rbAny":
+							if( size($tfAny) != 0 ){
+								$namespace = $tfAny;
+							}else{
+								error "任意のネームスペースを入力してください。\n";
+							}
+						break;
+						case "ML_rbFileName":
+							string $fileName = basenameEx($mb);
+							$namespace = $fileName;
+						break;
+					}
+					
+					int $n;
+					if( $cbNum ){
+						$n = int($tfNum) + 1;
+					}else{
+						$n = 0;
+					}
+					
+					int $result = stringArrayContains( $namespace , $nslist );
+					
+					int $unmatch = 0;
+
+					if( $result ){
+						$unmatch = 1;
+						while( $unmatch ){
+							switch( $rcNamespace ){
+								case "ML_rbCordName":
+									$namespace = "";
+									$namespace = $cb[$i];
+									$namespace += string($n);
+								break;
+								case "ML_rbAny":
+									$namespace += string($n);
+								break;
+								case "ML_rbFileName":
+									$namespace += string($n);
+								break;
+							}
+							
+							$n += 1;
+							
+							if( !` stringArrayContains $namespace $nslist ` ){
+								$unmatch = 0;
+							}
+							
+						}
+						
+					}
+
+					$rmNS[size($rmNS)] = $namespace;
+					
+				}
+				
+				//$evalに読み込みスクリプト文を蓄積
+				switch( $rcLoadSetting ){
+					case "ML_rbImport":
+						$eval += "file -import -type \"mayaBinary\"  -ignoreVersion -mergeNamespacesOnClash false ";
+						if( !$cbUseNamespace ){
+							$eval += "-rpr \"\" -options \"v=0;\" -pr ";
+						}else{
+							$eval += "-namespace ";
+							$eval += $namespace;
+							$eval += " -options \"v=0;\" -pr ";
+							$import = 1;
+						}
+					break;
+					case "ML_rbReference":
+						$eval += "file -r -type \"mayaBinary\"  -ignoreVersion -gl -loadReferenceDepth \"all\" -mergeNamespacesOnClash false ";
+						$eval += "-namespace ";
+						$eval += $namespace;
+						$eval += " -options \"v=0;\" ";
+					break;
+				}
+				
+				//$evalにファイルパスを追加
+				string $mbPath;
+				if( size($path) == 0 ){
+					$mbPath = $cbPath[$i] + $mb;
+					$mbPath = substituteAllString($mbPath,"\\","/");
+				}else{
+					$cbPath[$i] = substituteAllString($cbPath[$i],".mb/",".mb");
+					$cbPath[$i] = substituteAllString($cbPath[$i],".mb\\",".mb");
+					$mbPath = $cbPath[$i];
+					$mbPath = substituteAllString($mbPath,"\\","/");
+				}
+				$eval += "\"";
+				$eval += $mbPath;
+				$eval += "\"";
+
+				//読み込み実行
+				eval $eval;
+			}
+			
+		}
+	}
+	
+	if( $import == 1 && $cbRemoveNewNS == 1 ){
+		if( size($rmNS) != 0 ){
+			for( $ns in $rmNS ){
+				namespace -mergeNamespaceWithParent -removeNamespace $ns;
+			}
+		}
+	}
+
+	
+	for( $cbOne in $cbName ){
+		checkBox -e -v 0 $cbOne;
+	}
+	
+}
+
+
+/*------------------------------------------------------------------------------------------------
+
+	ML_allCbOFF
+
+	コードチェックボックスをすべてオフにします。
+
+------------------------------------------------------------------------------------------------*/
+global proc ML_allCbOFF(){
+
+	string $cbName[] = ML_getCbInfo("checkBoxName");
+	if( size($cbName) != 0 ){
+		for( $cbOne in $cbName ){
+			checkBox -e -v 0 $cbOne;
+		}
+	}
+
+}
+
+
+
+
+
+

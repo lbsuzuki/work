@@ -1,0 +1,54 @@
+///////////////////////////////////////////////////////////////////////////////
+//	PSTR_A_arrangeAdjustHip            //
+///////////////////////////////////////////////////////////////////////////////
+//
+//	AUTHOR: 		goto kazufumi
+//
+//	CREATION DATE:	2013_09_07
+//	UPDATED DATE:	2013_10_11
+//
+//	VERSION:			1.1
+//
+//	HOW TO USE:		run "PSTR_A_arrangeAdjustHip();"
+//
+//////////////////////////////////////////////////////////////////
+
+global proc PSTR_A_arrangeAdjustHip(){
+
+	string $code = `textField -q -text PST_tfCordName`;
+	int $size = `size $code`;
+	if( $size != 0 ){
+		string $last = `substring $code $size $size`;
+		if( $last != "_" ){
+			if( $last != ":" ){
+				$code += "_";
+			}
+		}
+	}
+	
+	//ロケータのペアレント再現
+	PSTR_ALP_arrangeLocatorParent;
+	
+	string $lct[] = {		"L_adjustHip_jnt_ALct",
+								"R_adjustHip_jnt_ALct"								};
+
+	string $rig[] = {		"L_adjustHip_link",
+								"R_adjustHip_link"										};
+
+	for( $i=0; $i<size($lct); $i++ ){
+		$lct[$i] = $code + $lct[$i];
+		$rig[$i] = $code + $rig[$i];
+		int $result = 0;
+		$result = `objExists $rig[$i]`;
+		if( $result ){
+			float $pos[] = YP_RD_returnDefferenceXYZ( $lct[$i] , $rig[$i] );
+			move -r $pos[0] $pos[1] $pos[2] $rig[$i];
+		}
+	}
+}
+
+
+
+
+
+

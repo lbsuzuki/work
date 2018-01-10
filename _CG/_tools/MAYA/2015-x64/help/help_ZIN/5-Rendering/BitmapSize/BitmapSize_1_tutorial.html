@@ -1,0 +1,115 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="ja">
+<head>
+
+	<meta http-equiv="Content-Type" content="text/html; charset=Shift_JIS">
+
+	<link rel="stylesheet" type="text/css" href="../../0-X/css/bodyTextStyle.css">
+	
+	<title>Bitmap Size チュートリアル</title>
+
+
+</head>
+
+<body>
+
+<h1></h1>
+
+	<p>
+	</p>
+
+		<div class="index">
+		
+			<h3 id="index">index</h3>
+		
+			<ul>
+		
+			<li><a href="#概要">概要</a></li>
+			<li><a href="#起動">起動</a></li>
+			<li><a href="#実行">BitmapSize 実行</a></li>
+			
+			</ul>
+		
+		</div>
+
+
+<h2 id="概要">概要</h2>
+	<p>
+	イメージプレーンに画像を読み込んだとき<br>
+	イメージプレーンの比率とレンダリングサイズの比率のズレが起こります。<br>
+	これによりビューポートの100％フレームに画像が合わせるために<br>
+	手動で画像比率に合ったレンダリングサイズをレンダー設定に打ち込む必要があります。<br>
+	本ツールはイメージプレーンを選択することで自動的にレンダリングサイズを入力することを可能にします。
+	</p>
+	<img src="pict/使用方法_0_概要.jpg" border="0" alt="使用方法_0_概要.jpg(263529 byte)" width="1119" height="651">
+
+	<p>
+	<a href="#index">topへ戻る</a>
+	</p>
+
+
+
+<h2 id="起動">起動</h2>
+<h3>仁ツール</h3>
+
+	<img src="pict/使用方法_1_起動.jpg" border="0" alt="使用方法_1_起動.jpg(56423 byte)" width="346" height="303">
+	
+
+	<p>
+	<a href="#index">topへ戻る</a>
+	</p>
+	
+	
+<h2 id="実行">BitmapSize 実行</h2>
+	<h3>イメージプレーンリストから選択</h3>
+		<p>
+		レンダリングサイズの基準となる画像を読み込んだイメージプレーンノードをリストから選択<br>
+		選択しますとウインドウ下部の【Width】【Height】に画像の大きさが表示されます。<br>
+		<img src="pict/使用方法_2_1_イメージプレーン選択.jpg" border="0" alt="使用方法_2_1_イメージプレーン選択.jpg(250985 byte)" width="942" height="459">
+		</p>
+	
+
+	<h3>Output%にパーセンテージを入力し実行</h3>
+		<p>
+		イメージプレーンに読み込まれている画像の大きさはレンダリングサイズの比率の基準となります。<br>
+		画像の大きさに対してレンダリングサイズは何％に値するかを【Output%】に入力します。（ここでは画像と同じと仮定して100と入力）<br>
+		入力後、【Apply】ボタンをクリック<br>
+		<img src="pict/使用方法_2_2_パーセンテージ入力.jpg" border="0" alt="使用方法_2_2_パーセンテージ入力.jpg(252241 byte)" width="942" height="459">
+		</p>
+	
+	
+	<h3>結果</h3>
+		<p>
+		レンダリングサイズが画像と同じ1600x960となり、ビューポート上の画像が100％フレームに合います。<br>
+		<img src="pict/使用方法_2_3_結果.jpg" border="0" alt="使用方法_2_3_結果.jpg(230011 byte)" width="942" height="459">
+		</p>
+
+
+	<h3>レンダリングサイズを画像の半分サイズにしたいとき</h3>
+		<p>
+		レンダリングサイズ＝画像の半分サイズとなるのが望ましいとき<br>
+		【Output%】に50と入力し、実行します。<br>
+		<img src="pict/使用方法_2_4_半分サイズ.jpg" border="0" alt="使用方法_2_4_半分サイズ.jpg(239770 byte)" width="942" height="459">
+		</p>
+		
+
+	<h3>結果</h3>
+		<p>
+		レンダリングサイズが画像の半分サイズである800x480となります。<br>
+		比率は画像と一致しているため、ビューポート上の画像は100％フレームに合います。<br>
+		<img src="pict/使用方法_2_5_結果.jpg" border="0" alt="使用方法_2_5_結果.jpg(232986 byte)" width="942" height="459">
+		</p>
+
+	<p>
+	<a href="#index">topへ戻る</a>
+	</p>
+
+
+
+
+
+
+</body>
+
+
+</html>

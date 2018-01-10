@@ -1,0 +1,263 @@
+///////////////////////////////////////////////////////////////////////////////
+//	PSTR_A_arrangeLArm            //		左腕のリグ調整
+///////////////////////////////////////////////////////////////////////////////
+//
+//	AUTHOR: 		goto kazufumi
+//
+//	CREATION DATE:	2013_04_15
+//	UPDATED DATE:	2016_04_10
+//
+//	VERSION:			1.3
+//
+//	HOW TO USE:		run "PSTR_A_arrangeLArm();"
+//
+//////////////////////////////////////////////////////////////////
+
+/*=======================================================
+
+	PSTR_A_arrangeLArm
+	
+	腕のリグの配置を調整
+
+=======================================================*/
+
+/*-------------------------------------------------------------------------------------------------------
+
+	更新
+	
+		1.3		『positionElbow』に対応
+
+-------------------------------------------------------------------------------------------------------*/
+
+global proc PSTR_A_arrangeLArm(){
+
+	string $sl[] = ` ls -sl `;
+
+	string $code = `textField -q -text PST_tfCordName`;
+	int $size = `size $code`;
+	if( $size != 0 ){
+		string $last = `substring $code $size $size`;
+		if( $last != "_" ){
+			if( $last != ":" ){
+				$code += "_";
+			}
+		}
+	}
+	
+	//ロケータのペアレント再現
+	PSTR_ALP_arrangeLocatorParent;
+	
+	//L_hand00_crvからL_hand01_crvまでの位置情報取得
+	
+	string $L_hand01_crv = $code + "L_hand01_crv";
+	string $L_hand00_crv = $code + "L_hand00_crv";
+	
+	float $hand01Before[] = ` xform -q -ws -piv $L_hand01_crv `;
+	float $hand00Before[] = ` xform -q -ws -piv $L_hand00_crv `;
+
+	float $x1 = $hand01Before[0] - $hand00Before[0];
+	float $y1 = $hand01Before[1] - $hand00Before[1];
+	float $z1 = $hand01Before[2] - $hand00Before[2];
+
+
+
+	
+	//削除
+		//IK
+		string $L_arm_IK = $code + "L_arm_IK";
+		delete $L_arm_IK;
+		
+		//L_shoulder01_jnt
+		string $L_shoulder01_jnt = $code + "L_shoulder01_jnt";
+		string $L_shoulder01_jnt_paC[] = `listConnections -source 1 -destination 0 -type "parentConstraint" $L_shoulder01_jnt`;
+		delete $L_shoulder01_jnt_paC[0];
+		
+		//L_shoulder02_jnt
+		string $L_shoulder02_jnt = $code + "L_shoulder02_jnt";
+		string $L_shoulder02_jnt_poC[] = `listConnections -source 1 -destination 0 -type "pointConstraint" $L_shoulder02_jnt`;
+		delete $L_shoulder02_jnt_poC[0];
+
+		string $L_shoulder02_jnt = $code + "L_shoulder02_jnt";
+		string $L_arm_clamp = $code + "L_arm_clamp";
+		disconnectAttr ( $L_arm_clamp + ".outputR" ) ( $L_shoulder02_jnt + ".scaleX" );
+		
+		//L_arm_jnt
+		string $L_arm_jnt = $code + "L_arm_jnt";
+		string $L_arm_clamp = $code + "L_arm_clamp";
+		disconnectAttr ( $L_arm_clamp + ".outputR" ) ( $L_arm_jnt + ".scaleX" );
+
+		//L_positionElbow_link
+		string $L_positionElbow_link = $code + "L_positionElbow_link";
+		int $result = 0;
+		$result = `objExists $L_positionElbow_link`;
+		if( $result ){
+			string $L_positionElbow_link_paC[] = `listConnections -source 1 -destination 0 -type "parentConstraint" $L_positionElbow_link`;
+			$L_positionElbow_link_paC = stringArrayRemoveDuplicates($L_positionElbow_link_paC);
+			for( $one in $L_positionElbow_link_paC ){
+				delete $one;
+			}
+		}
+		
+	//
+	string $L_hand00_lct = $code + "L_hand00_lct";
+	string $L_hand01_lct = $code + "L_hand01_lct";
+	string $co_rig_grp = $code + "co_rig_grp";
+	string $L_hand01_constlink = $code + "L_hand01_constlink";
+	string $l[] = `spaceLocator -p 0 0 0`;
+	string $grp = $l[0];
+	parent $grp $co_rig_grp;
+	parent $L_hand01_lct $L_hand01_constlink;
+	parent $L_hand00_lct $co_rig_grp;
+	
+	
+	//宣言
+	string $lct[] = {		"L_shoulder01_jnt_ALct",
+							"L_shoulder02_jnt_ALct",
+							"L_arm_jnt_ALct",
+							"L_hand00_crv_pivotALct",
+							"L_hand01_jnt_ALct",
+							"L_arm_poleVector_lct_ALct",
+							"L_shoulder02_jnt_ALct",
+							"L_shoulder02_jnt_ALct",
+							"L_hand01_jnt_ALct",
+							"L_arm_jnt_ALct",
+							"L_adjustElbow_jnt_ALct"							};
+							
+	string $rig[] = {		"L_shoulder01_jnt",
+							"L_shoulder02_jnt",
+							"L_arm_jnt",
+							"L_hand00_lct",
+							"L_hand01_constlink",
+							"L_arm_poleVector_lct",
+							"L_shoulder01_link",
+							"L_arm_baseDistance01_lct",
+							"L_arm_baseDistance02_lct",
+							"L_positionElbow_link",
+							"L_adjustElbow_link"							};
+
+							
+	for( $i=0; $i<size($lct); $i++ ){
+		$lct[$i] = $code + $lct[$i];
+		$rig[$i] = $code + $rig[$i];
+		int $result = 0;
+		$result = `objExists $rig[$i]`;
+		if( $result ){
+			float $pos[] = YP_RD_returnDefferenceXYZ( $lct[$i] , $rig[$i] );
+			move -r $pos[0] $pos[1] $pos[2] $rig[$i];			
+		}
+	}
+	
+	//リグを再構築
+		//IK
+		string $L_shoulder02_jnt = $code + "L_shoulder02_jnt";
+		string $L_hand01_jnt = $code + "L_hand01_jnt";
+		string $L_arm_IK = $code + "L_arm_IK";
+		string $co_rig_grp = $code + "co_rig_grp";
+		select -r $L_shoulder02_jnt $L_hand01_jnt;
+		string $solver;
+		string $ik[];
+		string $codeSolver = $code + "ikRPsolver";
+		if( `objExists $codeSolver`){
+			$ik = `ikHandle -sol $codeSolver `;
+		}else{
+			$ik = `ikHandle -sol ikRPsolver `;
+		}
+		rename $ik[0] $L_arm_IK;
+		parent $L_arm_IK $co_rig_grp;
+		select -r $L_hand01_crv $L_arm_IK;
+		pointConstraint -mo -weight 1;
+		
+		//IKの極ベクトル
+		string $L_arm_poleVector_crv = $code + "L_arm_poleVector_crv";
+		select -r $L_arm_poleVector_crv $L_arm_IK;
+		poleVectorConstraint -weight 1;
+
+
+		
+		string $con[];
+		//constlink座標のフリーズ
+		string $co_rig_grp = $code + "co_rig_grp";
+		float $pos[] = YP_RD_returnDefferenceXYZ( $L_hand01_constlink , $grp );
+		move -r $pos[0] $pos[1] $pos[2] $grp;
+		float $piv[] = `xform -q -ws -piv $L_hand01_constlink`;
+		xform -ws -t $piv[0] $piv[1] $piv[2] $grp;
+		makeIdentity -apply 1 -t 1 -r 0 -s 0 -n 0 $grp;
+		string $L_hand01_lct = $code + "L_hand01_lct";
+		parent $L_hand00_lct $grp;
+		parent $L_hand01_lct $L_hand00_crv;
+		select -r $L_hand01_constlink;
+		Delete;
+		rename $grp $L_hand01_constlink;
+		
+	
+		//L_shoulder01_jnt
+		string $L_shoulder01_crv = $code + "L_shoulder01_crv";
+		select -r $L_shoulder01_crv $L_shoulder01_jnt;
+		parentConstraint -mo -weight 1;
+		
+		//L_shoulder02_jnt
+		string $L_shoulder02_crv = $code + "L_shoulder02_crv";
+		select -r $L_shoulder02_crv $L_shoulder02_jnt;
+		pointConstraint -mo -weight 1;
+
+		connectAttr -f ( $L_arm_clamp + ".outputR" ) ( $L_shoulder02_jnt + ".scaleX" );
+		
+		//L_arm_jnt
+		connectAttr ( $L_arm_clamp + ".outputR" ) ( $L_arm_jnt + ".scaleX" );
+		
+		
+		string $lct[] = {		"L_arm_jnt",
+								"L_adjustElbow_jnt_ALct"							};
+								
+		string $rig[] = {		"L_positionElbow_link",
+								"L_adjustElbow_link"							};
+
+								
+		for( $i=0; $i<size($lct); $i++ ){
+			$lct[$i] = $code + $lct[$i];
+			$rig[$i] = $code + $rig[$i];
+			int $result = 0;
+			$result = `objExists $rig[$i]`;
+			if( $result ){
+				float $pos[] = YP_RD_returnDefferenceXYZ( $lct[$i] , $rig[$i] );
+				move -r $pos[0] $pos[1] $pos[2] $rig[$i];			
+			}
+		}		
+		
+		
+		//L_positionElbow_link
+		int $result = 0;
+		$result = `objExists $L_positionElbow_link`;
+		if( $result ){
+			string $L_arm_jnt = $code + "L_arm_jnt";
+			select -r $L_arm_jnt $L_positionElbow_link;
+			parentConstraint -mo -skipRotate x -skipRotate y -skipRotate z -weight 1;;
+			string $L_shoulder02_jnt = $code + "L_shoulder02_jnt";
+			select -r $L_shoulder02_jnt $L_positionElbow_link;
+			parentConstraint -mo -skipTranslate x -skipTranslate y -skipTranslate z -weight 1;
+		}
+
+	
+		//L_hand00_crvのＣＶをL_hand01_crvまで移動
+		float $hand01After[] = ` xform -q -ws -piv $L_hand01_crv `;
+		float $hand00After[] = ` xform -q -ws -piv $L_hand00_crv `;
+
+		float $x2 = $hand01After[0] - $hand00After[0];
+		float $y2 = $hand01After[1] - $hand00After[1];
+		float $z2 = $hand01After[2] - $hand00After[2];
+
+		float $x3 = $x2 - $x1;
+		float $y3 = $y2 - $y1;
+		float $z3 = $z2 - $z1;
+		xform -r -t $x3 $y3 $z3 ( $L_hand00_crv + "Shape.cv[0:7]" );
+		
+
+		select -r $sl;
+		
+		YP_RAW_renameAttrWeight();
+}
+
+
+
+
+

@@ -1,0 +1,50 @@
+///////////////////////////////////////////////////////////////////////////////
+//	PCT_pedalChangeTool.res
+///////////////////////////////////////////////////////////////////////////////
+//
+//	AUTHOR: 		goto kazufumi
+//
+//	CREATION DATE:	2013_12_05
+//	UPDATED DATE:	2013_12_05
+//
+//	VERSION:				1.01
+//
+//////////////////////////////////////////////////////////////////
+
+/*================================================================
+
+	"Change Tool" Resource of English version
+
+================================================================*/
+
+/*================================================================
+
+	UPDATE
+
+================================================================*/
+
+displayString -r -v "Change Tool" zm_PCT.windowTitle;
+
+displayString -r -v "Anti-aliasing" zm_PCT_CA.tlAntialiasing;
+displayString -r -v "Make Anti-aliasing cancellation mechanism" zm_PCT_CA.flMakeAntialiasingCancellationMechanism;
+displayString -r -v "Namespace list" zm_PCT_CA.flNamespaceList;
+displayString -r -v "Reload" zm_PCT_CA.btnReload;
+displayString -r -v "Select all" zm_PCT_CA.btnSelectAll;
+displayString -r -v "Make Anti-aliasing cancellation mechanism" zm_PCT_CA.btnMakeAntialiasingCancellationMechanism;
+displayString -r -v "Change Anti-aliasing" zm_PCT_CA.flChangeAntialiasing;
+displayString -r -v "Current state : " zm_PCT_CA.tCurrentState;
+displayString -r -v "Anti-aliasing ON" zm_PCT_CA.btnAntialiasingON;
+displayString -r -v "Anti-aliasing OFF" zm_PCT_CA.btnAntialiasingOFF;
+
+displayString -r -v "Tire brush" zm_PCT_CTB.tlChangeTireBrush;
+displayString -r -v "Change tire brush" zm_PCT_CTB.flChangeTireBrush;
+displayString -r -v "Current state : " zm_PCT_CTB.tCurrentState;
+displayString -r -v "NOON" zm_PCT_CTB.btnNOON;
+displayString -r -v "NIGHT" zm_PCT_CTB.btnNIGHT;
+
+displayString -r -v "Please choose a namespace among Namespace list." zm_PCT_CA_selectNS.ePleaseChooseNamespace;
+displayString -r -v "There is no antiRamp." zm_PCT_CA_antiON.eThereIsNoAntiRamp;
+displayString -r -v "There is no antiRamp." zm_PCT_CA_antiOFF.eThereIsNoAntiRamp;
+displayString -r -v "There is no miDefaultFramebuffer." zm_PCT_CA_inputAntiCurrentState.tThereIsNoMiDefaultFramebuffer;
+
+

@@ -1,0 +1,42 @@
+///////////////////////////////////////////////////////////////////////////////
+//	CW_cameraWindow.res
+///////////////////////////////////////////////////////////////////////////////
+//
+//	AUTHOR: 		goto kazufumi
+//
+//	CREATION DATE:	2013_12_09
+//	UPDATED DATE:	2016_03_30
+//
+//	VERSION:				1.0
+//
+//////////////////////////////////////////////////////////////////
+
+/*================================================================
+
+	"CW_cameraWindow" Resource of English version
+
+================================================================*/
+
+/*================================================================
+
+	UPDATE
+
+================================================================*/
+
+displayString -r -v "カメラ作成" zm_CW.windowTitle;
+displayString -r -v "指定の名前でカメラを作成します。" zm_CW.tExp1;
+displayString -r -v "カメラ名" zm_CW.tCamName;
+displayString -r -v "イメージプレーン付き" zm_CW.cbWithImagePlane;
+displayString -r -v "カメラ作成" zm_CW.btnCreateCamera;
+displayString -r -v "イメージプレーン接続" zm_CW.btnConnectImagePlane;
+displayString -r -v "カメラとイメージプレーンのアトリビュート接続を行います。" zm_CW.tExp2;
+displayString -r -v "オフセット接続" zm_CW.btnConnectOffset;
+displayString -r -v "オフセット切断" zm_CW.btnDisconnectOffset;
+displayString -r -v "カメラのTransformにアトリビュートを追加しShapeと接続します。" zm_CW.tExp4;
+displayString -r -v "アトリビュート追加" zm_CW.btnAddAttr;
+displayString -r -v "アトリビュート接続" zm_CW.btnConnectShape;
+displayString -r -v "　にある次のシェイプのアトリビュートは既に何かしらの接続がなされています。" zm_CW.wShapeAttrAlreadyConnected;
+displayString -r -v "　に次のアトリビュートが存在しないため接続が無視されました。" zm_CW.wConnectionIgnoredAttrNot;
+displayString -r -v "　にある次のアトリビュートは重複していたため無視しました。" zm_CW.wIgnoredAddAttr;
+displayString -r -v "カメラを選択してください。" zm_CW.eChooseCamera;
+displayString -r -v "　に次のアトリビュートが存在しないため接続が無視されました。" zm_CW.wIgnoredAttrNotExists;

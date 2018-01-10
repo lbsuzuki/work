@@ -1,0 +1,10 @@
+PSTRO_PCT_pedalChangeTool>>切り替えツール（verセットアップツール）>>240 206 125
+PSTRO_renameAttrWeight>>コンストレイントのウェイト名リネーム>>108 171 209
+PSTRO_RMD_renameMultiplyDivide>>texLine_multiplyDivide→facialLine_multiplyDivide にリネーム>>245 145 151
+PSTRO_CTL_connectTexLine>>CTRL_crv から texLine_multiplyDivide に接続>>245 145 151
+PSTRO_CFL_connectFacialLine>>CTRL_crv から facialLine_multiplyDivide に接続>>245 145 151
+PSTRO_CC_connectContour>>CTRL_crv から contour_shader_simple に接続>>245 145 151
+PSTRO_ELLCN_editLtLineColorNormal>>レイヤテクスチャ 一番上のレイヤの色を10 10 10 に変更。>>123 194 143
+PSTRO_ELLCN_editLtLineColorNa>>レイヤテクスチャ 一番上のレイヤの色を5 5 5 に変更。>>123 194 143
+PSTRO_RNC_reviseNumberColor>>ゼッケンを夏色に修正>>123 194 143
+PSTRO_PLC_printLtColor>>レイヤーテクスチャの色をスクリプトエディタに表示>>108 171 209

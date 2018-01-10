@@ -1,0 +1,383 @@
+//////////////////////////////////////////////////////////////////
+//	BS_bitmapSize            //     　ビットマップサイズ　　 //
+//////////////////////////////////////////////////////////////////
+//
+//	AUTHOR: 		goto kazufumi
+//
+//	CREATION DATE: 	2010_04_26
+//	UPDATED DATE:		2013_12_09
+//
+//	VERSION:		1.7
+//
+//	HOW TO USE:		run "BS_bitmapSize();"
+//
+//////////////////////////////////////////////////////////////////
+
+/*=====================================================
+
+	実行するとウインドウを開き、そこでimagePlaneをもとにレンダー設定の縦横出力サイズを
+	設定することができます。
+
+=====================================================*/
+
+/*------------------------------------------------------------------------------------------------
+
+	更新:
+	
+		v1.7		言語切り替えが可能になりました。
+					
+		v1.6		mayaの新しいインターフェースに対応させました。
+					2013でも動くように改善しました。
+		v1.5		mel文の内容を他のmelファイルの書き方に統一しました。
+					イメージプレーンが見つからなくなるバグを修正しました。
+
+
+------------------------------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------
+
+	BS_rendWinEx
+
+	レンダー設定ウインドウを表示する。
+	※レンダー設定ウインドウを表示した際に
+	　読み込まれるプロシージャが必要。
+
+------------------------------------------------------------------------*/
+
+global proc BS_rendWinEx(){
+	int $winEx;
+	int $winVisibleState;
+	$winEx = `window -q -exists "unifiedRenderGlobalsWindow"`;
+	if($winEx == 1){
+		$winVisibleState = `window -q -visible "unifiedRenderGlobalsWindow"`;
+		if($winVisibleState == 0){
+			optionVar -intValue BS_winRenderGlobalWindowVisibleState $winVisibleState;
+			unifiedRenderGlobalsWindow;
+		}
+	}else{
+		unifiedRenderGlobalsWindow;
+	}
+}
+
+
+
+/*-----------------------------------------------------------------------
+
+	BS_bitmapSize
+
+	ビットマップサイズウインドウを表示する。
+
+------------------------------------------------------------------------*/
+
+global proc BS_bitmapSize(){
+
+	if( `window -q -exists BS_window` )
+		deleteUI BS_window;
+
+	BS_rendWinEx();
+	
+	string $tool = (uiRes("zm_BS.windowTitle"));
+	string $version = "v1.7";
+	
+	window -title ($tool + $version)
+				-iconName ($tool + $version)
+				BS_window;
+	
+	formLayout BS_folAll;
+	
+		//イメージプレーンリスト----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+		frameLayout 	-label (uiRes("zm_BS.flImagePlaneList"))
+								-borderStyle "etchedOut"
+								BS_flImagePlaneList;
+			formLayout BS_folImagePlaneList;
+				textScrollList 	-allowMultiSelection false
+										-height 120
+										-selectCommand "BS_attributeVisible();string $imagePlane[] = `textScrollList -q -selectItem BS_tslImagePlaneList`;select $imagePlane[0];BS_imagePlaneSize()"
+										BS_tslImagePlaneList;
+				button	-label (uiRes("zm_BS.btnReloadImagePlane"))
+							-height 25
+							-command "BS_imagePlaneSearch()"
+							BS_btnReloadImagePlane;
+			setParent..;
+		setParent..;
+
+		frameLayout -labelVisible 0 -borderStyle "etchedOut" BS_flImagePlaneSize;
+			formLayout BS_folImagePlaneSize;
+			//幅サイズ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+					text	-height 20 -label (uiRes("zm_BS.tWidthItem")) BS_tWidthItem;
+					text	-height 20 -label "" BS_tWidth;
+			//高さサイズ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+					text	-height 20 -label (uiRes("zm_BS.tHeightItem")) BS_tHeightItem;
+					text	-height 20 -label "" BS_tHeight;
+			//出力％--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+					text -height 20 -label (uiRes("zm_BS.tPercentItem")) BS_tPercentItem;
+					intField -width 60 -height 20 -value 100 BS_ifScaleValue;
+					text -height 20 -label (uiRes("zm_BS.tPercent")) BS_tPercent;
+			setParent..;
+		setParent..;
+
+		text -label (uiRes("zm_BS.tExpress")) BS_tExpress;
+
+		formLayout BS_folButton;
+		//ボタン--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+			button -label (uiRes("zm_BS.btnApply"))	-height 25 -command "BS_run();" BS_btnApply;
+			button -label (uiRes("zm_BS.btnOK")) 	-height 25 -command "BS_run();deleteUI BS_window;BS_rendWinDelete();" BS_btnOK;
+			button -label (uiRes("zm_BS.btnCancel")) 	-height 25 -command "deleteUI BS_window;BS_rendWinDelete();" BS_btnCancel;
+		setParent..;
+	showWindow;
+	
+	
+	formLayout -e
+	
+		-af	BS_flImagePlaneList			"top"				0
+		-af	BS_flImagePlaneList			"left"				0
+		-af	BS_flImagePlaneList			"right"				0
+		
+		-ac	BS_flImagePlaneSize			"top"				0		BS_flImagePlaneList
+		-af	BS_flImagePlaneSize			"left"				0
+		-af	BS_flImagePlaneSize			"right"				0
+		
+		-ac	BS_tExpress							"top"				5		BS_flImagePlaneSize
+		-af	BS_tExpress							"left"				0
+		-af	BS_tExpress							"right"				0
+		
+		-af	BS_folButton						"left"				0
+		-af	BS_folButton						"right"				0
+		-af	BS_folButton						"bottom"			0
+		
+		BS_folAll;
+		
+	formLayout -e
+		
+		-af	BS_tslImagePlaneList			"top"				0
+		-af	BS_tslImagePlaneList			"left"				0
+		-af	BS_tslImagePlaneList			"right"				0
+		
+		-ac	BS_btnReloadImagePlane	"top"				0		BS_tslImagePlaneList
+		-af	BS_btnReloadImagePlane	"left"				0
+		-af	BS_btnReloadImagePlane	"right"				0
+		-af	BS_btnReloadImagePlane	"bottom"			0
+		
+		BS_folImagePlaneList;
+		
+	formLayout -e
+	
+		-af	BS_tWidthItem					"top"				10
+		-ac	BS_tWidthItem					"right"				10		BS_tWidth
+		
+		-af	BS_tWidth							"top"				10
+		-ap	BS_tWidth							"left"				0	50
+		
+		-ac	BS_tHeightItem					"top"				10		BS_tWidthItem
+		-ac	BS_tHeightItem					"right"				10		BS_tHeight
+		
+		-ac	BS_tHeight							"top"				10		BS_tWidthItem
+		-ap	BS_tHeight							"left"				0	50
+		
+		-ac	BS_tPercentItem					"top"				10		BS_tHeightItem
+		-ac	BS_tPercentItem					"right"				10		BS_tHeight
+		
+		-ac	BS_ifScaleValue					"top"				10		BS_tHeightItem
+		-ap	BS_ifScaleValue					"left"				0	50
+		
+		-ac	BS_tPercent							"top"				10		BS_tHeightItem
+		-ac	BS_tPercent							"left"				10		BS_ifScaleValue
+		-af	BS_tPercent							"bottom"			10
+		
+		BS_folImagePlaneSize;
+		
+	formLayout -e
+	
+		-af	BS_btnApply						"left"				0			
+		-ap	BS_btnApply						"right"				0		33
+		
+		-ap	BS_btnOK							"left"				0		33
+		-ap	BS_btnOK							"right"				0		66
+		
+		-ap	BS_btnCancel						"left"				0		66
+		-af	BS_btnCancel						"right"				0
+		
+		BS_folButton;
+	
+	window -e 	-width 200
+			-height 335
+			BS_window;
+	BS_imagePlaneSearch();
+}
+
+
+/*-----------------------------------------------------------------------
+
+	BS_rendWinDelete
+
+	ビットマップサイズウインドウを実行前にレンダー設定ウインドウが
+	表示されていたか次第でレンダー設定ウインドウを閉じる。
+
+------------------------------------------------------------------------*/
+
+global proc BS_rendWinDelete(){
+	int $winVisibleState = 1;
+	if( ` optionVar -exists BS_winRenderGlobalWindowVisibleState ` ){
+		$winVisibleState = ` optionVar -q "BS_winRenderGlobalWindowVisibleState" `;
+	}
+	
+	if($winVisibleState == 0){
+		deleteUI "unifiedRenderGlobalsWindow";
+	}
+}
+
+
+
+
+/*-----------------------------------------------------------------------
+
+	AEinvokeFitFilmGate
+
+	※注意※
+
+	このプロシージャはAEimagePlaneTemplate.melからコピーしてきたものです。
+	絶対に編集しないでください。
+	
+------------------------------------------------------------------------*/
+
+
+global proc AEinvokeFitFilmGate ( string $sizeX, string $sizeY )
+{
+    // Get imageplane name
+    string $imgplane[];
+    tokenize ($sizeX, ".", $imgplane);
+
+    // Get camera info
+    string $camera[] = `listConnections ($imgplane[0] + ".message")`;
+	int $i, $j;
+	for ($i = 0; $i < size($camera); $i++) {
+		if (`objectType -isa "camera" $camera[$i]`) break;
+		string $shapes[] = `listRelatives -shapes ($camera[$i])`;
+		for ($j = 0; $j < size($shapes); $j++) 
+			if (`objectType -isa "camera" $shapes[$j]`) break;
+		if ($j != size($shapes)) break;
+	}
+    if ($i == size ($camera)) return;
+    float $camX = `getAttr ($camera[$i] + ".horizontalFilmAperture")`;
+    float $camY = `getAttr ($camera[$i] + ".verticalFilmAperture")`;
+
+	// Set the image plane + camera sizes to be the same.
+	setAttr $sizeX $camX;
+	setAttr $sizeY $camY;
+}
+
+
+
+/*-----------------------------------------------------------------------
+
+	BS_imagePlaneSearch
+
+	イメージプレーンを検索し、リストに表示する。
+
+------------------------------------------------------------------------*/
+
+global proc BS_imagePlaneSearch(){
+	
+	textScrollList -e -removeAll BS_tslImagePlaneList;
+	string $imagePlaneName[];
+	string $ot;
+	string $ip[] = `ls -type imagePlane`;
+	for( $ipOne in $ip ){
+		string $ipName[];
+		int $token = `tokenize $ipOne ">" $ipName`;
+		if( $token != 0 ){
+			$token = $token-1;
+		}
+		string $type = `objectType $ipName[$token]`;	
+		if($type=="imagePlane"){
+			textScrollList -e -append $ipName[$token] BS_tslImagePlaneList;
+		}
+	}
+	select -cl;
+}
+
+
+
+/*-----------------------------------------------------------------------
+
+	BS_run
+
+	ビットマップサイズウインドウを実行する。
+
+------------------------------------------------------------------------*/
+
+global proc BS_run(){
+	
+	string $imagePlane[] = ` ls -type "imagePlane" `;
+	if( ` size $imagePlane ` == 0){
+		error (uiRes("zm_BS_run.eThereIsNoImagePlane"));
+	}else{
+		string $selectItem[] = `textScrollList -q -selectItem BS_tslImagePlaneList`;
+		int $kazu = `size $selectItem`;
+		if($kazu == 0){
+			error (uiRes("zm_BS_run.ePleaseChooseImagePlane"));
+		}else{
+			int $scale = `intField -q -value BS_ifScaleValue`;
+			int $coverageX = `getAttr ($selectItem[0] + ".coverageX")`;
+			int $width = ($coverageX*$scale*0.01);
+		
+			int $coverageY = `getAttr ($selectItem[0] + ".coverageY")`;
+			int $height = ($coverageY*$scale*0.01);
+		
+			setAttr "defaultResolution.width" $width;
+			setAttr "defaultResolution.height" $height;
+		
+		
+			floatFieldGrp -e -v1 1 pixRatio;
+		
+			float $aspect = (float) $width / (float) $height;
+			setAttr "defaultResolution.deviceAspectRatio" $aspect;
+		
+			AEinvokeFitRezGate ($selectItem[0] + ".sizeX") ($selectItem[0] + ".sizeY");
+		}
+	}
+}
+
+
+
+/*-----------------------------------------------------------------------
+
+	BS_imagePlaneSize
+
+	イメージプレーンのサイズを表示する。
+
+------------------------------------------------------------------------*/
+
+global proc BS_imagePlaneSize(){
+	
+	
+	
+	string $selectItem[] = `textScrollList -q -selectItem BS_tslImagePlaneList`;
+	int $coverageX = `getAttr ($selectItem[0] + ".coverageX")`;
+	int $coverageY = `getAttr ($selectItem[0] + ".coverageY")`;
+
+	string $coverageXString = string($coverageX);
+	string $coverageYString = string($coverageY);
+
+	text -e	-label $coverageXString BS_tWidth;
+	text -e	-label $coverageYString BS_tHeight;
+}
+
+
+
+/*-----------------------------------------------------------------------
+
+	BS_attributeVisible
+
+	アトリビュートウインドウを表示する。
+	※アトリビュートウインドウを表示した際に
+	　読み込まれるプロシージャが必要なため。
+
+------------------------------------------------------------------------*/
+
+global proc BS_attributeVisible(){
+	int $BS_attributeEx = `isUIComponentVisible("Attribute Editor")`;
+	if($BS_attributeEx == 0){
+		setAttributeEditorVisible(1);
+	}
+}

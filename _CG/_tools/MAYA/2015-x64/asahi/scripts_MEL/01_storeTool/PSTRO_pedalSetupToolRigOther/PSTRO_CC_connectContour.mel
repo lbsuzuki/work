@@ -1,0 +1,74 @@
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//	PSTRO_CC_connectContour	//	
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+//	AUTHOR: 		goto kazufumi
+//
+//	CREATION DATE:	2014_02_20
+//	UPDATED DATE:	2014_02_20
+//
+//	VERSION:			1.0
+//
+//	HOW TO USE:		run "PSTRO_CC_connectContour();"
+//
+//////////////////////////////////////////////////////////////////
+
+/*================================================================
+
+
+
+================================================================*/
+
+
+/*================================================================
+
+	■更新内容：
+
+
+================================================================*/
+
+
+/*----------------------------------------------------------------------
+
+	PSTRO_CC_connectContour
+	
+	CTRL_crv.lineTexThickness_atr　から　texLine_multiplyDivide.input1X　に
+	接続します。
+	
+----------------------------------------------------------------------*/
+
+global proc PSTRO_CC_connectContour(){
+
+	string $CTRL[] = ` ls -type "transform" "*_CTRL_crv*" `;
+	string $con[] = ` ls -type "contour_shader_simple"  `;
+
+	if( size($CTRL) != 1 ){
+		string $error = "『_CTRL_crv』という名前を持つtransformの数に問題があります。" + " 数 " + string(size($CTRL));
+		string $one;
+		if( size($CTRL) != 0 ){
+			for( $one in $CTRL ){
+				$error += " ";
+				$error += $one;
+			}
+		}
+		error $error;
+	}
+	
+	if( size($con) != 1 ){
+		string $error = "『contour_shader_simple』という名前を持つcontour_shader_simpleの数に問題があります。" + " 数 " + string(size($con));
+		string $one;
+		if( size($con) != 0 ){
+			for( $one in $con ){
+				$error += " ";
+				$error += $one;
+			}
+		}
+		error $error;
+	}
+	
+	connectAttr -f ( $CTRL[0] + ".line_atr" ) ( $con[0] + ".width" );
+	
+}
+
+
+

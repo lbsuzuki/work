@@ -1,0 +1,38 @@
+///////////////////////////////////////////////////////////////////////////////
+//	BS_bitmapSize.res
+///////////////////////////////////////////////////////////////////////////////
+//
+//	AUTHOR: 		goto kazufumi
+//
+//	CREATION DATE:	2013_12_09
+//	UPDATED DATE:	2013_12_09
+//
+//	VERSION:				1.0
+//
+//////////////////////////////////////////////////////////////////
+
+/*================================================================
+
+	『ビットマップ サイズ』日本語バージョンのリソース
+
+================================================================*/
+
+/*================================================================
+
+	更新内容
+
+================================================================*/
+
+displayString -r -v "ビットマップ サイズ" zm_BS.windowTitle;
+displayString -r -v "イメージ プレーン リスト" zm_BS.flImagePlaneList;
+displayString -r -v "更新" zm_BS.btnReloadImagePlane;
+displayString -r -v "幅 ：" zm_BS.tWidthItem;
+displayString -r -v "高さ ：" zm_BS.tHeightItem;
+displayString -r -v "出力％ ：" zm_BS.tPercentItem;
+displayString -r -v "%" zm_BS.tPercent;
+displayString -r -v "イメージプレーンサイズを\nレンダリングサイズに割り当てます。" zm_BS.tExpress;
+displayString -r -v "適用" zm_BS.btnApply;
+displayString -r -v "ＯＫ" zm_BS.btnOK;
+displayString -r -v "キャンセル" zm_BS.btnCancel;
+displayString -r -v "イメージプレーンが存在しません。" zm_BS_run.eThereIsNoImagePlane;
+displayString -r -v "リストからイメージプレーンを選択してください。" zm_BS_run.ePleaseChooseImagePlane;

@@ -1,0 +1,61 @@
+///////////////////////////////////////////////////////////////////////////////
+//	PSTR_A_arrangeAdjustBelly            //	ï†ÇÃÉäÉOí≤êÆ
+///////////////////////////////////////////////////////////////////////////////
+//
+//	AUTHOR: 		goto kazufumi
+//
+//	CREATION DATE:	2013_09_07
+//	UPDATED DATE:	2013_10_11
+//
+//	VERSION:			1.1
+//
+//	HOW TO USE:		run "PSTR_A_arrangeAdjustBelly();"
+//
+//////////////////////////////////////////////////////////////////
+
+global proc PSTR_A_arrangeAdjustBelly(){
+
+	string $cord = `textField -q -text PST_tfCordName`;
+	int $size = `size $cord`;
+	string $last = `substring $cord $size $size`;
+	if( $last != "_" ){
+		$cord += "_";
+	}
+	
+	string $lct[] = {		"adjustBelly_jnt_ALct"								};
+
+	string $rig[] = {		"adjustBelly_link"									};
+
+	for( $i=0; $i<size($lct); $i++ ){
+		$lct[$i] = $cord + $lct[$i];
+		$rig[$i] = $cord + $rig[$i];
+		int $result = 0;
+		$result = `objExists $rig[$i]`;
+		if( $result ){
+			float $pos[] = PSTR_A_translateXYZ( $lct[$i] , $rig[$i] );
+			move -r $pos[0] $pos[1] $pos[2] $rig[$i];
+		}
+	}
+	
+	//adjustBelly
+	string $adjustBelly_link = $cord + "adjustBelly_link";
+	int $result = 0;
+	$result = `objExists $adjustBelly_link`;
+	if( $result ){
+		string $adjustBelly_link_paC[] = `listConnections -source 1 -destination 0 -type "parentConstraint" $adjustBelly_link`;
+		delete $adjustBelly_link_paC[0];
+		
+		string $adjustBelly_jnt_ALct = $cord + "adjustBelly_jnt_ALct";
+		float $pos[] = PSTR_A_translateXYZ( $adjustBelly_jnt_ALct , $adjustBelly_link );
+		move -r $pos[0] $pos[1] $pos[2] $adjustBelly_link;
+		string $spine02_crv = $cord + "spine02_crv";
+		select -r $spine02_crv $adjustBelly_link;
+		parentConstraint -mo -weight 1;
+	}
+}
+
+
+
+
+
+

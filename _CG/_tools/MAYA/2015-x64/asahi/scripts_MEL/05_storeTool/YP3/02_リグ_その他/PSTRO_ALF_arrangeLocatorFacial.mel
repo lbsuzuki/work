@@ -1,0 +1,128 @@
+///////////////////////////////////////////////////////////////////////////////
+//	PSTRO_ALF_arrangeLocatorFacial            //	
+///////////////////////////////////////////////////////////////////////////////
+//
+//	AUTHOR: 		goto kazufumi
+//
+//	CREATION DATE:	2013_04_11
+//	UPDATED DATE:	2016_04_10
+//
+//	VERSION:			1.3
+//
+//	HOW TO USE:		run "PSTRO_ALF_arrangeLocatorFacial();"
+//
+//////////////////////////////////////////////////////////////////
+
+
+/*=======================================================
+
+	PSTRO_ALF_arrangeLocatorFacial
+	
+	ジョイントにロケータを配置しました
+
+=======================================================*/
+
+/*-------------------------------------------------------------------------------------------------------
+
+	更新
+	
+		1.3		『hand00』に対応
+				『positionElbow』のロケータが出ないように対応
+		1.2		ロケータを降順になるようにしました
+
+-------------------------------------------------------------------------------------------------------*/
+
+
+global proc PSTRO_ALF_arrangeLocatorFacial(){
+
+	//ロケータ作成
+	
+	string $crv[] = {	"L_front_eye_crv",
+							"R_front_eye_crv",
+							"L_side_eye_crv",
+							"R_side_eye_crv",
+							"front_mouth_crv",
+							"side_mouth_crv"		};
+	
+	string $link[] = {	"L_front_eye_meshlink",
+							"L_side_eye_meshlink",
+							"R_front_eye_meshlink",
+							"R_side_eye_meshlink",
+							"front_mouth_meshlink",
+							"side_mouth_meshlink"					};
+						
+	
+	string $code = `textField -q -text PST_tfCordName`;
+	int $size = `size $code`;
+	if( $size != 0 ){
+		string $last = `substring $code $size $size`;
+		if( $last != "_" ){
+			if( $last != ":" ){
+				$code += "_";
+			}
+		}
+	}
+	
+	for( $i=0; $i<size($crv); $i++ ){
+		$crv[$i] = $code + $crv[$i];
+	}
+	
+	for( $i=0; $i<size($link); $i++ ){
+		$link[$i] = $code + $link[$i];
+	}
+	
+	//グループ作成
+	string $grp = `group -em`;
+	xform -os -piv 0 0 0;
+	$grp = `rename $grp ( $code  + "facialLct_grp")`;
+	
+	string $linkAlct[];
+	
+	for( $i=0; $i<size($link); $i++ ){
+
+		string $lct[] = `spaceLocator -p 0 0 0`;
+		string $shape[] = `listRelatives -shapes $lct[0]`;
+		setAttr ( $shape[0] + ".localScaleX" ) 2.0;
+		setAttr ( $shape[0] + ".localScaleY" ) 2.0;
+		setAttr ( $shape[0] + ".localScaleZ" ) 2.0;
+		setAttr ( $shape[0] + ".overrideEnabled" ) 1;
+		setAttr ( $shape[0] + ".overrideColor" ) 20;
+		
+		$lct[0] = `rename $lct[0] ( $link[$i] + "_ALct" )`;
+		
+		float $pos[] = `xform -q -ws -t $link[$i]`;
+		move $pos[0] $pos[1] $pos[2] $lct[0];
+		
+		setAttr ( $link[$i] + ".displayRotatePivot" ) 1;
+		
+		parent $lct[0] $grp;
+		$linkAlct[size($linkAlct)] = $lct[0];
+		
+	}
+	
+	for( $i=0; $i<size($crv); $i++ ){
+
+		string $lct[] = `spaceLocator -p 0 0 0`;
+		string $shape[] = `listRelatives -shapes $lct[0]`;
+		setAttr ( $shape[0] + ".localScaleX" ) 1.0;
+		setAttr ( $shape[0] + ".localScaleY" ) 1.0;
+		setAttr ( $shape[0] + ".localScaleZ" ) 1.0;
+		setAttr ( $shape[0] + ".overrideEnabled" ) 1;
+		setAttr ( $shape[0] + ".overrideColor" ) 14;
+		
+		$lct[0] = `rename $lct[0] ( $crv[$i] + "_pivotALct" )`;
+		
+		float $pos[] = `xform -q -ws -piv $crv[$i]`;
+		move $pos[0] $pos[1] $pos[2] $lct[0];
+		
+		setAttr ( $crv[$i] + ".displayRotatePivot" ) 1;
+		
+		parent $lct[0] $linkAlct[$i];
+		
+	}
+
+	
+}
+
+
+

@@ -1,0 +1,37 @@
+///////////////////////////////////////////////////////////////////////////////
+//	PSTN_IMS_importMatSohoku            //		総北マテリアルの読み込み
+///////////////////////////////////////////////////////////////////////////////
+//
+//	AUTHOR: 		goto kazufumi
+//
+//	CREATION DATE:	2013_04_15
+//	UPDATED DATE:	2013_10_11
+//
+//	VERSION:			1.1
+//
+//	HOW TO USE:		run "PSTN_IMS_importMatSohoku()"
+//
+//////////////////////////////////////////////////////////////////
+
+global proc PSTN_IMS_importMatSohoku(){
+
+	string $rigPath = ZIN_commonAbsolutePath("PSTN_IMS_importMatSohoku");
+	
+	string $file[] = `fileDialog2	-dialogStyle 1
+												-startingDirectory $rigPath
+												-caption "総北マテリアルの読み込み"
+												-fileMode 1`;
+	
+	if( `size $file[0]` != 0 ){
+		file	-import -type "mayaBinary" -ignoreVersion -mergeNamespacesOnClash false
+				-rpr ""
+				-options "v=0;" -pr
+				-loadReferenceDepth "all" $file[0];
+	}
+	
+}
+
+
+
+
+

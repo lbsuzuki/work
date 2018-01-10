@@ -1,0 +1,35 @@
+///////////////////////////////////////////////////////////////////////////////
+//	PSTN_CBTS_connectBackTexSkin            //		BackTexSkinÇ∆ÉtÉåÅ[ÉÄägí£éqÇÃê⁄ë±
+///////////////////////////////////////////////////////////////////////////////
+//
+//	AUTHOR: 		goto kazufumi
+//
+//	CREATION DATE:	2013_10_07
+//	UPDATED DATE:	2013_10_07
+//
+//	VERSION:			1.1
+//
+//	HOW TO USE:		run "PSTN_CBTS_connectBackTexSkin();"
+//
+//////////////////////////////////////////////////////////////////
+
+global proc PSTN_CBTS_connectBackTexSkin(){
+
+	string $cord = `textField -q -text PST_tfCordName`;
+	int $size = `size $cord`;
+	string $last = `substring $cord $size $size`;
+	if( $last != "_" ){
+		$cord += "_";
+	}
+
+	string $ik[] = ` ls -sl -type "file"`;
+	for( $ikOne in $ik ){
+		int $result = ` isConnected -iuc ( $cord + "CTRL_crv.backTexSkin_atr" )   ( $ikOne + ".frameExtension" ) `;
+		if( !$result ){
+			connectAttr -f ( $cord + "CTRL_crv.backTexSkin_atr" )   ( $ikOne + ".frameExtension" );
+		}
+	}
+	
+}
+
+

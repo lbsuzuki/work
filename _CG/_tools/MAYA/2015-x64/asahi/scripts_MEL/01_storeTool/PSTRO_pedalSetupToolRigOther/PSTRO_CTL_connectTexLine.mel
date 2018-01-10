@@ -1,0 +1,74 @@
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//	PSTRO_CTL_connectTexLine	//	
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+//	AUTHOR: 		goto kazufumi
+//
+//	CREATION DATE:	2013_12_03
+//	UPDATED DATE:	2014_01_27
+//
+//	VERSION:			1.0
+//
+//	HOW TO USE:		run "PSTRO_CTL_connectTexLine();"
+//
+//////////////////////////////////////////////////////////////////
+
+/*================================================================
+
+
+
+================================================================*/
+
+
+/*================================================================
+
+	■更新内容：
+
+
+================================================================*/
+
+
+/*----------------------------------------------------------------------
+
+	PSTRO_CTL_connectTexLine
+	
+	CTRL_crv.lineTexThickness_atr　から　texLine_multiplyDivide.input1X　に
+	接続します。
+	
+----------------------------------------------------------------------*/
+
+global proc PSTRO_CTL_connectTexLine(){
+
+	string $CTRL[] = ` ls -type "transform" "*_CTRL_crv*" `;
+	string $mp[] = ` ls -type "multiplyDivide" "*_texLine_multiplyDivide*" `;
+
+	if( size($CTRL) != 1 ){
+		string $error = "『_CTRL_crv』という名前を持つtransformの数に問題があります。" + " 数 " + string(size($CTRL));
+		string $one;
+		if( size($CTRL) != 0 ){
+			for( $one in $CTRL ){
+				$error += " ";
+				$error += $one;
+			}
+		}
+		error $error;
+	}
+	
+	if( size($mp) != 1 ){
+		string $error = "『_texLine_multiplyDivide』という名前を持つmultiplyDivideの数に問題があります。" + " 数 " + string(size($mp));
+		string $one;
+		if( size($mp) != 0 ){
+			for( $one in $mp ){
+				$error += " ";
+				$error += $one;
+			}
+		}
+		error $error;
+	}
+	
+	connectAttr -f ( $CTRL[0] + ".lineTexThickness_atr" ) ( $mp[0] + ".input1X" );
+	
+}
+
+
+

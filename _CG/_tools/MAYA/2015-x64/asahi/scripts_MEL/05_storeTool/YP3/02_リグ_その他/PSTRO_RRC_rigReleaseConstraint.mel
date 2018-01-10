@@ -1,0 +1,59 @@
+///////////////////////////////////////////////////////////////////////////////
+//	PSTRO_RRC_rigReleaseConstraint            //		
+///////////////////////////////////////////////////////////////////////////////
+//
+//	AUTHOR: 		goto kazufumi
+//
+//	CREATION DATE:	2016_04_28
+//	UPDATED DATE:		2016_04_28
+//
+//	VERSION:			1.0
+//
+//	HOW TO USE:		run "PSTRO_RRC_rigReleaseConstraint();"
+//
+//////////////////////////////////////////////////////////////////
+
+global proc PSTRO_RRC_rigReleaseConstraint(){
+
+	global string $PSTRO_RRC_crv[];
+	$PSTRO_RRC_crv = ` ls -sl `;
+
+	for( $one in $PSTRO_RRC_crv ){
+
+		global string $PSTRO_RRC_paC[];
+		clear $PSTRO_RRC_paC;
+		global string $PSTRO_RRC_scC[];
+		clear $PSTRO_RRC_scC;
+		global string $PSTRO_RRC_poC[];
+		clear $PSTRO_RRC_poC;
+		global string $PSTRO_RRC_orC[];
+		clear $PSTRO_RRC_orC;
+		
+		$PSTRO_RRC_paC = ` listConnections -s 0 -d 1 -type "parentConstraint" $one `;
+		$PSTRO_RRC_scC = ` listConnections -s 0 -d 1 -type "scaleConstraint" $one `;
+		$PSTRO_RRC_poC = ` listConnections -s 0 -d 1 -type "pointConstraint" $one `;
+		$PSTRO_RRC_orC = ` listConnections -s 0 -d 1 -type "orientConstraint" $one `;
+		
+		if( size($PSTRO_RRC_paC) != 0 ){
+			delete $PSTRO_RRC_paC;
+		}
+		
+		if( size($PSTRO_RRC_scC) != 0 ){
+			delete $PSTRO_RRC_scC;
+		}
+		
+		if( size($PSTRO_RRC_poC) != 0 ){
+			delete $PSTRO_RRC_poC;
+		}
+		
+		if( size($PSTRO_RRC_orC) != 0 ){
+			delete $PSTRO_RRC_orC;
+		}
+		
+
+
+	}
+
+
+}
+

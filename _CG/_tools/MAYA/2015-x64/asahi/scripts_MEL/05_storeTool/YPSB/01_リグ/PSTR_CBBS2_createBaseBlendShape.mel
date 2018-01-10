@@ -1,0 +1,220 @@
+///////////////////////////////////////////////////////////////////////////////
+//	PSTR_CBBS2_createBaseBlendShape            //	ブレンドシェイプ作成
+///////////////////////////////////////////////////////////////////////////////
+//
+//	AUTHOR: 		goto kazufumi
+//
+//	CREATION DATE:	2013_04_11
+//	UPDATED DATE:	2016_03_28
+//
+//	VERSION:			1.3
+//
+//	HOW TO USE:		run "PSTR_CBBS2_createBaseBlendShape();"
+//
+//////////////////////////////////////////////////////////////////
+
+/*==========================================================================
+■更新内容
+
+	1.3	設定の保存機能を追加しました
+	1.2	ブレンドメッシュにlambert1を自動で割り当てるようにしました
+
+==========================================================================*/
+
+global proc PSTR_CBBS2_createBaseBlendShape(){
+
+	string $tfBlendShapeName = "base";
+
+	if( ` optionVar -exists PSTR_CBBS2_tfBlendShapeName ` ){
+		$tfBlendShapeName = ` optionVar -q PSTR_CBBS2_tfBlendShapeName `;
+	}
+
+	if( `window -q -exists PSTR_CBBS2_window` ) deleteUI PSTR_CBBS2_window;
+
+	window	-title "ブレンド シェイプ 作成"
+				PSTR_CBBS2_window;
+		frameLayout -label "ブレンドシェイプ名 入力" -borderStyle "etchedOut" PSTR_CBBS2_flAll;
+		formLayout PSTR_CBBS2_folAll;
+			formLayout PSTR_CBBS2_folBlendShapeName;
+				text -label "ブレンドシェイプ名を入力してください。\nオブジェクトとヌルの名前の基準とします。" PSTR_CBBS2_tExp;
+				text -h 25 -label "ブレンドシェイプ名" PSTR_CBBS2_tBlendShapeName;
+				textField -h 25 -text $tfBlendShapeName -cc "PSTR_CBBS2_saveSetting()" PSTR_CBBS2_tfBlendShapeName;
+			setParent..;
+			formLayout PSTR_CBBS2_folButton;
+				button -label "適用" -command "PSTR_CBBS2_assign()" PSTR_CBBS2_btnAssign;
+				button -label "キャンセル" -command "deleteUI PSTR_CBBS2_window" PSTR_CBBS2_btnCancel;
+			setParent..;
+		setParent..;
+	showWindow;
+	
+	
+	formLayout -e
+	
+		-af	PSTR_CBBS2_folBlendShapeName		"top"			0
+		-af	PSTR_CBBS2_folBlendShapeName		"left"			0
+		-af	PSTR_CBBS2_folBlendShapeName		"right"		0
+		
+		-af	PSTR_CBBS2_folButton						"left"			0
+		-af	PSTR_CBBS2_folButton						"right"		0
+		-af	PSTR_CBBS2_folButton						"bottom"	0
+	
+	PSTR_CBBS2_folAll;
+	
+
+	formLayout -e
+	
+		-af	PSTR_CBBS2_tExp							"top"		5
+		-af	PSTR_CBBS2_tExp							"left"		0
+		-af	PSTR_CBBS2_tExp							"right"	0
+		
+		-ac	PSTR_CBBS2_tBlendShapeName		"top"		5	PSTR_CBBS2_tExp
+		-af	PSTR_CBBS2_tBlendShapeName		"left"		20
+		
+		-ac	PSTR_CBBS2_tfBlendShapeName		"top"		5	PSTR_CBBS2_tExp
+		-ac	PSTR_CBBS2_tfBlendShapeName		"left"		3	PSTR_CBBS2_tBlendShapeName
+		-af	PSTR_CBBS2_tfBlendShapeName		"right"	20
+
+	PSTR_CBBS2_folBlendShapeName;
+	
+	formLayout -e
+	
+		-af	PSTR_CBBS2_btnAssign					"top"		0
+		-af	PSTR_CBBS2_btnAssign					"left"		0
+		-ap	PSTR_CBBS2_btnAssign					"right"	0	50
+		
+		-af	PSTR_CBBS2_btnCancel					"top"		0
+		-ap	PSTR_CBBS2_btnCancel					"left"		0	50
+		-af	PSTR_CBBS2_btnCancel					"right"	0
+		
+	PSTR_CBBS2_folButton;
+	
+	window -e -width 410 -height 120 PSTR_CBBS2_window;
+	
+}
+
+
+
+global proc PSTR_CBBS2_saveSetting(){
+
+	string $tfBlendShapeName = ` textField -q -tx PSTR_CBBS2_tfBlendShapeName `;
+	
+	optionVar -stringValue PSTR_CBBS2_tfBlendShapeName $tfBlendShapeName;
+
+}
+
+
+
+global proc PSTR_CBBS2_assign(){
+
+	string $baseBlend = ` textField -q -text PSTR_CBBS2_tfBlendShapeName `;
+	PSTR_CBBS2_run($baseBlend);
+
+}
+
+global proc PSTR_CBBS2_run( string $baseBlend ){
+
+	string $grp[] = `ls -type transform -sl`;
+
+	string $cord = `textField -q -text PST_tfCordName`;
+	int $size = `size $cord`;
+	if( $size != 0 ){
+		string $last = `substring $cord $size $size`;
+		if( $last != "_" ){
+			$cord += "_";
+		}
+	}
+	
+
+
+	//CTRL_crvの名前宣言
+	string $CTRL_crv = $cord + "CTRL_crv";
+	
+	//一番上のグループ名宣言
+	string $allGrp = $cord + "grp";
+	//一番上のグループの子を取得
+	string $children[] = `listRelatives -children $allGrp`;
+	string $child;
+	//ブレンドグループ名宣言
+	string $blend_grp = $cord + "blend_grp";
+	//モー不ターゲットグループ名を宣言
+	string $morphTarget_grp = $cord + "morphTarget_grp";
+	
+	//ブレンドグループが存在するかを調査
+	int $exist = 0;
+	for( $child in $children ){
+		if( $child == $blend_grp ){
+			$exist = 1;
+		}
+	}
+	
+	//ブレンドグループが存在しない場合グループを作成、一番上のグループの子にする
+	if( $exist == 0 ){
+		string $storeGrp1 = `group -em`;
+		xform -os -piv 0 0 0;
+		rename $storeGrp1 $blend_grp;
+		parent $blend_grp $allGrp;
+	}
+	
+	//ブレンドグループの子を取得
+	string $children[] = `listRelatives -children $blend_grp`;
+	int $exist = 0;
+	for( $child in $children ){
+		if( $child == $morphTarget_grp ){
+			$exist = 1;
+		}
+	}
+	
+	//モーフターゲットグループの存在を宣言
+	if( $exist == 0 ){
+		string $storeGrp1 = `group -em`;
+		xform -os -piv 0 0 0;
+		rename $storeGrp1 $morphTarget_grp;
+		parent $morphTarget_grp $blend_grp;
+	}
+	
+	for( $grpOne in $grp ){
+		string $basename = $baseBlend;
+		
+		string $blend = $basename + "_blend";
+		string $blendGrp = $basename + "_blendGrp";
+		
+		select -r $grpOne;
+		string $blendS[] = `blendShape -frontOfChain -n $blend`;
+		blendShapeAddBaseTarget($blendS[0]);
+		aliasAttr $basename ($blendS[0] + ".w[1]" );
+		string $select[] = `ls -sl`;
+		rename $select[0] $blendGrp;
+		
+		connectAttr -f ($CTRL_crv + ".envelope") ($blend + ".envelope");
+		
+		string $select[] = `ls -sl`;
+		rename $select[0] $blendGrp;
+		
+		parent $blendGrp $morphTarget_grp;
+		
+		setAttr ($blendS[0] + "." + $basename) 1;
+		
+		select -r $blendGrp;
+		hyperShade -assign initialShadingGroup;
+		
+		move -ls -100 0 0 $blendGrp;
+		
+	}
+
+	if( !`isConnected ($CTRL_crv + ".blendVis") ($blend_grp + ".visibility")` ){
+		connectAttr -f ($CTRL_crv + ".blendVis") ($blend_grp + ".visibility");
+	}
+	
+}
+
+
+
+
+
+
+
+
+
+
+
+

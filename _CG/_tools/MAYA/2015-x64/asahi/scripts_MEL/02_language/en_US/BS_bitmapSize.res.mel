@@ -1,0 +1,38 @@
+///////////////////////////////////////////////////////////////////////////////
+//	BS_bitmapSize.res
+///////////////////////////////////////////////////////////////////////////////
+//
+//	AUTHOR: 		goto kazufumi
+//
+//	CREATION DATE:	2013_12_09
+//	UPDATED DATE:	2013_12_09
+//
+//	VERSION:				1.0
+//
+//////////////////////////////////////////////////////////////////
+
+/*================================================================
+
+	"Bitmap Size" Resource of English version
+
+================================================================*/
+
+/*================================================================
+
+	UPDATE
+
+================================================================*/
+
+displayString -r -v "Bitmap Size" zm_BS.windowTitle;
+displayString -r -v "Image Plane List" zm_BS.flImagePlaneList;
+displayString -r -v "Reload" zm_BS.btnReloadImagePlane;
+displayString -r -v "Width : " zm_BS.tWidthItem;
+displayString -r -v "Height : " zm_BS.tHeightItem;
+displayString -r -v "Output% : " zm_BS.tPercentItem;
+displayString -r -v "%" zm_BS.tPercent;
+displayString -r -v "You can assign image plane size to rendering size." zm_BS.tExpress;
+displayString -r -v "Apply" zm_BS.btnApply;
+displayString -r -v "OK" zm_BS.btnOK;
+displayString -r -v "Cancel" zm_BS.btnCancel;
+displayString -r -v "There is no imagePlane" zm_BS_run.eThereIsNoImagePlane;
+displayString -r -v "Please choose image plane among a list." zm_BS_run.ePleaseChooseImagePlane;

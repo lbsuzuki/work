@@ -1,0 +1,14 @@
+======================================================
+　■説明
+　右目の可視性を切り替えるアニメーションカーブ（scv）を選択し、
+　実行すると右目とscvを接続します。
+　下記は接続するソースとアニメーションカーブ（scv）です。
+　scv項目を選択して実行してください。
+
+　ソース： コード + CTRL_crv.R_eyeTex_atr
+
+　   scv： R_front_eyePlane_link_visibility_scv
+　           R_side_eyePlane_link_visibility_scv
+　           R_tilt_eyePlane_link_visibility_scv
+　           R_tiltR_eyePlane_link_visibility_scv
+======================================================

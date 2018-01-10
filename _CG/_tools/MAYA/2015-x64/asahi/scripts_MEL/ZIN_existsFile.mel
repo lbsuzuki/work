@@ -1,0 +1,107 @@
+//////////////////////////////////////////////////////////////////
+//		ZIN_existsFile          //   
+//////////////////////////////////////////////////////////////////
+//
+//	AUTHOR: 		goto kazufumi
+//
+//	CREATION DATE: 	2012_03_23
+//	UPDATED DATE:		2012_03_23
+//
+//	VERSION:		1.0
+//
+//	HOW TO USE:		run "ZIN_existsFile();"
+//
+//////////////////////////////////////////////////////////////////
+
+/*----------------------------------------------------------------------------------------------------
+
+	ZIN_existsFile( パス, ファイル名, ファイルを作成するかどうか )
+
+	指定されたパスとファイルが存在するかどうかを調査し、引数によってはディレクトリとファイルを作成します。
+	戻り値は3つ返されます。
+	
+	戻り値1：		1	ディレクトリパス、またはファイルを作成した場合
+				2	なにも作成しなかった場合
+					
+	戻り値2：		"ディレクトリの存在を確認しました。"
+				"指定したディレクトリを作成しました。"
+					
+	戻り値3：		"ファイルの存在を確認しました。"
+				"指定したファイルを作成しました。"
+
+----------------------------------------------------------------------------------------------------*/
+
+
+global proc string[] ZIN_existsFile( string $path, string $file, int $create ){
+
+	string $message[];
+	$message[0] = "0";
+	
+	if( $create == 1 ){
+	
+		$message[1] = "\nディレクトリの存在を確認しました。\n";
+		string $dirResult[] = ZIN_existsDirectory( $path, 1 );
+		
+		if( size($dirResult) != 1 ){
+		
+			$message[0] = "1";
+			$message[1] = "\n指定したディレクトリを作成しました。\n";
+		
+		}
+		
+		
+		int $size = `size $path`;
+		string $lastStr = `substring $path $size $size`;
+		if( $lastStr != "/" ){
+		
+			$path = $path + "/";
+		
+		}
+
+		int $existsFile = `filetest -f ( $path + $file )`;
+		
+		if( $existsFile  == 0 ){
+		
+			int $id = `fopen ( $path + $file ) "w"`;
+			fclose $id;
+			$message[2] = "指定したファイルを作成しました。\n";
+		
+		}else{
+		
+			$message[0] = "1";
+			$message[2] = "ファイルの存在を確認しました。\n";
+		
+		}
+	}else if( $create == 0 ){
+	
+		$message[1] = "\n指定したディレクトリは存在しません。\n";
+		$message[2] = "指定したファイルは存在しません。\n";
+		string $dirResult[] = ZIN_existsDirectory( $path, 0 );
+	
+		if( $dirResult[0] == "1" ){
+	
+			$message[1] = "\nディレクトリの存在を確認しました。\n";
+			int $size = `size $path`;
+			string $lastStr = `substring $path $size $size`;
+			if( $lastStr != "/" ){
+			
+				$path = $path + "/";
+			
+			}
+
+			int $existsFile = `filetest -f ( $path + $file )`;
+			
+			if( $existsFile != 0 ){
+			
+				$message[0] = "1";
+				$message[2] = "ファイルの存在を確認しました。\n";
+			
+			}
+			
+		}
+	
+	}
+	
+	return $message;
+	
+}

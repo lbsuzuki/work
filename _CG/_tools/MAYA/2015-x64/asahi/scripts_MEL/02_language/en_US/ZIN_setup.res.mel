@@ -1,0 +1,163 @@
+///////////////////////////////////////////////////////////////////////////////
+//	ZIN_setup.res
+///////////////////////////////////////////////////////////////////////////////
+//
+//	AUTHOR: 		goto kazufumi
+//
+//	CREATION DATE:	2013_12_09
+//	UPDATED DATE:	2016_08_11
+//
+//	VERSION:		1.15
+//
+//////////////////////////////////////////////////////////////////
+
+/*================================================================
+
+	ymƒƒjƒ…[z‰pŒêƒo[ƒWƒ‡ƒ“‚ÌƒŠƒ\[ƒX
+
+================================================================*/
+
+/*================================================================
+
+	XV“à—e
+	
+	1.15	yDLz‚ÉyUVƒXƒP[ƒ‹ ƒ`ƒFƒbƒJ[z‚ğ’Ç‰Á‚µ‚Ü‚µ‚½
+			yƒŒƒ“ƒ_ƒŠƒ“ƒOz‚ÉyƒŒƒCƒ„ì¬z‚ğ’Ç‰Á‚µ‚Ü‚µ‚½
+	1.14	yDLz‚ÉyLWOƒtƒ@ƒCƒ‹‚Ì“Ç‚İ‚İz‚ğ’Ç‰Á‚µ‚Ü‚µ‚½
+	1.13	ym‚É‚Â‚¢‚Äz‚ğ’Ç‰Á‚µ‚Ü‚µ‚½
+	1.12	y‚»‚Ì‘¼z‚Éyƒ`ƒƒƒ“ƒlƒ‹ƒ{ƒbƒNƒX‚©‚çƒŒƒCƒ„[ƒI[ƒo[ƒ‰ƒCƒhz‚ğ’Ç‰Á‚µ‚Ü‚µ‚½
+	1.11	yƒŒƒ“ƒ_ƒŠƒ“ƒOz‚ÉyƒeƒNƒXƒ`ƒƒ‰ğ‘œ“xØ‚è‘Ö‚¦z‚ğ’Ç‰Á‚µ‚Ü‚µ‚½
+	1.1	yƒŒƒ“ƒ_ƒŠƒ“ƒOz‚ÌyƒJƒƒ‰ƒZƒbƒgz‚ğyƒJƒƒ‰ì¬z‚Æ‚µ‚ÄXV
+	1.09	y‚»‚Ì‘¼z‚ÉyƒXƒgƒA ƒc[ƒ‹z‚ğ’Ç‰Á‚µ‚Ü‚µ‚½
+	1.08	yDLz‚ÉyƒvƒƒbƒgƒJ[ƒuz‚ğ’Ç‰Á‚µ‚Ü‚µ‚½
+	1.07	y‚»‚Ì‘¼z‚ÉyTurtleƒm[ƒhíœz‚ğ’Ç‰Á‚µ‚Ü‚µ‚½
+	1.05	yBBê—pƒc[ƒ‹z‚ÉyBB ‚`‚d‚Öî•ño—Íz‚ğ’Ç‰Á‚µ‚Ü‚µ‚½
+	1.04	yDLz‚ÉygeoSphere ‹…‘Ìì¬zy•\–Ê‚ÉƒIƒuƒWƒFƒNƒg‚ğ”z’uz‚ğ’Ç‰Á
+	1.03	yƒyƒ_ƒ‹ê—pƒc[ƒ‹z‚ÉyŠçƒvƒŒ[ƒ““\‚è‚İz‚ğ’Ç‰Á
+	1.02	yDLz‚ÉyƒWƒ‡ƒCƒ“ƒg ƒIƒŠƒGƒ“ƒgz‚ğ’Ç‰Á
+	1.01	y‚»‚Ì‘¼z‚Éy’¼üUV‚Ì”ä—¦‚ğ‡‚í‚¹‚ézAyUV‚ğŠiqó‚É®—ñ‚³‚¹‚éz‚ğ’Ç‰Á
+	
+
+================================================================*/
+
+displayString -r -v "  ZIN  " zm_ZIN_S.mMain;
+displayString -r -v "Animation" zm_ZIN_S.miAnimation;
+	displayString -r -v "Go to Time" zm_ZIN_S.miGT;
+	displayString -r -v "Time Difference Animation" zm_ZIN_S.miTDA;
+	displayString -r -v "Time Remap" zm_ZIN_S.miTR;
+	displayString -r -v "Pose Library" zm_ZIN_S.miPL;
+displayString -r -v "Modeling" zm_ZIN_S.miModeling;
+	displayString -r -v "Align Tool" zm_ZIN_S.miIA;
+	displayString -r -v "Zero Pivot" zm_ZIN_S.miZP;
+	displayString -r -v "Sharp Edge" zm_ZIN_S.miSE;
+	displayString -r -v "Create Material Set" zm_ZIN_S.miMS;
+	displayString -r -v "Union UV Set" zm_ZIN_S.miUU;
+	displayString -r -v "Edit UV" zm_ZIN_S.miEU;
+	displayString -r -v "image Poly Plane" zm_ZIN_S.miIP;
+displayString -r -v "Dynamics" zm_ZIN_S.miDynamics;
+	displayString -r -v "Crumble Mesh" zm_ZIN_S.miCM;
+displayString -r -v "Rendering" zm_ZIN_S.miRendering;
+	displayString -r -v "Edit Tool" zm_ZIN_S.miET;
+	displayString -r -v "Create Camera" zm_ZIN_S.miCW;
+	displayString -r -v "Bitmap Size" zm_ZIN_S.miBS;
+	displayString -r -v "Change File Resolution" zm_ZIN_S.miCFR;
+	displayString -r -v "Create Urgent Line" zm_ZIN_S.miUL;
+	displayString -r -v "Create Layer" zm_ZIN_S.miCL;
+	displayString -r -v "Export Render Layer List" zm_ZIN_S.miER;
+	displayString -r -v "Backburner List" zm_ZIN_S.miOBBBackburnaerList;
+	displayString -r -v "Sequence Save Render Image" zm_ZIN_S.miSR;
+displayString -r -v "Setup" zm_ZIN_S.miSetup;
+	displayString -r -v "Edit Attribute" zm_ZIN_S.miEA;
+	displayString -r -v "File Node filter Type OFF" zm_ZIN_S.miFO;
+	displayString -r -v "File Node Rewrite File Path" zm_ZIN_S.miRFP;
+	displayString -r -v "Change file into sequence number using dot " zm_ZIN_S.miCSFP;
+	displayString -r -v "MaterialInfo Node Editor" zm_ZIN_S.miEMI;
+	displayString -r -v "Share Source" zm_ZIN_S.miSS;
+	displayString -r -v "Create Line Object" zm_ZIN_S.miLO;
+	displayString -r -v "Constraint Tool" zm_ZIN_S.miCT;
+	displayString -r -v "Cluster of Vertex" zm_ZIN_S.miFC_forCluster;
+	displayString -r -v "Cluster of Vertex with Null" zm_ZIN_S.miFC_forClusterAndNull;
+	displayString -r -v "Search Duplication Object" zm_ZIN_S.miSDO;
+	displayString -r -v "Create Locator in Edge Center" zm_ZIN_S.miECL;
+	displayString -r -v "Parent Null" zm_ZIN_S.miPN;
+	displayString -r -v "Create PointOnSurfaceInfo" zm_ZIN_S.miCreateNodePointOnSurfaceInfo;
+displayString -r -v "Scene" zm_ZIN_S.miSceneSetting;
+	displayString -r -v "Load Scene" zm_ZIN_S.miLS;
+	displayString -r -v "Model Loader" zm_ZIN_S.miML;
+	displayString -r -v "Edit Project" zm_ZIN_S.miCP;
+	displayString -r -v "Load Plugin" zm_ZIN_S.miLP;
+displayString -r -v "Other" zm_ZIN_S.miOther;
+	displayString -r -v "Renamer" zm_ZIN_S.miRW;
+	displayString -r -v "Store Tool" zm_ZIN_S.miST;
+	displayString -r -v "Delete Turtle" zm_ZIN_S.miDT;
+	displayString -r -v "Render Thumbnail Update" zm_ZIN_S.miRTU;
+	displayString -r -v "Layer Override From Channel Box" zm_ZIN_S.miCO;
+	displayString -r -v "Arrange Object on Particle" zm_ZIN_S.miAOOP;
+	displayString -r -v "Random Tool" zm_ZIN_S.miRT;
+	displayString -r -v "Window Minimization" zm_ZIN_S.miWM;
+	displayString -r -v "Edit Set" zm_ZIN_S.miES;
+	displayString -r -v "Edit Window" zm_ZIN_S.miEW;
+	displayString -r -v "Mel Template" zm_ZIN_S.miMT;
+	displayString -r -v "All Archive" zm_ZIN_S.miAA;
+	displayString -r -v "Add Outliner" zm_ZIN_S.miAO;
+	displayString -r -v "Max Select Tool" zm_ZIN_S.miSH;
+displayString -r -v "Pedal" zm_ZIN_S.miPedal;
+	displayString -r -v "Change Tool" zm_ZIN_S.miPCT;
+	displayString -r -v "Setup Tool" zm_ZIN_S.miPST;
+	displayString -r -v "Create Face Plane" zm_ZIN_S.miFP;
+displayString -r -v "Brave Beats" zm_ZIN_S.miBB;
+	displayString -r -v "BB Tool Set" zm_ZIN_S.miBB_TS;
+	displayString -r -v "BB Model Loader" zm_ZIN_S.miBB_ML;
+	displayString -r -v "BB Create Camera" zm_ZIN_S.miBB_CW;
+	displayString -r -v "BB HIK Retarget" zm_ZIN_S.miBB_HR;
+	displayString -r -v "BB Delete Unuse HIK" zm_ZIN_S.miBB_DH;
+	displayString -r -v "BB Rend Ready" zm_ZIN_S.miBB_RR;
+	displayString -r -v "BB Setting Outline" zm_ZIN_S.miBB_OS;
+	displayString -r -v "BB Create Layer" zm_ZIN_S.miBB_CL;
+	displayString -r -v "BB Change Tex Resolution" zm_ZIN_S.miBB_TC;
+	displayString -r -v "BB Chara Set Key" zm_ZIN_S.miBB_CS;
+	displayString -r -v "BB Joint Scale" zm_ZIN_S.miBB_JS;
+	displayString -r -v "BB Width Line" zm_ZIN_S.miBB_WL;
+	displayString -r -v "BB Copy Animation" zm_ZIN_S.miBB_CA;
+	displayString -r -v "BB Change Tex Path" zm_ZIN_S.miBB_CT;
+	displayString -r -v "BB Playblast" zm_ZIN_S.miBB_P;
+	displayString -r -v "BB Shot Time Slider" zm_ZIN_S.miBB_STS;
+	displayString -r -v "BB Shot Camera" zm_ZIN_S.miBB_SCL;
+	displayString -r -v "BB Shot Frame Range" zm_ZIN_S.miBB_SFR;
+	displayString -r -v "BB Line Layer Override" zm_ZIN_S.miBB_LO;
+	displayString -r -v "BB Model Check" zm_ZIN_S.miBB_MC;
+	displayString -r -v "BB Export Info To AE" zm_ZIN_S.miBB_ETA;
+displayString -r -v "DL" zm_ZIN_S.miDL;
+	displayString -r -v "Dora Time Remap" zm_ZIN_S.miDoraTimeRemap;
+	displayString -r -v "Create Camera Slider" zm_ZIN_S.miTN_CreateCameraSlider;
+	displayString -r -v "Collision Deformer" zm_ZIN_S.miJlCollisionDeformer;
+	displayString -r -v "Noise Deformer" zm_ZIN_S.miNoiseDeformer;
+	displayString -r -v "Hot Ocean" zm_ZIN_S.miHotOceanDeformer;
+	displayString -r -v "Set Skin Weight Max Influences" zm_ZIN_S.miSetSkinWeightMaxInfluences;
+	displayString -r -v "Material Lister" zm_ZIN_S.miMaterialLister;
+	displayString -r -v "Helper" zm_ZIN_S.miRig101wireControllers;
+	displayString -r -v "SOuP" zm_ZIN_S.miSOuP;
+	displayString -r -v "Metaball" zm_ZIN_S.miNSmetaball;
+	displayString -r -v "AriUVFromVertexRatio" zm_ZIN_S.miAriUVFromVertexRatio;
+	displayString -r -v "AriUVGridding" zm_ZIN_S.miAriUVGridding;
+	displayString -r -v "AriUVScaleChecker" zm_ZIN_S.miAriUVScaleChecker;
+	displayString -r -v "Joint Orient" zm_ZIN_S.miJointOrient;
+	displayString -r -v "Geo Spheres" zm_ZIN_S.miGeoSpheres;
+	displayString -r -v "Poly Scatter" zm_ZIN_S.miIcPolyScatter;
+	displayString -r -v "Plot Curve" zm_ZIN_S.miPlotCurve;
+	displayString -r -v "Load LWO" zm_ZIN_S.miLoadLWO;
+displayString -r -v "Config" zm_ZIN_S.miZC;
+displayString -r -v "Work Information" zm_ZIN_S.miWI;
+displayString -r -v "Web" zm_ZIN_S.miWeb;
+	displayString -r -v "Asahi Maya Page" zm_ZIN_S.miWebAsahi;
+	displayString -r -v "Digital Matrix" zm_ZIN_S.miWebDigitalMatrix;
+	displayString -r -v "Creative Crash" zm_ZIN_S.miWebCreativeCrash;
+	displayString -r -v "maya blog: 3D CG labo" zm_ZIN_S.miWebMayaBlog;
+displayString -r -v "About ZIN" zm_ZIN_S.miAboutZIN;
+	displayString -r -v "Help" zm_ZIN_S.miHelpZIN;
+	displayString -r -v "Version" zm_ZIN_S.miVersionZIN;
+	
+	
+	
+	
+	

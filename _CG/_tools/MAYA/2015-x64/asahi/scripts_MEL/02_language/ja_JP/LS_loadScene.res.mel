@@ -1,0 +1,156 @@
+///////////////////////////////////////////////////////////////////////////////
+//	LS_loadScene.res
+///////////////////////////////////////////////////////////////////////////////
+//
+//	AUTHOR: 		goto kazufumi
+//
+//	CREATION DATE:	2013_12_10
+//	UPDATED DATE:	2013_12_10
+//
+//	VERSION:				1.0
+//
+//////////////////////////////////////////////////////////////////
+
+/*================================================================
+
+	『シーンのロード』日本語バージョンのリソース
+
+================================================================*/
+
+/*================================================================
+
+	更新内容
+
+================================================================*/
+
+/*---------------------------------------------------------------------
+	Main UI
+---------------------------------------------------------------------*/
+displayString -r -v "シーンのロード" zm_LS.windowTitle;
+displayString -r -v "設定" zm_LS.mConfig;
+displayString -r -v "タイトル追加" zm_LS.miAddTitle;
+displayString -r -v "タイトル編集" zm_LS.miEditTitle;
+displayString -r -v "タイトル削除" zm_LS.miDeleteTitle;
+displayString -r -v "自動プロジェクト設定" zm_LS.miAutoSetProject;
+displayString -r -v "履歴を全削除" zm_LS.miDeleteAllHistory;
+displayString -r -v "ディレクトリ" zm_LS.tDirectory;
+displayString -r -v "タイトル" zm_LS.flTitle;
+displayString -r -v "階層" zm_LS.flHierarchy;
+displayString -r -v "LOAD" zm_LS.btnLoadButton;
+
+
+/*---------------------------------------------------------------------
+	Error
+---------------------------------------------------------------------*/
+	/*---------------------------------------------------------------------
+		Other Error
+	---------------------------------------------------------------------*/
+	displayString -r -v " が見つかりません。\n" zm_LS_gotoDiretory.eThereIsNo;
+	displayString -r -v "maまたはmbファイルが選択されていません。選択してからＬＯＡＤを実行してください。" zm_LS_loadSceneRun.eFileIsNotChosen;
+
+	/*---------------------------------------------------------------------
+		Edit Title Error
+	---------------------------------------------------------------------*/
+	/*---------------------------------------------------------------------
+		Delete Title Error
+	---------------------------------------------------------------------*/
+/*---------------------------------------------------------------------
+	Save Confirm UI
+---------------------------------------------------------------------*/
+displayString -r -v "確認" zm_LS_loadSceneRun.confirmTitle;
+displayString -r -v "現在のシーンを保存しますか？" zm_LS_loadSceneRun.confirmExp;
+displayString -r -v "保存" zm_LS_loadSceneRun.confirmSave;
+displayString -r -v "保存しない" zm_LS_loadSceneRun.confirmNotSave;
+displayString -r -v "キャンセル" zm_LS_loadSceneRun.confirmCancel;
+
+/*---------------------------------------------------------------------
+	Add Title
+---------------------------------------------------------------------*/
+	/*---------------------------------------------------------------------
+		Add Title UI
+	---------------------------------------------------------------------*/
+	displayString -r -v "タイトルの追加" zm_LS_addTitle.windowTitle;
+	displayString -r -v "タイトル名、workフォルダフルパスを入力してください。" zm_LS_addTitle.tCaption;
+	displayString -r -v "タイトル" zm_LS_addTitle.tTitle;
+	displayString -r -v "フルパス" zm_LS_addTitle.tFullPath;
+	displayString -r -v "追加" zm_LS_addTitle.btnAdd;
+	displayString -r -v "キャンセル" zm_LS_addTitle.btnCancel;
+
+	displayString -r -v "パスを取得" zm_LS_addTitleFolderPathDialog.caption;
+
+	/*---------------------------------------------------------------------
+		Add Title Error
+	---------------------------------------------------------------------*/
+	displayString -r -v "タイトル名を入力してください。\n" zm_LS_addNewTitle.ePleaseInputTitle;
+	displayString -r -v "workフォルダフルパスを入力してください。\n" zm_LS_addNewTitle.ePleaseInputFullPath;
+	displayString -r -v "同じタイトル名を持つファイルが既に存在します。別名を入力してください。\n" zm_LS_addNewTitle.eDuplicationTitle;
+	
+	/*---------------------------------------------------------------------
+		Add Title Message
+	---------------------------------------------------------------------*/
+	displayString -r -v "に" zm_LS_addNewTitle.message01;
+	displayString -r -v "を追加しました。\n" zm_LS_addNewTitle.message02;
+
+/*---------------------------------------------------------------------
+	Edit Title
+---------------------------------------------------------------------*/
+	/*---------------------------------------------------------------------
+		Edit Title UI
+	---------------------------------------------------------------------*/
+	displayString -r -v "タイトル編集" zm_LS_editTitle.windowTitle;
+	displayString -r -v "タイトルリスト" zm_LS_editTitle.tTitleList;
+	displayString -r -v "更新" zm_LS_editTitle.btnReload;
+	displayString -r -v "タイトル名" zm_LS_editTitle.tTitleName;
+	displayString -r -v "フルパス" zm_LS_editTitle.tFullPath;
+	displayString -r -v "上記の内容で編集します。" zm_LS_editTitle.tExp;
+	displayString -r -v "編集" zm_LS_editTitle.btnEdit;
+	displayString -r -v "キャンセル" zm_LS_editTitle.btnCancel;
+
+	displayString -r -v "パスを取得" zm_LS_editTitleFolderPathDialog.caption;
+	
+	/*---------------------------------------------------------------------
+		Edit Title Error
+	---------------------------------------------------------------------*/
+	displayString -r -v "リストで選択したファイル名を持つtxtファイルは存在しません。\n" zm_LS_editTitle.eTxtFileDoesNotExist;
+	displayString -r -v "タイトル名を入力してください。\nworkフォルダフルパスを入力してください。\n" zm_LS_editTitle.ePleaseInputTitleAndFullPath;
+	displayString -r -v "タイトル名を入力してください。\n" zm_LS_editTitle.ePleaseInputTitle;
+	displayString -r -v "workフォルダフルパスを入力してください。\n" zm_LS_editTitle.ePleaseInputFullPath;
+	
+	/*---------------------------------------------------------------------
+		Edit Title Message
+	---------------------------------------------------------------------*/
+	displayString -r -v "編集を完了しました。\n" zm_LS_editTitle.editingCompletion;
+
+/*---------------------------------------------------------------------
+	Delete Title
+---------------------------------------------------------------------*/
+	/*---------------------------------------------------------------------
+		Delete Title UI
+	---------------------------------------------------------------------*/
+	displayString -r -v "タイトル削除" zm_LS_deleteTitle.windowTitle;
+	displayString -r -v "タイトルリスト" zm_LS_deleteTitle.tTitleList;
+	displayString -r -v "更新" zm_LS_deleteTitle.btnReload;
+	displayString -r -v "リストで選択したタイトルを削除します。" zm_LS_deleteTitle.tExp;
+	displayString -r -v "削除" zm_LS_deleteTitle.btnDelete;
+	displayString -r -v "キャンセル" zm_LS_deleteTitle.btnCancel;
+
+	displayString -r -v "警告" zm_LS_deleteTitle.confirmTitle;
+	displayString -r -v "削除すると元に戻すことができません。\nよろしいですか？" zm_LS_deleteTitle.confirmExp;
+	displayString -r -v "削除" zm_LS_deleteTitle.confirmDelete;
+	displayString -r -v "キャンセル" zm_LS_deleteTitle.confirmNotDelete;
+
+	/*---------------------------------------------------------------------
+		Delete Title Error
+	---------------------------------------------------------------------*/
+	displayString -r -v "リストから削除するタイトルを選択してください。" zm_LS_deleteTitle.ePleaseSelecctTitle;
+	displayString -r -v "と一致するファイルが見つかりません。" zm_LS_deleteTitle.NotFoundFile;
+
+
+
+
+
+
+
+
+
+

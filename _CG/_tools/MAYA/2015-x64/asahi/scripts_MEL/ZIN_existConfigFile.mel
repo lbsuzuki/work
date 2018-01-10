@@ -1,0 +1,39 @@
+////////////////////////////////////
+//	ZIN_existConfigFile       //
+//////////////////////////////////////////////////////////////////
+//
+//	AUTHOR: 		goto kazufumi
+//
+//	CREATION DATE:	2011_08_15
+//	UPDATED DATE:		2013_03_30
+//
+//	VERSION:		2.0
+//
+//	HOW TO USE:		run "ZIN_existConfigFile"
+//
+//////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////////////////
+//
+//	ZIN_existConfigFile
+//
+//	C:/MAYA_mel/config/内に指定したファイルが存在するかを調査します。
+//	返り値：	存在しないとき　0
+//			存在するとき　　1
+//
+//////////////////////////////////////////////////////////////////////////
+
+global proc int ZIN_existConfigFile(string $fileName){
+
+	string $melConfig = "C:/ZIN/MEL/config";
+	int $existFile = `filetest -f ( $melConfig + "/" + $fileName)`;
+
+	if($existFile == 0){
+		int $fp = `fopen ( $melConfig + "/" + $fileName ) "w"`;
+		fclose $fp;
+		return 0;
+	}else if($existFile == 1){
+		return 1;
+	}
+}
+

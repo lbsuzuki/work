@@ -1,0 +1,97 @@
+////////////////////////////////////////////////////////////////////////////////////
+//	ZIN_existCommonAbsolutePath       //
+////////////////////////////////////////////////////////////////////////////////////
+//
+//	AUTHOR: 		goto kazufumi
+//
+//	CREATION DATE:	2013_02_24
+//	UPDATED DATE:	2013_02_24
+//
+//	VERSION:		1.0
+//
+//	HOW TO USE:		run "ZIN_existCommonAbsolutePath"
+//
+////////////////////////////////////////////////////////////////////////////////////
+
+/*--------------------------------------------------------------------------------------------------------------------
+
+	ZIN_existCommonAbsolutePath
+	
+	戻り値：	「ZIN_setup.mel」が存在しないとき		0
+					「ZIN_setup.mel」が存在するとき		1
+	共通絶対パスフォルダと共通絶対パスファイルが存在するか「ZIN_setup.mel」がある場所を調査し、
+	存在しないときは作成する。	
+	ファイル作成時、ローカル設定を保存する仁ツールフォルダの絶対パスを書き込みます。
+	
+	共通絶対パスファイルの場所
+	「ZIN_setup.mel」の保存場所 + "/00_commonAbsolutePath/ZIN_commonAbsolutePath.txt"
+
+--------------------------------------------------------------------------------------------------------------------*/
+
+global proc int ZIN_existCommonAbsolutePath(){
+
+	//共通絶対パスファイルに必ず書き込む絶対パス
+	string $localAbsolutePath = "localConfig>>C:/ZIN/MEL/config";
+	
+	//ローカル設定を保存する仁ツールフォルダが存在するか調査し、作成
+	ZIN_existLocalMELConfig();
+	
+	//戻り値
+	int $return = 0;
+
+	//「ZIN_setup.mel」が保存されているディレクトリを取得
+	//「ZIN_setup.mel」を含むフルパスが取得されます。
+	string $setupPath = `whatIs ZIN_setup.mel`;
+	
+	//「ZIN_setup.mel」が存在するとき
+	if( $setupPath != "Unknown" ){
+		
+		$return = 1;
+		
+		int $size = size($setupPath);
+		$setupPath = `substring $setupPath 18 $size`;		
+	
+		//「ZIN_setup.mel」以外のフルパスを取得
+		string $scriptPath = `dirname $setupPath`;
+		
+		//共通絶対パスフォルダのフルパス、共通絶対パスファイルのフルパスを取得
+		string $absolutePathFolder = $scriptPath + "/00_commonAbsolutePath";
+		string $absolutePathFile = $scriptPath + "/00_commonAbsolutePath/ZIN_commonAbsolutePath.txt";
+
+
+		//共通絶対パスフォルダの存在を調査
+		int $existFolder = `filetest -e $absolutePathFolder`;
+		
+		//共通絶対パスフォルダのフルパスが存在しないとき
+		if( !$existFolder ){
+		
+			//共通絶対パスフォルダを作成
+			sysFile -makeDir $absolutePathFolder;
+		
+		//共通絶対パスフォルダのフルパスが存在するとき
+		}
+		
+		//共通絶対パスファイルの存在を調査
+		int $existFile = `filetest -f $absolutePathFile`;
+		
+		//共通絶対パスファイルの存在が存在しないとき
+		if( !$existFile ){		
+			int $fileID = `fopen $absolutePathFile "w"`;
+			fprint $fileID $localAbsolutePath;
+			fclose $fileID;
+		}
+	
+	}
+
+	return $return;
+	
+}
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,126 @@
+global proc AEnoiseDeformerTemplate( string $nodeName )
+{
+	editorTemplate -beginScrollLayout;
+
+	editorTemplate -beginLayout "Noise Attributes" -collapse 0;
+		editorTemplate -addControl "noiseType" "olm_aet_nd_checkNoiseType";
+		editorTemplate -addControl "seed";
+		editorTemplate -label "Fractal" -addControl "fractalState" "olm_aet_nd_checkFractal";
+		editorTemplate -addControl "roughness";
+		editorTemplate -addControl "iterations";
+		editorTemplate -addControl "displacement";
+
+		editorTemplate -beginLayout "Noise Field Scale" -collapse 0;
+			editorTemplate -addControl "scaleX";
+			editorTemplate -addControl "scaleY";
+			editorTemplate -addControl "scaleZ";
+		editorTemplate -endLayout;
+
+		editorTemplate -beginLayout "Strength" -collapse 0;
+			editorTemplate -addControl "alongNormals" "olm_aet_nd_checkAlongNormals";
+            editorTemplate -suppress "envelope";
+  // editorTemplate -addControl "envelope";
+            editorTemplate -addControl "amplitude";
+			editorTemplate -label "X" -addControl "amplitudeX";
+			editorTemplate -label "Y" -addControl "amplitudeY";
+			editorTemplate -label "Z" -addControl "amplitudeZ";
+		editorTemplate -endLayout;
+
+		editorTemplate -beginLayout "Bounding Box" -collapse 0;
+			editorTemplate -label "Bounding Box"  -addControl "boundingBoxState" "olm_aet_nd_checkBoundingBox";
+			editorTemplate -addControl "falloff";
+		editorTemplate -endLayout;
+
+		editorTemplate -beginLayout "Animation" -collapse 0;
+			editorTemplate -label "Animate Noise" -addControl "animationState";
+			editorTemplate -addControl "time";
+			editorTemplate -addControl "frequency";
+			editorTemplate -addControl "phase";
+		editorTemplate -endLayout;
+
+	editorTemplate -endLayout;
+
+	// include/call base class/node attributes
+	AEdependNodeTemplate $nodeName;
+	
+	editorTemplate -addExtraControls;
+	editorTemplate -endScrollLayout;
+}
+
+global proc olm_aet_nd_checkFractal ( string $nodeName )
+{
+  string $nodeAttr = $nodeName + ".fractalState";
+  int $value = `getAttr $nodeAttr`;
+
+	if ( $value ) {
+		editorTemplate -dimControl $nodeName "roughness" false;
+		editorTemplate -dimControl $nodeName "iterations" false;
+	} else {
+		editorTemplate -dimControl $nodeName "roughness" true;
+		editorTemplate -dimControl $nodeName "iterations" true;
+	}
+}
+
+global proc olm_aet_nd_checkAlongNormals ( string $nodeName )
+{
+  string $nodeAttr = $nodeName + ".alongNormals";
+  int $value = `getAttr $nodeAttr`;
+
+	if ( $value ) {
+		editorTemplate -dimControl $nodeName "amplitude" false;
+		editorTemplate -dimControl $nodeName "amplitudeX" true;
+		editorTemplate -dimControl $nodeName "amplitudeY" true;
+		editorTemplate -dimControl $nodeName "amplitudeZ" true;
+	} else {
+		editorTemplate -dimControl $nodeName "amplitude" true;
+		editorTemplate -dimControl $nodeName "amplitudeX" false;
+		editorTemplate -dimControl $nodeName "amplitudeY" false;
+		editorTemplate -dimControl $nodeName "amplitudeZ" false;
+	}
+}
+
+global proc olm_aet_nd_checkBoundingBox ( string $nodeName )
+{
+  string $nodeAttr = $nodeName + ".boundingBoxState";
+  int $value = `getAttr $nodeAttr`;
+
+	if ( $value ) {
+		editorTemplate -dimControl $nodeName "falloff" false;
+	} else {
+		editorTemplate -dimControl $nodeName "falloff" true;
+	}
+}
+
+global proc olm_aet_nd_checkNoiseType ( string $nodeName )
+{
+  string $nodeAttr = $nodeName + ".noiseType";
+  int $value = `getAttr $nodeAttr`;
+
+	if ( $value == 4 ) {
+		editorTemplate -dimControl $nodeName "displacement" false;
+		editorTemplate -dimControl $nodeName "seed" true;
+		editorTemplate -dimControl $nodeName "scaleX" true;
+		editorTemplate -dimControl $nodeName "scaleY" true;
+		editorTemplate -dimControl $nodeName "scaleZ" true;
+		editorTemplate -dimControl $nodeName "fractalState" true;
+		editorTemplate -dimControl $nodeName "roughness" true;
+		editorTemplate -dimControl $nodeName "iterations" true;
+		editorTemplate -dimControl $nodeName "animationState" true;
+		editorTemplate -dimControl $nodeName "frequency" true;
+		editorTemplate -dimControl $nodeName "phase" true;
+	} else {
+		editorTemplate -dimControl $nodeName "displacement" true;
+		editorTemplate -dimControl $nodeName "seed" false;
+		editorTemplate -dimControl $nodeName "scaleX" false;
+		editorTemplate -dimControl $nodeName "scaleY" false;
+		editorTemplate -dimControl $nodeName "scaleZ" false;
+		editorTemplate -dimControl $nodeName "fractalState" false;
+		editorTemplate -dimControl $nodeName "roughness" false;
+		editorTemplate -dimControl $nodeName "iterations" false;
+		editorTemplate -dimControl $nodeName "animationState" false;
+		editorTemplate -dimControl $nodeName "frequency" false;
+		editorTemplate -dimControl $nodeName "phase" false;
+	}
+	olm_aet_nd_checkFractal($nodeName);
+}
+

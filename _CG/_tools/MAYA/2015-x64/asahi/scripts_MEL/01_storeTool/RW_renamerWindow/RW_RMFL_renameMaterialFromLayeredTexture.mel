@@ -1,0 +1,87 @@
+//レイヤテクスチャ.outColorと接続しているマテリアル名をリネーム
+global proc RW_RMFL_renameMaterialFromLayeredTexture(){
+	string $lt[] = ` ls -type "layeredTexture" -sl `;
+	string $withoutMat[];
+	string $ltOne;
+	for( $ltOne in $lt ){
+
+		string $base = "";
+		string $parts01[];
+		clear $parts01;
+		int $token = ` tokenize $ltOne "_" $parts01 `;
+		if( $parts01[$token-1] == "lt" ){
+			for( $i=0; $i<($token-1); $i++ ){
+				int $size = ` size $base `;
+				if( $size == 0 ){
+					$base = $parts01[0];
+				}else{
+					$base = $base + "_" + $parts01[$i];
+				}
+			}
+			
+		}else{
+			$base = $ltOne;
+		}
+			
+		string $mat[];
+		clear $mat;
+		string $matPlug[] = `connectionInfo -dfs ( $ltOne + ".outColor" ) `;
+		
+		int $size = ` size $matPlug `;
+		
+		if( $size != 0 ){
+		
+			string $matPlugOne;
+			for( $matPlugOne in $matPlug ){
+				string $parts02[];
+				tokenize $matPlugOne "." $parts02;
+				int $size = ` size $mat `;
+				$mat[$size] = $parts02[0];
+			}
+			
+			string $store[];
+			clear $store;
+			for( $i=0; $i<$size; $i++ ){
+				$storeSize = ` size $store `;
+				$store[$storeSize] = $base;
+			}
+			
+			
+			int $iSize = size(string($size));
+			string $rename[];
+			clear $rename;
+			$rename = ZIN_addSerial( $store , ($iSize+1) , 1 );
+
+			string $tmpStore[];
+			clear $tmpStore;
+			for( $i=0; $i<size($mat); $i++ ){
+				string $tmp = ` rename $mat[$i] "tmp" `;
+				int $size = ` size $tmpStore `;
+				$tmpStore[$size] = $tmp;
+			}
+			
+			for( $i=0; $i<size($mat); $i++ ){
+				rename $tmpStore[$i] ( $rename[$i] + "_mat" );
+			}
+			
+		}else{
+			int $size = ` size $withoutMat `;
+			$withoutMat[$size] = $ltOne;
+		}
+		
+	}
+
+	if( size($withoutMat) != 0 ){
+		string $warning = "次のレイヤーテクスチャの\".outColor\"には接続先がありません。\n";
+		string $warningOne;
+		for( $warningOne in $withoutMat ){
+			$warning += $warningOne;
+			$warning += "\n";
+		}
+		
+		warning $warning;
+		
+	}
+	
+}
+

@@ -1,0 +1,2080 @@
+//////////////////////////////////////////////////////////////////
+//	RW_renamerWindow            //     　リネーマ					  //
+//////////////////////////////////////////////////////////////////
+//
+//	AUTHOR: 		goto kazufumi
+//
+//	CREATION DATE:			2011_07_12
+//	UPDATED DATE:			2014_02_26
+//
+//	VERSION:		3.2
+//
+//	HOW TO USE:		run "RW_renamerWindow();"
+//
+//////////////////////////////////////////////////////////////////
+
+/******************************************************************************
+
+	■更新内容：
+	
+		v3.2 「マテリアル ネットワーク名前変換」で変換対象から「lambert1」を除外するように変更しました
+		v3.1	絶対パスをZIN_commonAbsolutePathで取得するようにしました。
+		v3.0	マテリアル ネットワーク名前変換ツールの追加
+		v2.1	文字列削除を実行すると削除に該当する文字列を
+			名前全体から検索し、該当する文字列全てを削除してしまうバグを
+			直しました。　
+		v2.0	文字列削除ツールの追加
+			文字列追加のテンプレート機能を追加
+		v1.1	選択オブジェクトの取得順を階層降順に並び替えて取得するようにしました。
+		
+
+******************************************************************************/
+
+
+///////////////////////////////////////////////////////
+//
+//	RW_renamerWindow
+//
+//	リネーマウインドウを表示します。
+//
+////////////////////////////////////////
+
+
+global proc RW_renamerWindow(){
+
+	string $source = RW_window();
+	print $source;
+	eval $source;
+
+}
+
+
+///////////////////////////////////////////////////////
+//
+//	RW_window
+//
+//	リネーマウインドウを表示します。
+//
+////////////////////////////////////////
+
+global proc string RW_window(){
+
+	//共通コンフィグ絶対パス
+	string $commonAP = ZIN_commonAbsolutePath("RW_renamerWindowConfig");
+
+	//文字列追加テンプレートの読込先
+	string $addStringTemplatePath = $commonAP + "/addStringTemplate.txt";
+
+	//ツール名、バージョン
+	string $title = "リネーマ";
+	string $version = "v3.2";
+	
+	
+	//重複ウインドウ対策
+	if(`window -exists RW_winMain`)	deleteUI RW_winMain;
+	
+	//レイアウト調整値
+	int $expOffset = 25;
+	int $top = 12;
+	int $left = 100;
+	int $right = 20;
+	
+	//ウインドウ要素/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	window	-title ($title + " " + $version)
+				-titleBar 1
+				-minimizeButton 1
+				-maximizeButton 1
+				-menuBar 1
+				RW_winMain;
+		
+		//メニュー--------------------------------------------------------------------------
+		menu	-label "設定";
+	
+			menuItem	-label "設定の保存" -command "RW_saveSetting()";
+			menuItem	-label "設定の読込" -command "RW_loadSetting()";
+			menuItem	-label "設定のリセット" -command "RW_resetSetting()";
+			
+		tabLayout RW_tlAll;
+	
+		//最上位レイアウト--------------------------------------------------------------------------
+		formLayout		RW_folAll;
+	
+			//名前全変換/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+			frameLayout		-label "名前全変換"
+									-collapsable 1
+									-collapse 1
+									-collapseCommand "RW_winMainSizeChange(\"flAllRename\")"
+									-borderStyle etchedOut
+									RW_flAllRename;
+									
+				formLayout	RW_folAllRename;
+					text			-label "名前を変換したいオブジェクトを選択してください。"
+									RW_tAllRenameExp;
+
+					//名前--------------------------------------------------------------------------
+					text			-label "名前："
+									RW_tAllRenameName;
+					textField	-text ""
+									-enterCommand "RW_allRenameResult()"
+									-changeCommand "RW_allRenameResult()"
+									RW_tfAllRenameBase;
+
+					//パディングチェックボックス、開始番号--------------------------------------------------------------------------
+					checkBox	-label ""
+									-value 1
+									-changeCommand "RW_allRenameNumberCustomChange();RW_allRenameResult();"
+									RW_cbAllRenameNumberCustom;
+					text			-label "開始番号："
+									RW_tAllRenameStartNum;
+					intField		-value 1
+									-width 50
+									-changeCommand "RW_allRenameResult()"
+									RW_ifAllRenameStartValue;
+
+					//パディング--------------------------------------------------------------------------
+					text			-label "パディング："
+									RW_tAllRenamePadding;
+					intField		-value 1
+									-minValue 1
+									-maxValue 10
+									-step 1
+									-width 50
+									-changeCommand "RW_allRenamePaddingValueChange();RW_allRenameResult()"
+									RW_ifAllRenamePaddingValue;
+					intSlider	-value 1
+									-minValue 1
+									-maxValue 10
+									-width 150
+									-step 1
+									-dragCommand "RW_allRenameSliderChange();RW_allRenameResult()"
+									RW_isAllRenamePaddingSlider;
+
+
+					//結果--------------------------------------------------------------------------
+					text 			-label "結果："
+									RW_tAllRenameResultItem;
+					text			-label ""
+									RW_tAllRenameResult;
+
+
+					//実行ボタン群--------------------------------------------------------------------------
+					button	-label "適用"
+								-command "RW_allRename();RW_allRenameResult()"
+								RW_bAllRenameRun;
+				setParent..;
+			setParent..;
+
+			
+			formLayout	-e
+			
+				-af		RW_tAllRenameExp							"top"				$top
+				-af		RW_tAllRenameExp							"left"				$expOffset
+
+				-ac		RW_tAllRenameName							"top"				$top		RW_tAllRenameExp
+				-ac		RW_tAllRenameName							"right"			0			RW_tfAllRenameBase
+				
+				-ac		RW_tfAllRenameBase							"top"				$top		RW_tAllRenameExp
+				-af		RW_tfAllRenameBase							"left"				$left
+				-af		RW_tfAllRenameBase							"right"			$right
+				
+				-ac		RW_cbAllRenameNumberCustom			"top"				$top		RW_tAllRenameName
+				-ac		RW_cbAllRenameNumberCustom			"right"			10		RW_tAllRenameStartNum
+				
+				-ac		RW_tAllRenameStartNum					"top"				$top		RW_tAllRenameName
+				-ac		RW_tAllRenameStartNum					"right"			0			RW_ifAllRenameStartValue
+				
+				-ac		RW_ifAllRenameStartValue					"top"				$top		RW_tAllRenameName
+				-af		RW_ifAllRenameStartValue					"left"				$left
+				
+				-ac		RW_tAllRenamePadding						"top"				$top		RW_tAllRenameStartNum
+				-ac		RW_tAllRenamePadding						"right"			0			RW_ifAllRenamePaddingValue
+				
+				-ac		RW_ifAllRenamePaddingValue				"top"				$top		RW_tAllRenameStartNum
+				-af		RW_ifAllRenamePaddingValue				"left"				$left
+
+				-ac		RW_isAllRenamePaddingSlider				"top"				$top		RW_tAllRenameStartNum
+				-ac		RW_isAllRenamePaddingSlider				"left"				0			RW_ifAllRenamePaddingValue
+				-af		RW_isAllRenamePaddingSlider				"right"			$right
+
+				-ac		RW_tAllRenameResultItem					"top"				$top		RW_tAllRenamePadding
+				-ac		RW_tAllRenameResultItem					"right"			0			RW_tAllRenameResult
+				
+				-ac		RW_tAllRenameResult							"top"				$top		RW_tAllRenamePadding
+				-af		RW_tAllRenameResult							"left"				$left
+				
+				-ac		RW_bAllRenameRun							"top"				$top		RW_tAllRenameResultItem
+				-af		RW_bAllRenameRun							"left"				0
+				-af		RW_bAllRenameRun							"right"			0
+			
+				RW_folAllRename;
+			
+
+			//名前部分変換////////////////////////////////////////////////////////////////////////////////////
+
+			frameLayout	-label "名前部分変換"
+								-collapsable 1
+								-collapse 1
+								-collapseCommand "RW_winMainSizeChange(\"flPartsRename\")"
+								-borderStyle etchedOut
+								RW_flPartsRename;
+				formLayout	RW_folPartsRename;
+					text		-label "名前を変換したいオブジェクトを選択してください。"
+								RW_tPartsRenameExp;
+
+					//検索文字列--------------------------------------------------------------------------
+					text			-label "検索文字列："
+									RW_tSearchString;
+					textField	-text ""
+									RW_tfSearchString;
+
+					//置換文字列--------------------------------------------------------------------------
+					text			-label "置換文字列："
+									RW_tTargetString;
+					textField	-text ""
+									RW_tfTargetString;
+
+					//実行ボタン群--------------------------------------------------------------------------
+					button	-label "適用"
+								-command "RW_partsRename()"
+								RW_bPartsRenameRun;
+				setParent..;
+			setParent..;
+			
+
+			formLayout	-e
+			
+				-af		RW_tPartsRenameExp						"top"				$top
+				-af		RW_tPartsRenameExp						"left"				$expOffset
+				
+				-ac		RW_tSearchString							"top"				$top		RW_tPartsRenameExp
+				-ac		RW_tSearchString							"right"			0			RW_tfSearchString
+				
+				-ac		RW_tfSearchString							"top"				$top		RW_tPartsRenameExp
+				-af		RW_tfSearchString							"left"				$left
+				-af		RW_tfSearchString							"right"			$right
+				
+				-ac		RW_tTargetString							"top"				$top		RW_tSearchString
+				-ac		RW_tTargetString							"right"			0			RW_tfTargetString
+				
+				-ac		RW_tfTargetString							"top"				$top		RW_tSearchString
+				-af		RW_tfTargetString							"left"				$left
+				-af		RW_tfTargetString							"right"			$right
+				
+				-ac		RW_bPartsRenameRun					"top"				$top		RW_tfTargetString
+				-af		RW_bPartsRenameRun					"left"				0
+				-af		RW_bPartsRenameRun					"right"			0
+				
+				RW_folPartsRename;
+				
+
+			//文字列追加////////////////////////////////////////////////////////////////////////////////////
+
+			frameLayout	-label "文字列追加" -cll true -cl true
+								-collapseCommand "RW_winMainSizeChange(\"flAddString\")"
+								-borderStyle etchedOut
+								RW_flAddString;
+				formLayout	RW_folAddString;
+					text	-label "名前を変換したいオブジェクトを選択してください。"
+							RW_tAddStringExp;
+
+					//文字列追加文字列--------------------------------------------------------------------------
+					radioCollection	RW_rcAddString;
+						radioButton	-label ""
+											-changeCommand "RW_addStringResult()"
+											RW_rbAddString;
+						text				-label "追加文字列:"
+											RW_tAddString;											
+						textField	-text ""
+										-width 150
+										-enterCommand "RW_addStringResult()"
+										-changeCommand "RW_addStringResult()"
+										RW_tfAddString;
+										
+					//テンプレートオプションメニュー------------------------------------------------------------------
+						radioButton	-label ""
+											-changeCommand "RW_addStringResult()"
+											RW_rbAddStringTemplate;
+						text				-label "テンプレート:"
+											RW_tTemplate;
+									
+						optionMenu	-label ""
+											-width 200
+											-changeCommand "RW_addStringResult()"
+											RW_omAddStringTemplate;
+						int $ID = `fopen $addStringTemplatePath "r"`;
+						while(!`feof $ID`){
+							string $item = `fgetline $ID`;
+							if( $item != "\n" ){
+								string $parts[];
+								tokenize $item "\n" $parts;
+								menuItem -label $parts[0];
+							}
+						}
+						fclose $ID;
+
+					
+
+					//文字列追加場所--------------------------------------------------------------------------
+					text				-label "追加場所："
+										RW_tAddPosition;
+					optionMenu	-label ""
+										-width 80
+										-changeCommand "RW_addStringResult()"
+										RW_omAddDirection;
+						menuItem -label "前から";
+						menuItem -label "後ろから";
+					intField	-value 0
+								-width 50
+								-minValue 0
+								-changeCommand "RW_addStringResult()"
+								RW_ifAddPosition;
+					text		-label "文字目に追加"
+								RW_tAddCharaString;
+
+					//文字列追加結果--------------------------------------------------------------------------
+
+					text	-label "結果："
+							RW_tAddStringResultItem;
+
+					text	-label ""
+							RW_tAddStringResult;
+
+					//文字列追加実行ボタン群--------------------------------------------------------------------------
+					button	-label "適用"
+								-command "RW_addString();RW_addStringResult()"
+								RW_bAddStringRun;
+				setParent..;
+			setParent..;
+
+			
+			formLayout	-e
+			
+				-af			RW_tAddStringExp				"top"				$top
+				-af			RW_tAddStringExp				"left"				$expOffset
+				
+				-ac			RW_rbAddString					"top"				$top		RW_tAddStringExp
+				-ac			RW_rbAddString					"right"			5			RW_tAddString
+				
+				-ac			RW_tAddString					"top"				$top		RW_tAddStringExp
+				-ac			RW_tAddString					"right"			0			RW_tfAddString
+				
+				-ac			RW_tfAddString					"top"				$top		RW_tAddStringExp
+				-af			RW_tfAddString					"left"				$left
+				-af			RW_tfAddString					"right"			$right
+				
+				-ac			RW_rbAddStringTemplate	"top"				$top		RW_rbAddString
+				-ac			RW_rbAddStringTemplate	"right"			3			RW_tTemplate
+				
+				-ac			RW_tTemplate					"top"				$top		RW_rbAddString
+				-ac			RW_tTemplate					"right"			0			RW_omAddStringTemplate
+				
+				-ac			RW_omAddStringTemplate	"top"				$top		RW_rbAddString
+				-af			RW_omAddStringTemplate	"left"				$left
+				
+				-ac			RW_tAddPosition				"top"				$top		RW_rbAddStringTemplate
+				-ac			RW_tAddPosition				"right"			0			RW_omAddDirection
+				
+				-ac			RW_omAddDirection			"top"				$top		RW_rbAddStringTemplate
+				-af			RW_omAddDirection			"left"				$left
+				
+				-ac			RW_ifAddPosition				"top"				$top		RW_rbAddStringTemplate
+				-ac			RW_ifAddPosition				"left"				0			RW_omAddDirection
+				
+				-ac			RW_tAddCharaString			"top"				$top		RW_rbAddStringTemplate
+				-ac			RW_tAddCharaString			"left"				0			RW_ifAddPosition
+				
+				-ac			RW_tAddStringResultItem	"top"				$top		RW_tAddPosition
+				-ac			RW_tAddStringResultItem	"right"			0			RW_tAddStringResult
+				
+				-ac			RW_tAddStringResult			"top"				$top		RW_tAddPosition
+				-af			RW_tAddStringResult			"left"				$left
+			
+				-ac			RW_bAddStringRun			"top"				$top		RW_tAddStringResultItem
+				-af			RW_bAddStringRun			"left"				0
+				-af			RW_bAddStringRun			"right"			0
+
+				RW_folAddString;
+			
+
+			//文字列削除////////////////////////////////////////////////////////////////////////////////////
+			
+			frameLayout	-label "文字列削除"
+								-collapsable 1
+								-collapse 1
+								-collapseCommand "RW_winMainSizeChange(\"flRemoveString\")"
+								-borderStyle etchedOut
+								RW_flRemoveString;
+							
+				formLayout	RW_folRemoveString;
+				
+					text	-label "名前を削除したいオブジェクトを選択してください。"
+							RW_tRemoveStringExp;
+						
+					text	-label "削除範囲："
+							RW_tRemoveRange;
+					optionMenu	-label ""
+										-width 80
+										-changeCommand "RW_removeStringResult()"
+										RW_omRemoveStringDirection;
+						menuItem -label "前から";
+						menuItem -label "後ろから";
+					intField	-value 1
+								-width 50
+								-minValue 1
+								-enterCommand "RW_removeStringEndStartChange();RW_removeStringResult()"
+								-changeCommand "RW_removeStringEndStartChange();RW_removeStringResult()"
+								RW_ifRemoveStringStartPosition;
+					text	-label " 文字目～"
+							RW_tRemoveStringCharaStart;
+					intField	-value 1
+								-width 50
+								-minValue 1
+								-enterCommand "RW_removeStringEndStartChange();RW_removeStringResult()"
+								-changeCommand "RW_removeStringEndStartChange();RW_removeStringResult()"
+								RW_ifRemoveStringEndPosition;
+					text	-label " 文字目まで"
+							RW_tRemoveStringCharaEnd;
+					text	-label "結果："
+							RW_tRemoveStringResultItem;
+					text	-label ""
+							RW_tRemoveStringResult;
+					//文字列削除実行ボタン群--------------------------------------------------------------------------
+					button	-label "適用"
+								-command "RW_removeString();RW_removeStringResult()"
+								RW_bAddStringRun;
+				setParent..;
+			setParent..;
+			
+
+			formLayout	-e
+			
+				-af			RW_tRemoveStringExp				"top"			$top 
+				-af			RW_tRemoveStringExp				"left"			$expOffset
+				
+				-ac			RW_tRemoveRange					"top"			$top 		RW_tRemoveStringExp
+				-ac			RW_tRemoveRange					"right"		0			RW_omRemoveStringDirection
+				
+				-ac			RW_omRemoveStringDirection		"top"			$top 		RW_tRemoveStringExp
+				-af			RW_omRemoveStringDirection		"left"			$left
+				
+				-ac			RW_ifRemoveStringStartPosition	"top"			$top 		RW_tRemoveRange
+				-af			RW_ifRemoveStringStartPosition	"left"			$left
+				
+				-ac			RW_tRemoveStringCharaStart		"top"			$top 		RW_tRemoveRange
+				-ac			RW_tRemoveStringCharaStart		"left"			0			RW_ifRemoveStringStartPosition
+				
+				-ac			RW_ifRemoveStringEndPosition	"top"			$top		RW_tRemoveRange
+				-ac			RW_ifRemoveStringEndPosition	"left"			0			RW_tRemoveStringCharaStart
+
+				-ac			RW_tRemoveStringCharaEnd		"top"			$top		RW_tRemoveRange
+				-ac			RW_tRemoveStringCharaEnd		"left"			0			RW_ifRemoveStringEndPosition
+				
+				-ac			RW_tRemoveStringResultItem		"top"			$top		RW_ifRemoveStringStartPosition
+				-ac			RW_tRemoveStringResultItem		"right"		0			RW_tRemoveStringResult
+				
+				-ac			RW_tRemoveStringResult			"top"			$top		RW_ifRemoveStringStartPosition
+				-af			RW_tRemoveStringResult			"left"			$left
+				
+				-ac			RW_bAddStringRun					"top"			$top		RW_tRemoveStringResultItem
+				-af			RW_bAddStringRun					"left"			0
+				-af			RW_bAddStringRun					"right"		0
+				
+				RW_folRemoveString;
+				
+				
+
+			//連番追加////////////////////////////////////////////////////////////////////////////////////
+
+			frameLayout	-label "連番追加"
+								-collapsable 1
+								-collapse 1
+								-collapseCommand "RW_winMainSizeChange(\"flAddSerialNumber\")"
+								-borderStyle etchedOut
+								RW_flAddSerialNumber;
+				formLayout	RW_folAddSerialNumber;
+					text	-label "連番を追加したいオブジェクトを選択してください。"
+							RW_tAddSerialNumberExp;
+
+					//パディングチェックボックス、開始番号--------------------------------------------------------------------------
+					text	-label "開始番号："
+							RW_tAddSerialNumberStart;
+					intField	-value 1
+								-width 50
+								-changeCommand "RW_addSerialNumberResult()"
+								RW_ifAddSerialNumberStartValue;
+
+					//パディング--------------------------------------------------------------------------
+					text		-label "パディング："
+								RW_tAddSerialNumberPadding;
+					intField	-value 1
+								-minValue 1
+								-maxValue 10
+								-step 1
+								-width 50
+								-changeCommand "RW_addSerialNumberPaddingValueChange();RW_addSerialNumberResult()"
+								RW_ifAddSerialNumberPaddingValue;
+					intSlider	-value 1	
+									-minValue 1	
+									-maxValue 10
+									-width 150
+									-step 1
+									-dragCommand "RW_addSerialNumberPaddingSliderChange();RW_addSerialNumberResult()"
+									RW_isAddSerialNumberPaddingSlider;
+
+					//連番追加場所--------------------------------------------------------------------------
+					text	-label "追加場所："
+							RW_tAddSerialNumberAddPosition;
+					optionMenu	-label ""
+										-width 80
+										-changeCommand "RW_addSerialNumberResult()"
+										RW_omAddSerialNumberDirection;
+							menuItem -label "前から";
+							menuItem -label "後ろから";
+					intField	-value 1
+								-width 50
+								-minValue 0
+								-changeCommand "RW_addSerialNumberResult()"
+								RW_ifAddSerialNumberPosition;
+					text	-label "文字目に追加"
+							RW_tAddSerialNumberAddChara;
+
+					//連番追加結果--------------------------------------------------------------------------
+					text	-label "結果："
+							RW_tAddSerialNumberResultItem;
+					text	-label ""
+							RW_tAddSerialNumberResult;
+
+					//連番追加実行ボタン群--------------------------------------------------------------------------
+					button	-label "適用"
+								-command "RW_addSerialNumber()"
+								RW_bAddSerialNumberRun;
+				setParent..;
+			setParent..;
+			
+			
+			formLayout	-e
+
+				-af			RW_tAddSerialNumberExp						"top"			$top
+				-af			RW_tAddSerialNumberExp						"left"			$expOffset
+				
+				-ac			RW_tAddSerialNumberStart						"top"			$top		RW_tAddSerialNumberExp
+				-ac			RW_tAddSerialNumberStart						"right"		0			RW_ifAddSerialNumberStartValue
+				
+				-ac			RW_ifAddSerialNumberStartValue			"top"			$top		RW_tAddSerialNumberExp
+				-af			RW_ifAddSerialNumberStartValue			"left"			$left
+				
+				-ac			RW_tAddSerialNumberPadding					"top"			$top		RW_tAddSerialNumberStart
+				-ac			RW_tAddSerialNumberPadding					"right"		0			RW_ifAddSerialNumberPaddingValue
+				
+				-ac			RW_ifAddSerialNumberPaddingValue		"top"			$top		RW_tAddSerialNumberStart
+				-af			RW_ifAddSerialNumberPaddingValue		"left"			$left
+				
+				-ac			RW_isAddSerialNumberPaddingSlider		"top"			$top		RW_tAddSerialNumberStart
+				-ac			RW_isAddSerialNumberPaddingSlider		"left"			0			RW_ifAddSerialNumberPaddingValue
+				
+				-ac			RW_tAddSerialNumberAddPosition			"top"			$top		RW_tAddSerialNumberPadding
+				-ac			RW_tAddSerialNumberAddPosition			"right"		0			RW_omAddSerialNumberDirection
+				
+				-ac			RW_omAddSerialNumberDirection			"top"			$top		RW_tAddSerialNumberPadding
+				-af			RW_omAddSerialNumberDirection			"left"			$left
+				
+				-ac			RW_ifAddSerialNumberPosition				"top"			$top		RW_tAddSerialNumberPadding
+				-ac			RW_ifAddSerialNumberPosition				"left"			0			RW_omAddSerialNumberDirection
+				
+				-ac			RW_tAddSerialNumberAddChara				"top"			$top		RW_tAddSerialNumberPadding
+				-ac			RW_tAddSerialNumberAddChara				"left"			0			RW_ifAddSerialNumberPosition
+				
+				-ac			RW_tAddSerialNumberResultItem				"top"			$top		RW_ifAddSerialNumberPosition
+				-ac			RW_tAddSerialNumberResultItem				"right"		0			RW_tAddSerialNumberResult
+				
+				-ac			RW_tAddSerialNumberResult					"top"			$top		RW_ifAddSerialNumberPosition
+				-af			RW_tAddSerialNumberResult					"left"			$left
+				
+				-ac			RW_bAddSerialNumberRun						"top"			$top		RW_tAddSerialNumberResultItem
+				-af			RW_bAddSerialNumberRun						"left"			0
+				-af			RW_bAddSerialNumberRun						"right"		0
+				
+				RW_folAddSerialNumber;					
+			
+			
+
+			//大文字・小文字変換////////////////////////////////////////////////////////////////////////////////////
+
+			frameLayout	-label "大文字・小文字変換" -cll true -cl true
+								-collapseCommand "RW_winMainSizeChange(\"flCapitalSmall\")"
+								-borderStyle etchedOut
+								RW_flCapitalSmall;
+				formLayout	RW_folCapitalSmall;
+					text	-label "選択したオブジェクト名に対し、大文字⇔小文字を実行します。"
+							RW_tCapitalSmallExp;
+
+					//変換方法（大文字⇔小文字）--------------------------------------------------------------------------
+					text	-label "変換方法："
+							RW_tCapitalSmallConversionRegime;
+					optionMenu	-label ""
+										-width 125
+										-height 20
+										RW_omCapitalSmall;
+						menuItem	-label "大文字⇒小文字";
+						menuItem	-label "小文字⇒大文字";
+					text	-label "に変換する。"
+							RW_tConvert;
+
+					//実行ボタン群--------------------------------------------------------------------------
+					button	-label "適用"
+								-command "RW_capitalSmall();"
+								RW_bCapitalSmallRun;
+				setParent..;
+			setParent..;
+			
+			
+			formLayout	-e
+			
+				-af			RW_tCapitalSmallExp								"top"				$top
+				-af			RW_tCapitalSmallExp								"left"				$expOffset
+				
+				-ac			RW_tCapitalSmallConversionRegime			"top"				$top		RW_tCapitalSmallExp
+				-ac			RW_tCapitalSmallConversionRegime			"right"			0			RW_omCapitalSmall
+				
+				-ac			RW_omCapitalSmall								"top"				$top		RW_tCapitalSmallExp
+				-af			RW_omCapitalSmall								"left"				$left
+				
+				-ac			RW_tConvert											"top"				$top		RW_tCapitalSmallExp
+				-ac			RW_tConvert											"left"				0			RW_omCapitalSmall
+				
+				-ac			RW_bCapitalSmallRun								"top"				$top		RW_tCapitalSmallConversionRegime
+				-af			RW_bCapitalSmallRun								"left"				0
+				-af			RW_bCapitalSmallRun								"right"			0
+			
+				RW_folCapitalSmall;
+				
+			
+			//マテリアルネットワーク名前変換////////////////////////////////////////////////////////////////////////////////////
+			
+			float $color[] = {0.5,0.5,0.5};
+			
+			frameLayout	-label "マテリアル ネットワーク名前変換" -cll true -cl true
+								-collapseCommand "RW_winMainSizeChange(\"flMN\")"
+								-borderStyle etchedOut
+								RW_flMN;
+				formLayout	-width 360
+									RW_folMN;
+					text	-label "シェーディンググループをマテリアル名と同期" RW_tMNSGExp01;
+					text	-label "例: color01_mat + SG → color01_matSG" RW_tMNSGExp02;
+					
+					//１つのマテリアルに複数のシェーディンググループがある場合--------------------------------------------------------------------------
+					//無視する
+					radioCollection	RW_rcMNSG;
+					text	-label "１つのマテリアルに複数のシェーディンググループがある場合、"
+							RW_tMNSGExp03;
+					radioButton	-label "無視する"
+										-changeCommand ""
+										RW_rbMNSGIgnore;
+					checkBox	-label "無視したマテリアル名とシェーディンググループ名を返す"
+									-value 1
+									-changeCommand ""
+									RW_cbMNSGWarning;
+					
+					//連番をつける
+					radioButton	-label "名前の最後に連番を追加"
+										-select
+										-changeCommand ""
+										RW_rbMNSGSerialNumber;
+									
+					//パディング--------------------------------------------------------------------------
+					text			-label "パディング："
+									RW_tMNSGPadding;
+					intField		-value 1
+									-minValue 1
+									-maxValue 10
+									-step 1
+									-width 50
+									-changeCommand ""
+									RW_ifMNSGPaddingValue;
+					intSlider	-value 1
+									-minValue 1
+									-maxValue 10
+									-width 150
+									-step 1
+									-dragCommand ""
+									RW_isMNSGPaddingSlider;
+					
+					//実行ボタン シェーディンググループ変換
+					button	-label "適用"
+								-command "RW_materialNetworkSG();"
+								RW_bMNSGRun;
+								
+		
+				setParent..;
+			setParent..;
+			
+			formLayout -e
+			
+				-af		RW_tMNSGExp01					"top"				$top
+				-af		RW_tMNSGExp01					"left"				$expOffset
+				
+				-ac		RW_tMNSGExp02					"top"				$top				RW_tMNSGExp01
+				-af		RW_tMNSGExp02					"left"				($expOffset+10)
+				
+				-ac		RW_tMNSGExp03					"top"				$top				RW_tMNSGExp02
+				-af		RW_tMNSGExp03					"left"				$expOffset
+				
+				-ac		RW_rbMNSGIgnore					"top"				$top				RW_tMNSGExp03	
+				-af		RW_rbMNSGIgnore					"left"				$expOffset
+				
+				-ac		RW_cbMNSGWarning				"top"				$top				RW_rbMNSGIgnore
+				-af		RW_cbMNSGWarning				"left"				($expOffset+10)
+				
+				-ac		RW_rbMNSGSerialNumber		"top"				$top				RW_cbMNSGWarning
+				-af		RW_rbMNSGSerialNumber		"left"				$expOffset
+
+				-ac		RW_tMNSGPadding					"top"				$top				RW_rbMNSGSerialNumber
+				-ac		RW_tMNSGPadding					"right"			0					RW_ifMNSGPaddingValue
+				
+				-ac		RW_ifMNSGPaddingValue		"top"				$top				RW_rbMNSGSerialNumber
+				-af		RW_ifMNSGPaddingValue		"left"				$left
+
+				-ac		RW_isMNSGPaddingSlider		"top"				$top				RW_rbMNSGSerialNumber
+				-ac		RW_isMNSGPaddingSlider		"left"				0					RW_ifMNSGPaddingValue
+
+				-ac		RW_bMNSGRun						"top"				$top				RW_tMNSGPadding
+				-af		RW_bMNSGRun						"left"				0
+				-af		RW_bMNSGRun						"right"			0
+				
+				RW_folMN;
+			
+			
+		setParent..;
+		
+		columnLayout -adjustableColumn 1 RW_clRenameButton;
+			string $source = ST_storeTool( "RW", "RW_renamerWindow" );
+			
+		setParent..;
+		
+		setParent..;
+	
+	showWindow;
+	
+	tabLayout -e	-tabLabel RW_folAll "入力必須リネーマ"
+						-tabLabel RW_clRenameButton "ボタン群"
+						RW_tlAll;
+
+	//フレームレイアウト幅--------------------------------------------------------------------------
+	int $flWidth = 360;
+	frameLayout	-e	-width $flWidth	RW_flAllRename;
+	frameLayout	-e	-width $flWidth	RW_flPartsRename;
+	frameLayout	-e	-width $flWidth	RW_flAddString;
+	frameLayout	-e	-width $flWidth	RW_flRemoveString;
+	frameLayout	-e	-width $flWidth	RW_flAddSerialNumber;
+	frameLayout	-e	-width $flWidth	RW_flCapitalSmall;
+
+	//オプションメニュー初期値--------------------------------------------------------------------------
+	optionMenu -e -select 2 RW_omAddDirection;
+	optionMenu -e -select 2 RW_omRemoveStringDirection;
+	optionMenu -e -select 2 RW_omAddSerialNumberDirection;
+	radioCollection -e -select RW_rbAddString RW_rcAddString;
+	
+	//最上位レイアウト調整--------------------------------------------------------------------------
+	formLayout	-e
+	
+		-af			RW_flAllRename				"top"				0
+		-af			RW_flAllRename				"left"				0
+		-af			RW_flAllRename				"right"			0
+		
+		-ac			RW_flPartsRename			"top"				0		RW_flAllRename
+		-af			RW_flPartsRename			"left"				0
+		-af			RW_flPartsRename			"right"			0
+		
+		-ac			RW_flAddString				"top"				0		RW_flPartsRename
+		-af			RW_flAddString				"left"				0
+		-af			RW_flAddString				"right"			0
+		
+		-ac			RW_flRemoveString		"top"				0		RW_flAddString
+		-af			RW_flRemoveString		"left"				0
+		-af			RW_flRemoveString		"right"			0
+		
+		-ac			RW_flAddSerialNumber	"top"				0		RW_flRemoveString
+		-af			RW_flAddSerialNumber	"left"				0
+		-af			RW_flAddSerialNumber	"right"			0
+		
+		-ac			RW_flCapitalSmall			"top"				0		RW_flAddSerialNumber
+		-af			RW_flCapitalSmall			"left"				0
+		-af			RW_flCapitalSmall			"right"			0
+		
+		-ac			RW_flMN						"top"				0		RW_flCapitalSmall
+		-af			RW_flMN						"left"				0
+		-af			RW_flMN						"right"			0
+		
+		RW_folAll;
+	
+	//各要素初期化
+	RW_allRenamePaddingValueChange();
+	RW_allRenameResult();
+	RW_addStringResult();
+	RW_removeStringResult();
+	RW_addSerialNumberResult();
+
+	//ウインドウ幅・高さ調整
+	window -e		-width 362
+						-height 166
+						RW_winMain;
+						
+	return $source;
+	
+	//リネーマ個人設定読込
+	RW_loadSetting();
+
+	
+
+}
+
+
+
+/////////////////////////////////////
+//
+//	設定プロシージャ
+//
+/////////////////////////////////////
+
+//----------------------------------------------------------------------------------------------------------
+//
+//	RW_saveSetting
+//
+//	設定を保存します。
+//
+//----------------------------------------------------------------------------------------------------------
+
+global proc RW_saveSetting(){
+
+	//ウインドウサイズ------------------------------------------------------------------------------------------------
+	int $height = `window -q -height RW_winMain`;
+	int $topLeftCorner[] = `window -q -topLeftCorner RW_winMain`;
+
+	//フレームレイアウト----------------------------------------------------------------------------------------------
+	int $flAllRename = `frameLayout -q -collapse RW_flAllRename`;
+	int $flPartsRename = `frameLayout -q -collapse RW_flPartsRename`;
+	int $flAddString = `frameLayout -q -collapse RW_flAddString`;
+	int $flRemoveString = `frameLayout -q -collapse RW_flRemoveString`;
+	int $flAddSerialNumber = `frameLayout -q -collapse RW_flAddSerialNumber`;
+	int $flCapitalSmall = `frameLayout -q -collapse RW_flCapitalSmall`;
+	int $flMN = `frameLayout -q -collapse RW_flMN`;
+
+	//名前全変換　各値--------------------------------------------------------------------------------------------
+	string $tfAllRenameBase = `textField -q -text RW_tfAllRenameBase`;
+	int $cbAllRenameNumberCustom = `checkBox -q -value RW_cbAllRenameNumberCustom`;
+	int $ifAllRenameStartValue = `intField -q -value RW_ifAllRenameStartValue`;
+	int $ifAllRenamePaddingValue = `intField -q -value RW_ifAllRenamePaddingValue`;
+
+	//名前部分変換　各値------------------------------------------------------------------------------------------
+	string $tfSearchString = `textField -q -text RW_tfSearchString`;
+	string $tfTargetString = `textField -q -text RW_tfTargetString`;
+
+	//文字列追加　各値--------------------------------------------------------------------------------------------
+	string $rcAddString = `radioCollection -q -select RW_rcAddString`;
+	string $rcSelect;
+	
+	if( $rcAddString == "RW_rbAddString" ){	
+		$rcSelect = "RW_rbAddString";	
+	}else if( $rcAddString == "RW_rbAddStringTemplate" ){	
+		$rcSelect = "RW_rbAddStringTemplate";	
+	}
+	
+	string $tfAddString = `textField -q -text RW_tfAddString`;
+	int $omAddStringTemplate = `optionMenu -q -select RW_omAddStringTemplate`;
+	int $omAddDirection = `optionMenu -q -select RW_omAddDirection`;
+	int $ifAddPosition = `intField -q -value RW_ifAddPosition`;
+	
+	//文字列削除---------------------------------------------------------------------------------------------
+	int $omRemoveStringDirection = `optionMenu -q -select RW_omRemoveStringDirection`;
+	int $ifRemoveStringStartPosition = `intField -q -value RW_ifRemoveStringStartPosition`;
+	int $ifRemoveStringEndPosition = `intField -q -value RW_ifRemoveStringEndPosition`;
+
+	//連番追加　各値---------------------------------------------------------------------------------------------
+	int $ifAddSerialNumberStartValue = `intField -q -value RW_ifAddSerialNumberStartValue`;
+	int $ifAddSerialNumberPaddingValue = `intField -q -value RW_ifAddSerialNumberPaddingValue`;
+	int $omAddSerialNumberDirection = `optionMenu -q -select RW_omAddSerialNumberDirection`;
+	int $ifAddSerialNumberPosition = `intField -q -value RW_ifAddSerialNumberPosition`;
+
+	//大文字・小文字変換　各値-----------------------------------------------------------------------------------
+	int $omCapitalSmall = `optionMenu -q -select RW_omCapitalSmall`;
+	//マテリアル ネットワーク名前変換　各値-----------------------------------------------------------------------------------
+	string $rcMNSG = `radioCollection -q -select RW_rcMNSG`;
+	int $cbMNSGWarning = `checkBox -q -value RW_cbMNSGWarning`;
+	int $ifMNSGPaddingValue = `intField -q -value RW_ifMNSGPaddingValue`;
+	
+	
+
+	string $cofigString =
+				//ウインドウ設定保存----------------------------------------------------------------------------------------------------------------------------------
+				"window -e -height "				+ $height											+ " RW_winMain"										+ ";\n" +
+				
+				"frameLayout -e -collapse "		+ $flAllRename									+ " RW_flAllRename"									+ ";\n" +
+				"frameLayout -e -collapse "		+ $flPartsRename								+ " RW_flPartsRename"								+ ";\n" +
+				"frameLayout -e -collapse "		+ $flAddString									+ " RW_flAddString"									+ ";\n" +
+				"frameLayout -e -collapse "		+ $flRemoveString								+ " RW_flRemoveString"								+ ";\n" +
+				"frameLayout -e -collapse "		+ $flAddSerialNumber							+ " RW_flAddSerialNumber"							+ ";\n" +
+				"frameLayout -e -collapse "		+ $flCapitalSmall								+ " RW_flCapitalSmall"								+ ";\n" +
+				//名前全変換設定保存----------------------------------------------------------------------------------------------------------------------------------
+				"textField -e -text "					+ "\"" + $tfAllRenameBase + "\""		+ " RW_tfAllRenameBase"							+ ";\n" +
+				"checkBox -e -value "				+ $cbAllRenameNumberCustom			+ " RW_cbAllRenameNumberCustom"			+ ";\n" +
+				"intField -e -value "					+ $ifAllRenameStartValue					+ " RW_ifAllRenameStartValue"					+ ";\n" +
+				"intField -e -value "					+ $ifAllRenamePaddingValue				+ " RW_ifAllRenamePaddingValue"				+ ";\n" +
+				//名前部分変換設定保存----------------------------------------------------------------------------------------------------------------------------------
+				"textField -e -text "					+ "\"" + $tfSearchString + "\""			+ " RW_tfSearchString"								+ ";\n" +
+				"textField -e -text "					+ "\"" + $tfTargetString + "\""			+ " RW_tfTargetString"								+ ";\n" +
+				//文字列追加設定保存----------------------------------------------------------------------------------------------------------------------------------
+				"radioCollection -e -select "		+ "\"" + $rcSelect + "\""					+ " RW_rcAddString"									+ ";\n" +
+				"textField -e -text "					+ "\"" + $tfAddString + "\""				+ " RW_tfAddString"									+ ";\n" +
+				"optionMenu -e -select "			+ $omAddStringTemplate					+ " RW_omAddStringTemplate"					+ ";\n" +
+				"optionMenu -e -select "			+ $omAddDirection								+ " RW_omAddDirection"							+ ";\n" +
+				"intField -e -value "					+ $ifAddPosition									+ " RW_ifAddPosition"									+ ";\n" +
+				//文字列削除設定保存----------------------------------------------------------------------------------------------------------------------------------
+				"optionMenu -e -select "			+ $omRemoveStringDirection				+ " RW_omRemoveStringDirection"				+ ";\n" +
+				"intField -e -value "					+ $ifRemoveStringStartPosition			+ " RW_ifRemoveStringStartPosition"			+ ";\n" +
+				"intField -e -value "					+ $ifRemoveStringEndPosition				+ " RW_ifRemoveStringEndPosition"				+ ";\n" +
+				//連番追加設定保存----------------------------------------------------------------------------------------------------------------------------------
+				"intField -e -value "					+ $ifAddSerialNumberStartValue			+ " RW_ifAddSerialNumberStartValue"			+ ";\n" +
+				"intField -e -value "					+ $ifAddSerialNumberPaddingValue		+ " RW_ifAddSerialNumberPaddingValue"		+ ";\n" +
+				"optionMenu -e -select "			+ $omAddSerialNumberDirection			+ " RW_omAddSerialNumberDirection"			+ ";\n" +
+				"intField -e -value "					+ $ifAddSerialNumberPosition				+ " RW_ifAddSerialNumberPosition"				+ ";\n" +
+				//大文字・小文字設定保存----------------------------------------------------------------------------------------------------------------------------------
+				"optionMenu -e -select "			+ $omCapitalSmall								+ " RW_omCapitalSmall"								+ ";\n" +
+				//マテリアル ネットワーク名前変換----------------------------------------------------------------------------------------------------------------------------------
+				"radioCollection -e -select "		+ $rcMNSG										+ " RW_rcMNSG"										+ ";\n" +
+				"checkBox -e -value "				+ $cbMNSGWarning							+ " RW_cbMNSGWarning"							+ ";\n" +
+				"intField -e -value "					+ $ifMNSGPaddingValue						+ " RW_ifMNSGPaddingValue"						+ ";\n";
+
+
+	//保存先フォルダ、ファイルの存在調査
+	ZIN_existLocalMELConfig();
+	ZIN_existConfigFile("RW_config.txt");
+	//保存されている設定を保存
+	string $configPath = ZIN_commonAbsolutePath("localMELConfig");
+	$configPath += "/RW_config.txt";
+	int $fp = `fopen $configPath "w"`;	
+	fwrite $fp $cofigString;
+	fclose $fp;
+
+}
+
+
+
+//----------------------------------------------------------------------------------------------------------
+//
+//	RW_loadSetting
+//
+//	保存した設定を読み込みます。
+//
+//----------------------------------------------------------------------------------------------------------
+
+global proc RW_loadSetting(){
+
+	//while対策　$getlineに空白を代入
+	string $getline = " ";
+	
+	//読込先のフォルダ、ファイルの存在調査
+	ZIN_existLocalMELConfig();
+	ZIN_existConfigFile("RW_config.txt");
+	
+	//設定の読込
+	string $configPath = ZIN_commonAbsolutePath("localMELConfig");
+	$configPath += "/RW_config.txt";
+	int $fp = `fopen $configPath "r"`;
+	while($getline != 0){
+		$getline = `fgetline $fp`;
+		eval $getline;
+	}
+	fclose $fp;
+
+}
+
+
+
+//----------------------------------------------------------------------------------------------------------
+//
+//	RW_resetSetting
+//
+//	設定をリセットします。
+//
+//----------------------------------------------------------------------------------------------------------
+
+global proc RW_resetSetting(){
+
+	//名前全変換
+	textField -e			-tx ""													RW_tfAllRenameBase;
+	checkBox -e			-v 1														RW_cbAllRenameNumberCustom;
+	intField -e				-v 1														RW_ifAllRenameStartValue;
+	intField -e				-v 1														RW_ifAllRenamePaddingValue;
+	//名前部分変換
+	textField -e			-tx ""													RW_tfSearchString;
+	textField -e			-tx ""													RW_tfTargetString;
+	//文字列追加
+	radioCollection -e	-select RW_rbAddString						RW_rcAddString;
+	textField -e			-tx ""													RW_tfAddString;
+	optionMenu -e		-select 2												RW_omAddDirection;
+	intField -e				-v 0														RW_ifAddPosition;
+	//文字列削除
+	optionMenu -e		-select 1												RW_omRemoveStringDirection;
+	intField -e				-v	1														RW_ifRemoveStringStartPosition;
+	intField -e				-v 1														RW_ifRemoveStringEndPosition;
+	//連番追加
+	intField -e				-v 1														RW_ifAddSerialNumberStartValue;
+	intField -e				-v 1														RW_ifAddSerialNumberPaddingValue;
+	intSlider -e			-v 1														RW_isAddSerialNumberPaddingSlider;
+	optionMenu -e		-select 2												RW_omAddSerialNumberDirection;
+	intField -e				-v 1														RW_ifAddSerialNumberPosition;
+	//大文字・小文字
+	optionMenu -e		-select 1												RW_omCapitalSmall;
+	//マテリアル ネットワーク名前変換
+	radioCollection -e	-select "RW_rbMNSGSerialNumber"		RW_rcMNSG;
+	checkBox -e			-v 1														RW_cbMNSGWarning;
+
+	RW_allRenameResult();
+	RW_addStringResult();
+
+}
+
+
+
+/////////////////////////////////////
+//
+//	ウインドウ編集プロシージャ
+//
+/////////////////////////////////////
+
+//----------------------------------------------------------------------------------------------------------
+//
+//	RW_winMainSizeChange
+//
+//	フレームレイアウトのコラプスを編集時にウインドウのサイズを同時に編集。
+//
+//----------------------------------------------------------------------------------------------------------
+
+global proc RW_winMainSizeChange(string $flName){
+	
+	//ウインドウサイズ、各フレームレイアウトのコラプス状態を取得
+	int $windowHeight = `window -q -height RW_winMain`;
+	int $allRenameCollapseState = `frameLayout -q -collapse RW_flAllRename`;
+	int $partsRenameCollapseState = `frameLayout -q -collapse RW_flPartsRename`;
+	int $addStringCollapseState = `frameLayout -q -collapse RW_flAddString`;
+	int $removeStringCollapseState = `frameLayout -q -collapse RW_flRemoveString`;
+	int $addSerialNumberCollapseState = `frameLayout -q -collapse RW_flAddSerialNumber`;
+	int $capitalSmallCollapseState = `frameLayout -q -collapse RW_flCapitalSmall`;
+	int $MNCollapseState = `frameLayout -q -collapse RW_flMN`;
+
+	//各コラプスが1のとき（閉じてるとき）ウインドウサイズからコラプス0のときとの差分を引く
+	if($flName == "flAllRename"){
+		if($allRenameCollapseState == 1){	
+			$windowHeight = $windowHeight - 168;	
+		}
+	}else if($flName == "flPartsRename"){	
+		if($partsRenameCollapseState == 1){	
+			$windowHeight = $windowHeight - 122;	
+		}
+	}else if($flName == "flAddString"){
+		if($addStringCollapseState == 1){	
+			$windowHeight = $windowHeight - 166;	
+		}
+	}else if($flName == "flRemoveString"){
+		if($removeStringCollapseState == 1){	
+			$windowHeight = $windowHeight - 148;	
+		}
+	}else if($flName == "flAddSerialNumber"){
+		if($addSerialNumberCollapseState == 1){	
+			$windowHeight = $windowHeight - 174;	
+		}
+	}else if($flName == "flCapitalSmall"){
+		if($capitalSmallCollapseState == 1){	
+			$windowHeight = $windowHeight - 90;	
+		}
+	}else if($flName == "flMN"){
+		if($MNCollapseState == 1){
+			$windowHeight = $windowHeight - 237;
+		}	
+	}
+	
+	//ウインドウサイズを編集
+	window -e -height $windowHeight RW_winMain;
+}
+
+
+
+/////////////////////////////////////
+//
+//	名前全変換プロシージャ
+//
+/////////////////////////////////////
+
+//----------------------------------------------------------------------------------------------------------
+//
+//	RW_allRenameNumberCustomChange
+//
+//	パディングチェックボックス切り替えに合わせてパディングイントフィールド、
+//	パディングイントスライダーの有効無効を切り替える。
+//
+//----------------------------------------------------------------------------------------------------------
+
+global proc RW_allRenameNumberCustomChange(){
+
+	//パディングチェックボックス状態を取得
+	int $numberCustom = `checkBox -q -v RW_cbAllRenameNumberCustom`;
+
+	//各要素をパディングチェックボックス状態と同期
+	intField -e -enable $numberCustom RW_ifAllRenameStartValue;
+	intField -e -enable $numberCustom RW_ifAllRenamePaddingValue;
+	intSlider -e -enable $numberCustom RW_isAllRenamePaddingSlider;
+
+}
+
+
+
+//----------------------------------------------------------------------------------------------------------
+//
+//	RW_allRenamePaddingValueChange
+//
+//	パディングイントフィールド編集をパディングイントスライダーに反映する。
+//
+//----------------------------------------------------------------------------------------------------------
+
+global proc RW_allRenamePaddingValueChange(){
+
+	//パディングイントフィールドの値を取得
+	int $paddingValue = `intField -q -v RW_ifAllRenamePaddingValue`;
+
+	//パディングイントスライダーに反映
+	intSlider -e -v $paddingValue RW_isAllRenamePaddingSlider;
+
+}
+
+
+
+//----------------------------------------------------------------------------------------------------------
+//
+//	RW_allRenameSliderChange
+//
+//	パディングイントスライダー編集をパディングイントフィールドに反映する。
+//
+//----------------------------------------------------------------------------------------------------------
+
+global proc RW_allRenameSliderChange(){
+
+	//パディングイントスライダーの値を取得
+	int $paddingValue = `intSlider -q -v RW_isAllRenamePaddingSlider`;
+
+	//パディングイントフィールドに反映
+	intField -e -v $paddingValue RW_ifAllRenamePaddingValue;
+
+}
+
+
+
+//----------------------------------------------------------------------------------------------------------
+//
+//	RW_allRenameResult
+//
+//	最初に選択したオブジェクトを対象にリネーム結果を表示する。
+//
+//----------------------------------------------------------------------------------------------------------
+
+global proc RW_allRenameResult(){
+
+	//各要素から値を取得
+	string $RW_allRenameBase = `textField -q -tx RW_tfAllRenameBase`;
+	int $RW_numberCustom = `checkBox -q -v RW_cbAllRenameNumberCustom`;
+	string $RW_allRenameResult;
+
+	//RW_cbAllRenameNumberCustomの値が1のとき、指定した値から連番で後ろに追加し結果として表示
+	//RW_cbAllRenameNumberCustomの値が0のとき、RW_tfAllRenameBaseに入力した名前を結果として表示
+	if($RW_numberCustom == 1){
+
+		int $RW_startValue = `intField -q -v RW_ifAllRenameStartValue`;
+		int $RW_paddingValue = `intField -q -v RW_ifAllRenamePaddingValue`;
+
+		int $RW_iSize = `size(string($RW_startValue))`;
+
+		$RW_allRenameResult = $RW_allRenameBase;
+
+		for($ii=1; $ii<=($RW_paddingValue-$RW_iSize); $ii++){
+
+			$RW_allRenameResult = $RW_allRenameResult + "0";
+	
+		}
+
+		$RW_allRenameResult = $RW_allRenameResult + $RW_startValue;
+	
+	}else{
+
+		$RW_allRenameResult = $RW_allRenameBase;
+
+	}
+
+	//結果を表示
+	text -e -label $RW_allRenameResult RW_tAllRenameResult;
+
+}
+
+
+
+//----------------------------------------------------------------------------------------------------------
+//
+//	RW_allRename
+//
+//	名前全変換を実行する。
+//
+//----------------------------------------------------------------------------------------------------------
+
+global proc RW_allRename(){
+
+	//各要素から値を取得
+	string $newName = `textField -q -tx RW_tfAllRenameBase`;
+	int $numberCustom = `checkBox -q -v RW_cbAllRenameNumberCustom`;
+	
+	//選択したオブジェクトを階層の降順に取得
+	string $obj[] = ZIN_objDescendingOrder(`ls -sl`);
+
+	if( size($newName) == 0 ){
+	
+		error "名前を入力してください。";
+		
+	}else if( size($obj) == 0 ){
+	
+		error "オブジェクトを１つ以上選択してください。";
+	
+	}else{
+	
+		if( $numberCustom == 1 ){
+		
+			int $start = `intField -q -v RW_ifAllRenameStartValue`;
+			int $padding = `intField -q -v RW_ifAllRenamePaddingValue`;
+			
+			for( $i = $start; $i < (size($obj)+$start); $i++ ){
+			
+				$newName = `textField -q -tx RW_tfAllRenameBase`;
+				int $iSize = `size(string($i))`;	
+				
+				for( $ii=1; $ii<=($padding-$iSize); $ii++ ){
+				
+					$newName += "0";
+					
+				}
+				
+				$newName = $newName + $i;
+				rename $obj[$i-$start] $newName;
+				
+			}
+		}else{
+		
+			for( $i = 0; $i < size($obj); $i++ ){
+			
+				rename $obj[$i] $newName;
+				
+			}
+		}
+	}
+}
+
+
+
+/////////////////////////////////////
+//
+//	名前部分変換プロシージャ
+//
+/////////////////////////////////////
+
+
+//----------------------------------------------------------------------------------------------------------
+//
+//	RW_partsRename
+//
+//	名前部分変換を実行します。
+//
+//----------------------------------------------------------------------------------------------------------
+
+global proc RW_partsRename(){
+
+	string $searchString = `textField -q -tx RW_tfSearchString`;
+	string $targetString = `textField -q -tx RW_tfTargetString`;
+
+	string $obj[] = ZIN_objDescendingOrder(`ls -sl`);
+	string $objOne;
+
+	if( size($searchString) == 0 ){
+	
+		error "検索文字列を入力してください。";
+		
+	}else if( size($obj) == 0 ){
+	
+		error "オブジェクトを１つ以上選択してください。";
+	
+	}else if( size($obj) > 0 ){	
+	
+		for( $objOne in $obj ){
+		
+			string $nameParts[];
+			tokenize $objOne "|" $nameParts;
+			
+			int $size = `size $nameParts`;
+			string $partsRenameString = substituteAllString($nameParts[$size-1], $searchString, $targetString);	
+			rename $objOne $partsRenameString;
+
+		}
+	}
+}
+
+
+
+
+/////////////////////////////////////
+//
+//	文字列追加プロシージャ
+//
+/////////////////////////////////////
+
+//----------------------------------------------------------------------------------------------------------
+//
+//	RW_addStringResult
+//
+//	文字列追加の結果を表示します。
+//
+//----------------------------------------------------------------------------------------------------------
+
+global proc RW_addStringResult(){
+
+	string $addString;
+	if(`radioCollection -q -select RW_rcAddString` == "RW_rbAddString"){
+		$addString = `textField -q -tx RW_tfAddString`;
+	}else if(`radioCollection -q -select RW_rcAddString` == "RW_rbAddStringTemplate"){
+		$addString = `optionMenu -q -value RW_omAddStringTemplate`;
+	}
+	
+	string $addStringParts[];
+	tokenize $addString "（" $addStringParts;
+	$addString = $addStringParts[0];
+	
+	int $addPosition = `intField -q -v RW_ifAddPosition`;
+	int $addDirection = `optionMenu -q -select RW_omAddDirection`;
+	string $obj[] = `ls -sl`;
+	string $objString;
+	string $substringFirst;
+	string $substringSecond;
+	string $addStringResult;
+
+	string $objName[] = stringToStringArray($obj[0],"|");
+	int $size = `size $objName`;
+	if($size > 1){
+		$objString = $objName[$size-1];
+	}else if($size == 1){
+		$objString = $objName[0];
+	}
+
+	if($addDirection == 1){
+		if($addPosition > size($obj[0])){
+			$addPosition =  size($obj[0]);
+		}
+
+		if($addPosition == 0){
+			$addStringResult = $addString + $objString;
+			text -e -label $addStringResult RW_tAddStringResult;
+		}else if(0 < $addPosition && $addPosition < size($obj[0])){
+			$substringFirst = `substring $objString 1 $addPosition`;
+			$substringSecond = `substring $objString ($addPosition + 1) (size($objString))`;	
+			$addStringResult = $substringFirst + $addString + $substringSecond;	
+			text -e -label $addStringResult RW_tAddStringResult;
+		}else if($addPosition >= size($objString)){
+			$addStringResult = $objString + $addString;
+			text -e -label $addStringResult RW_tAddStringResult;
+		}
+
+	}else if($addDirection == 2){
+		if($addPosition == 0){	
+			$addStringResult = $objString + $addString;	
+			text -e -label $addStringResult RW_tAddStringResult;
+		}else if(0 < $addPosition && $addPosition < size($objString)){	
+			$substringFirst = `substring $objString 1 (size($objString) - $addPosition)`;
+			$substringSecond = `substring $objString (size($objString) - $addPosition + 1) (size($objString))`;	
+			$addStringResult = $substringFirst + $addString + $substringSecond;	
+			text -e -label $addStringResult RW_tAddStringResult;				
+		}else if($addPosition >= size($objString)){
+			$addStringResult = $addString + $objString;
+			text -e -label $addStringResult RW_tAddStringResult;
+		}
+	}
+}
+
+
+
+
+//----------------------------------------------------------------------------------------------------------
+//
+//	RW_addString
+//
+//	文字列を追加します。
+//
+//----------------------------------------------------------------------------------------------------------
+
+global proc RW_addString(){
+
+	int $addPosition = `intField -q -v RW_ifAddPosition`;
+	string $addString;
+	if(`radioCollection -q -select RW_rcAddString` == "RW_rbAddString"){
+		$addString = `textField -q -tx RW_tfAddString`;
+	}else if(`radioCollection -q -select RW_rcAddString` == "RW_rbAddStringTemplate"){
+		$addString = `optionMenu -q -value RW_omAddStringTemplate`;
+	}
+	
+	string $addStringParts[];
+	tokenize $addString "（" $addStringParts;
+	$addString = $addStringParts[0];
+	
+	int $addDirection = `optionMenu -q -select RW_omAddDirection`;
+	string $obj[] = ZIN_objDescendingOrder(`ls -sl`);
+	string $objOne;
+	string $objString;
+	string $substringFirst;
+	string $substringSecond;
+	string $renameString;
+
+	if( size($addString) == 0 ){
+	
+		error "追加文字列を入力してください。";
+		
+	}else if( size($obj) == 0 ){
+	
+		error "オブジェクトを１つ以上選択してください。";
+	
+	}else if( size($addString) > 0 ){
+	
+		if( $addDirection == 1 ){
+		
+			for( $objOne in $obj ){
+			
+				string $objName[] = stringToStringArray($objOne,"|");
+				int $size = `size $objName`;
+				
+				if( $size > 1 ){
+					$objString = $objName[$size-1];
+				}else if( $size == 1 ){
+					$objString = $objName[0];
+				}
+
+				if( $addPosition == 0 ){	
+				
+					$renameString = $addString + $objString;		
+					rename $objOne $renameString;	
+					
+				}else if( 0 < $addPosition && $addPosition < size($objString) ){	
+				
+					$substringFirst = `substring $objOne 1 $addPosition`;
+					$substringSecond = `substring $objString ($addPosition + 1) (size($objString))`;		
+					$renameString = $substringFirst + $addString + $substringSecond;		
+					rename $objOne $renameString;
+					
+				}else if( $addPosition >= size($objString) ){
+				
+					$renameString = $objString + $addString;	
+					rename $objOne $renameString;
+					
+				}	
+			}
+			
+		}else if( $addDirection == 2 ){	
+		
+			for( $objOne in $obj ){
+			
+				string $objName[] = stringToStringArray($objOne,"|");
+				int $size = `size $objName`;
+				
+				if( $size > 1 ){
+					$objString = $objName[$size-1];
+				}else if( $size == 1 ){
+					$objString = $objName[0];
+				}
+
+				if( $addPosition == 0 ){
+				
+					$renameString = $objString + $addString;	
+					rename $objOne $renameString;
+					
+				}else if( 0 < $addPosition && $addPosition < size($objString) ){	
+				
+					$substringFirst = `substring $objString 1 (size($objString) - $addPosition)`;
+					$substringSecond = `substring $objString (size($objString) - $addPosition + 1) (size($objString))`;		
+					$renameString = $substringFirst + $addString + $substringSecond;		
+					rename $objOne $renameString;
+					
+				}else if( $addPosition >= size($objString) ){
+				
+					$renameString = $addString + $objString;		
+					rename $objOne $renameString;
+					
+				}	
+			}
+		}
+	}
+}
+
+
+/////////////////////////////////////
+//
+//	文字列削除プロシージャ
+//
+/////////////////////////////////////
+
+//----------------------------------------------------------------------------------------------------------
+//
+//	RW_removeStringEndStartChange
+//
+//	文字列削除の開始と終了の数字を変更したときのプロシージャ
+//
+//----------------------------------------------------------------------------------------------------------
+
+global proc RW_removeStringEndStartChange(){
+
+	int $removeStartPosition = `intField -q -value RW_ifRemoveStringStartPosition`;
+	int $removeEndPosition = `intField -q -value RW_ifRemoveStringEndPosition`;
+
+	if( $removeStartPosition > $removeEndPosition ){
+	
+		intField -e -value $removeStartPosition RW_ifRemoveStringEndPosition;
+	
+	}
+
+}
+
+//----------------------------------------------------------------------------------------------------------
+//
+//	RW_removeStringResult
+//
+//	文字列削除の結果を表示します。
+//
+//----------------------------------------------------------------------------------------------------------
+
+global proc RW_removeStringResult(){
+
+	int $removeDirection = `optionMenu -q -select RW_omRemoveStringDirection`;
+	int $removeStartPosition = `intField -q -value RW_ifRemoveStringStartPosition`;
+	int $removeEndPosition = `intField -q -value RW_ifRemoveStringEndPosition`;
+	
+	string $obj[] = `ls -sl`;
+	string $objString;
+	
+	if( size($obj) != 0 ){
+	
+		string $objName[] = stringToStringArray($obj[0],"|");
+		int $size = `size $objName`;
+		if($size > 1){
+			$objString = $objName[$size-1];
+		}else if($size == 1){
+			$objString = $objName[0];
+		}
+
+		if($removeStartPosition > size($objString)){
+			$removeStartPosition =  size($objString);
+		}
+		
+		if($removeEndPosition > size($objString)){
+			$removeEndPosition =  size($objString);
+		}
+		
+		if($removeDirection == 1){
+		
+			string $objNewName;
+			if( size($objString) != 1 ){
+				if( $removeStartPosition == 1  &&  $removeEndPosition < size($objString) ){
+					$objNewName = `substring $objString ($removeEndPosition+1) (size($objString))`;			
+				}else if( $removeStartPosition != 1  &&  $removeEndPosition == size($objString) ){
+					$objNewName = `substring $objString 1 ($removeStartPosition-1)`;
+				}else if( $removeStartPosition > size($objString)  &&  $removeEndPosition > size($objString) ){
+					$objNewName = `substring $objString size($objString) size($objString)`;
+				}else if( $removeStartPosition == 1  &&  $removeEndPosition == size($objString) ){
+					$objNewName = "";
+				}else{
+					string $objPartsA = `substring $objString 1 ($removeStartPosition-1)`;
+					string $objPartsB = `substring $objString ($removeEndPosition+1) (size($objString))`;
+					$objNewName = $objPartsA + $objPartsB;
+				}
+			}
+		
+			string $removeStringResult = $objNewName;
+			text -e -label $removeStringResult RW_tRemoveStringResult;
+			
+		}else if($removeDirection == 2){
+			
+			int $end = (size($objString) - ($removeStartPosition-1));			
+			int $start = (size($objString) - ($removeEndPosition-1));
+			$removeStartPosition = $start;
+			$removeEndPosition = $end;
+			
+			string $objNewName;
+			if( size($objString) != 1 ){
+				if( $removeStartPosition == 1  &&  $removeEndPosition < size($objString) ){
+					$objNewName = `substring $objString ($removeEndPosition+1) (size($objString))`;			
+				}else if( $removeStartPosition != 1  &&  $removeEndPosition == size($objString) ){
+					$objNewName = `substring $objString 1 ($removeStartPosition-1)`;
+				}else if( $removeStartPosition > size($objString)  &&  $removeEndPosition > size($objString) ){
+					$objNewName = `substring $objString size($objString) size($objString)`;
+				}else if( $removeStartPosition == 1  &&  $removeEndPosition == size($objString) ){
+					$objNewName = "";
+				}else{
+					string $objPartsA = `substring $objString 1 ($removeStartPosition-1)`;
+					string $objPartsB = `substring $objString ($removeEndPosition+1) (size($objString))`;
+					$objNewName = $objPartsA + $objPartsB;
+				}
+			}
+			
+			string $removeStringResult = $objNewName;
+			text -e -label $removeStringResult RW_tRemoveStringResult;
+		}
+	}
+}
+
+
+
+//----------------------------------------------------------------------------------------------------------
+//
+//	RW_removeString
+//
+//	文字列削除を実行します。
+//
+//----------------------------------------------------------------------------------------------------------
+
+global proc RW_removeString(){
+
+	string $obj[] = ZIN_objDescendingOrder(`ls -sl`);
+	string $objOne;
+	string $objString;
+
+	if( `size $obj` == 0 ){
+	
+		error "オブジェクトが選択されていません。";
+		
+	}else{
+	
+		for($objOne in $obj){
+		
+			int $removeDirection = `optionMenu -q -select RW_omRemoveStringDirection`;
+			int $removeStartPosition = `intField -q -value RW_ifRemoveStringStartPosition`;
+			int $removeEndPosition = `intField -q -value RW_ifRemoveStringEndPosition`;
+		
+			string $objName[] = stringToStringArray($objOne,"|");
+			int $size = `size $objName`;
+			if($size > 1){
+				$objString = $objName[$size-1];
+			}else if($size == 1){
+				$objString = $objName[0];
+			}
+
+			if($removeStartPosition > size($objString)){
+				$removeStartPosition =  size($objString);
+			}
+			
+			if($removeEndPosition > size($objString)){
+				$removeEndPosition =  size($objString);
+			}
+			
+			if($removeDirection == 1){
+			
+				string $objNewName;
+				if( size($objString) != 1 ){
+					if( $removeStartPosition == 1  &&  $removeEndPosition < size($objString) ){
+						$objNewName = `substring $objString ($removeEndPosition+1) (size($objString))`;			
+					}else if( $removeStartPosition != 1  &&  $removeEndPosition == size($objString) ){
+						$objNewName = `substring $objString 1 ($removeStartPosition-1)`;
+					}else if( $removeStartPosition > size($objString)  &&  $removeEndPosition > size($objString) ){
+						$objNewName = `substring $objString size($objString) size($objString)`;
+					}else if( $removeStartPosition == 1  &&  $removeEndPosition == size($objString) ){
+						$objNewName = "";
+					}else{
+						string $objPartsA = `substring $objString 1 ($removeStartPosition-1)`;
+						string $objPartsB = `substring $objString ($removeEndPosition+1) (size($objString))`;
+						$objNewName = $objPartsA + $objPartsB;
+					}
+				}
+			
+				string $removeStringResult = $objNewName;
+				rename $objOne $removeStringResult;
+			}else if($removeDirection == 2){
+				
+				int $end = (size($objString) - ($removeStartPosition-1));			
+				int $start = (size($objString) - ($removeEndPosition-1));
+				$removeStartPosition = $start;
+				$removeEndPosition = $end;
+				
+				string $objNewName;
+				if( size($objString) != 1 ){
+					if( $removeStartPosition == 1  &&  $removeEndPosition < size($objString) ){
+						$objNewName = `substring $objString ($removeEndPosition+1) (size($objString))`;			
+					}else if( $removeStartPosition != 1  &&  $removeEndPosition == size($objString) ){
+						$objNewName = `substring $objString 1 ($removeStartPosition-1)`;
+					}else if( $removeStartPosition > size($objString)  &&  $removeEndPosition > size($objString) ){
+						$objNewName = `substring $objString size($objString) size($objString)`;
+					}else if( $removeStartPosition == 1  &&  $removeEndPosition == size($objString) ){
+						$objNewName = "";
+					}else{
+						string $objPartsA = `substring $objString 1 ($removeStartPosition-1)`;
+						string $objPartsB = `substring $objString ($removeEndPosition+1) (size($objString))`;
+						$objNewName = $objPartsA + $objPartsB;
+					}
+				}
+				
+				string $removeStringResult = $objNewName;
+				rename $objOne $removeStringResult;
+				
+				clear $objName;
+				
+			}
+		}
+	}
+}
+
+
+
+
+
+/////////////////////////////////////
+//
+//	大文字・小文字プロシージャ
+//
+/////////////////////////////////////
+
+//----------------------------------------------------------------------------------------------------------
+//
+//	RW_capitalSmall
+//
+//	大文字を小文字に、小文字を大文字に変換します。
+//
+//----------------------------------------------------------------------------------------------------------
+
+global proc RW_capitalSmall(){
+
+	int $RW_capitalSmall = `optionMenu -q -select RW_omCapitalSmall`;
+	string $obj[] = ZIN_objDescendingOrder(`ls -sl`);
+	string $objOne;
+
+	for($objOne in $obj){
+		if($RW_capitalSmall == 1){
+			rename $objOne `tolower $objOne`;
+		}else if($RW_capitalSmall == 2){
+			rename $objOne `toupper $objOne`;
+		}
+	}
+}
+
+
+
+
+/////////////////////////////////////
+//
+//	連番追加プロシージャ
+//
+/////////////////////////////////////
+
+//----------------------------------------------------------------------------------------------------------
+//
+//	RW_addSerialNumberPaddingValueChange
+//
+//	パディングイントフィールド編集をパディングイントスライダーに反映する。
+//
+//----------------------------------------------------------------------------------------------------------
+
+global proc RW_addSerialNumberPaddingValueChange(){
+
+	int $paddingValue = `intField -q -v RW_ifAddSerialNumberPaddingValue`;
+
+	intSlider -e -v $paddingValue RW_isAddSerialNumberPaddingSlider;
+
+}
+
+
+
+//----------------------------------------------------------------------------------------------------------
+//
+//	RW_addSerialNumberPaddingSliderChange
+//
+//	パディングイントスライダー編集をパディングイントフィールドに反映する。
+//
+//----------------------------------------------------------------------------------------------------------
+
+global proc RW_addSerialNumberPaddingSliderChange(){
+
+	int $paddingValue = `intSlider -q -v RW_isAddSerialNumberPaddingSlider`;
+
+	intField -e -v $paddingValue RW_ifAddSerialNumberPaddingValue;
+
+}
+
+
+
+//----------------------------------------------------------------------------------------------------------
+//
+//	RW_addSerialNumberResult
+//
+//	連番追加の結果を表示します。
+//
+//----------------------------------------------------------------------------------------------------------
+
+global proc RW_addSerialNumberResult(){
+
+	int $startValue = `intField -q -v RW_ifAddSerialNumberStartValue`;
+	int $paddingValue = `intField -q -v RW_ifAddSerialNumberPaddingValue`;
+	int $direction = `optionMenu -q -select RW_omAddSerialNumberDirection`;
+	int $position = `intField -q -v RW_ifAddSerialNumberPosition`;
+	string $addSerialNumber = "";
+	string $obj[] = `ls -sl`;
+	string $objString;
+	string $substringFirst;
+	string $substringSecond;
+	string $addSerialNumberResult;
+
+	int $iSize = `size(string($startValue))`;
+	for($i=1; $i<=($paddingValue-$iSize); $i++){
+		$addSerialNumber = $addSerialNumber + "0";
+	}
+
+	string $objName[] = stringToStringArray($obj[0],"|");
+	int $size = `size $objName`;
+	if($size > 1){
+		$objString = $objName[$size-1];
+	}else if($size == 1){
+		$objString = $obj[0];
+	}
+
+	$addSerialNumber = $addSerialNumber + $startValue;
+	if($direction == 1){
+		if($position > size($obj[0])){
+			$position =  size($obj[0]);
+		}
+
+		if($position == 0){
+			$addSerialNumberResult = $addSerialNumber + $objString;
+			text -e -label $addSerialNumberResult RW_tAddSerialNumberResult;
+		}else if(0 < $position && $position < size($objString)){
+			$substringFirst = `substring $obj[0] 1 $position`;
+			$substringSecond = `substring $objString ($position + 1) (size($objString))`;	
+			$addSerialNumberResult = $substringFirst + $addSerialNumber + $substringSecond;	
+			text -e -label $addSerialNumberResult RW_tAddSerialNumberResult;
+		}else if($position >= size($objString)){
+			$addSerialNumberResult = $objString + $addSerialNumber;
+			text -e -label $addSerialNumberResult RW_tAddSerialNumberResult;
+		}
+
+	}else if($direction == 2){
+		if($position > size($obj[0])){
+			$position =  size($obj[0]);
+		}
+
+		if($position == 0){	
+			$addSerialNumberResult = $objString + $addSerialNumber;	
+			text -e -label $addSerialNumberResult RW_tAddSerialNumberResult;
+		}else if(0 < $position && $position < size($objString)){	
+			$substringFirst = `substring $objString 1 (size($objString) - $position)`;
+			$substringSecond = `substring $objString (size($objString) - $position + 1) (size($objString))`;	
+			$addSerialNumberResult = $substringFirst + $addSerialNumber + $substringSecond;	
+			text -e -label $addSerialNumberResult RW_tAddSerialNumberResult;				
+		}else if($position >= size($objString)){
+			$addSerialNumberResult = $addSerialNumber + $objString;
+			text -e -label $addSerialNumberResult RW_tAddSerialNumberResult;
+		}
+	}
+}
+
+
+
+//----------------------------------------------------------------------------------------------------------
+//
+//	RW_addSerialNumber
+//
+//	連番追加を実行します。
+//
+//----------------------------------------------------------------------------------------------------------
+
+global proc RW_addSerialNumber(){
+
+	int $startValue = `intField -q -v RW_ifAddSerialNumberStartValue`;
+	int $paddingValue = `intField -q -v RW_ifAddSerialNumberPaddingValue`;
+	int $direction = `optionMenu -q -select RW_omAddSerialNumberDirection`;
+	int $position = `intField -q -v RW_ifAddSerialNumberPosition`;
+
+	string $obj[] = ZIN_objDescendingOrder(`ls -sl`);
+	string $objString;
+	string $substringFirst;
+	string $substringSecond;
+	string $addSerialNumberResult;
+	int $objNum = 0;
+
+	for($i=$startValue; $i<($startValue + size($obj)); $i++){
+		string $addSerialNumber = "";
+		int $iSize = `size(string($i))`;
+		for($ii=1; $ii<=($paddingValue-$iSize); $ii++){
+			$addSerialNumber = $addSerialNumber + "0";
+		}
+		$addSerialNumber = $addSerialNumber + $i;
+
+		string $objName[] = stringToStringArray($obj[$objNum],"|");
+		int $size = `size $objName`;
+		if($size > 1){
+			$objString = $objName[$size-1];
+		}else if($size == 1){
+			$objString = $obj[$objNum];
+		}else if($size == 0){
+			error "オブジェクトが選択されていません。";
+		}
+
+		if($direction == 1){
+			if($position > size($objString)){
+				$position =  size($objString);
+			}
+
+			if($position == 0){
+				error "名前の先頭に数字を入れることはできません。";
+			}else if(0 < $position && $position < size($objString)){
+				$substringFirst = `substring $objString 1 $position`;
+				$substringSecond = `substring $objString ($position + 1) (size($objString))`;	
+				$addSerialNumberResult = $substringFirst + $addSerialNumber + $substringSecond;	
+				rename $obj[$objNum] $addSerialNumberResult;
+			}else if($position >= size($objString)){
+				$addSerialNumberResult = $objString + $addSerialNumber;
+				rename $obj[$objNum] $addSerialNumberResult;
+			}
+
+		}else if($direction == 2){
+			if($position > size($obj[$objNum])){
+				$position =  size($obj[$objNum]);
+			}
+
+			if($position == 0){	
+				$addSerialNumberResult = $obj[$objNum] + $addSerialNumber;	
+				rename $obj[$objNum] $addSerialNumberResult;
+			}else if(0 < $position && $position < size($obj[$objNum])){	
+				$substringFirst = `substring $obj[$objNum] 1 (size($obj[$objNum]) - $position)`;
+				$substringSecond = `substring $obj[$objNum] (size($obj[$objNum]) - $position + 1) (size($obj[$objNum]))`;	
+				$addSerialNumberResult = $substringFirst + $addSerialNumber + $substringSecond;	
+				rename $obj[$objNum] $addSerialNumberResult;				
+			}else if($position >= size($obj[$objNum])){
+				$addSerialNumberResult = $addSerialNumber + $obj[$objNum];
+				rename $obj[$objNum] $addSerialNumberResult;
+			}
+		}
+
+		$objNum += 1;
+	}
+}
+
+
+
+//----------------------------------------------------------------------------------------------------------
+//
+//	RW_materialNetworkSG
+//
+//	選択しているマテリアルにつながっているシェーディンググループの名前を
+//	マテリアル名と同期する。
+//	例：	color_mat → color_matSG
+//
+//----------------------------------------------------------------------------------------------------------
+
+global proc RW_materialNetworkSG(){
+
+	//選択しているオブジェクト名を取得
+	string $select[] = `ls -sl`;
+	
+	//宣言
+	string $selectOne;
+	string $ignoreMaterial[];
+	string $ignoreSG[];
+	
+	//各要素の状態を取得
+	string $rcMNSGState = `radioCollection -q -select RW_rcMNSG`;
+	int $cbMNSGWarningState = `checkBox -q -value RW_cbMNSGWarning`;
+	int $padding = `intField -q -value RW_ifMNSGPaddingValue`;
+	
+	//対象となるタイプ名を$materialTypeに格納
+	string $materialType[] = { "anisotropic",
+											"blinn",
+											"hairTubeShader",
+											"lambert",
+											"layeredShader",
+											"oceanShader",
+											"phong",
+											"phongE",
+											"rampShader",
+											"shadingMap",
+											"surfaceShader",
+											"useBackground" };
+	
+	
+	//無視するオブジェクト名を$ignoreに格納
+	string $ignore[] = {	"lambert1" };
+	
+	//$selectから$ignoreに一致するオブジェクトを除外
+	$select = stringArrayRemove( $ignore , $select );
+	
+	for( $selectOne in $select ){
+		
+		//オブジェクトのタイプを調査
+		string $type = `objectType $selectOne`;
+		
+		//事前に宣言していたタイプとオブジェクトのタイプが一致するかを調査
+		int $result = stringArrayContains( $type , $materialType );
+		
+		//$resultが1のときシェーディンググループ名をマテリアル名と同期する
+		if( $result ){
+			string $SG[] = `listConnections -source 0 -destination 1 -plugs 0 -type shadingEngine $selectOne`;
+			int $SGSize = `size $SG`;
+			if( $SGSize > 1 ){
+				if( $rcMNSGState == "RW_rbMNSGIgnore" ){
+					if( $cbMNSGWarningState == 1 ){
+						string $addIgnoreMaterial[0] = { $selectOne };
+						$ignoreMaterial = stringArrayCatenate( $ignoreMaterial , $addIgnoreMaterial );
+						$ignoreSG = stringArrayCatenate( $ignoreSG , $SG );
+					}
+				}else if( $rcMNSGState == "RW_rbMNSGSerialNumber" ){
+					for( $i = 1; $i < (size($SG) + 1); $i++ ){
+						string $newSG = $selectOne + "SG";
+						int $iSize = `size(string($i))`;
+						
+						for( $ii = 1; $ii <= ($padding-$iSize); $ii++ ){
+							$newSG +="0";
+						}
+						
+						$newSG = $newSG + $i;
+						rename $SG[$i-1] $newSG;
+						
+					}
+				}
+			}else if( $SGSize == 1 ){
+	        string $newSG = $selectOne + "SG";
+	        rename $SG[0] $newSG;
+			}
+		}
+	}
+	
+		
+	int $ignoreMaterialSize = `size $ignoreMaterial`;
+	string $warning;
+	$warning += "\n// 複数のシェーディンググループを持っていたため、以下のマテリアルは無視されました\n";
+	if( $ignoreMaterialSize != 0 ){
+		string $material;
+		for( $material in $ignoreMaterial ){
+			$warning += $material;
+			$warning += " ";
+		}
+
+		int $ignoreSGSize = `size $ignoreSG`;
+		if( $ignoreSGSize != 0 ){
+			string $SG;
+			$warning += "\n// SG名\n";
+			for( $SG in $ignoreSG ){
+				$warning += $SG;
+				$warning += " ";
+			}
+		}
+		
+		warning $warning;
+		
+	}
+
+}
+
+
+
+

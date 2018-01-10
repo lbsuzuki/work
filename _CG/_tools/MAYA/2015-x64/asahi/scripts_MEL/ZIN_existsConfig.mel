@@ -1,0 +1,36 @@
+//////////////////////////////////
+//	ZIN_existsConfig       //
+//////////////////////////////////////////////////////////////////
+//
+//	AUTHOR: 		goto kazufumi
+//
+//	CREATION DATE:	2011_08_15
+//	UPDATED DATE:		2011_08_15
+//
+//	VERSION:		1.0
+//
+//	HOW TO USE:		run "ZIN_existsConfig"
+//
+//////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////////////////
+//
+//	ZIN_existsConfig
+//
+//	C:/MAYA_mel/configが存在するかを調査し、存在しない場合フォルダを作成する。
+//	返り値：	存在しないとき　0
+//			存在するとき　　1
+//
+//////////////////////////////////////////////////////////////////////////
+
+global proc int ZIN_existsConfig(){
+
+	int $existsConfig = `filetest -e "C:/MAYA_mel/config"`;
+
+	if($existsConfig == 0){
+		sysFile -makeDir "C:/MAYA_mel/config/";
+		return 0;
+	}else if($existsConfig == 1){
+		return 1;
+	}
+}

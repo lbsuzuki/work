@@ -1,0 +1,202 @@
+///////////////////////////////////////////////////////////////////////////////
+//	PSTRP_SABR_symmetricArmBaseR            //	シンメトリー　右腕基準
+///////////////////////////////////////////////////////////////////////////////
+//
+//	AUTHOR: 		goto kazufumi
+//
+//	CREATION DATE:	2013_10_18
+//	UPDATED DATE:	2016_05_13
+//
+//	VERSION:			1.1
+//
+//	HOW TO USE:		run "PSTRP_SABR_symmetricArmBaseR();"
+//
+//////////////////////////////////////////////////////////////////
+
+global proc PSTRP_SABR_symmetricArmBaseR(){
+	
+
+	string $code = `textField -q -text PST_tfCordName`;
+	int $size = `size $code`;
+	if( $size != 0 ){
+		string $last = `substring $code $size $size`;
+		if( $last != "_" ){
+			if( $last != ":" ){
+				$code += "_";
+			}
+		}
+	}
+
+	
+	string $name[] = {					"shoulder01_crv",
+										"shoulder02_crv",
+										"adjustElbow_crv",
+										"hand01_crv",
+										"arm_poleVector_crv",
+										"hand02A_crv",
+										"hand02B_crv",
+										"finger_01_01_crv",
+										"finger_01_02_crv",
+										"finger_01_03_crv",
+										"finger_02_01_crv",
+										"finger_02_02_crv",
+										"finger_02_03_crv",
+										"finger_03_01_crv",
+										"finger_03_02_crv",
+										"finger_03_03_crv",
+										"finger_04_01_crv",
+										"finger_04_02_crv",
+										"finger_04_03_crv",
+										"finger_05_01_crv",
+										"finger_05_02_crv",
+										"finger_05_03_crv",
+										"hand00_crv",
+										"hand01_crv",
+										"positionElbow_crv",
+										"adjustVelcro_crv"	};
+
+									
+	string $crvOne;
+	for( $one in $name ){
+	
+		string $PM[];
+		clear $PM;
+	
+		switch ( $one ){
+		
+			case "shoulder01_crv":
+				$PM = { "-","+","+","+","-","-"};
+				break;
+			case "shoulder02_crv":
+				$PM = { "-","+","+","+","-","-"};
+				break;
+			case "adjustElbow_crv":
+				$PM = { "-","-","+","+","-","-"};
+				break;
+			case "hand01_crv":
+				$PM = { "-","+","+","+","-","-"};
+				break;
+			case "arm_poleVector_crv":
+				$PM = { "-","+","+","0","0","0"};
+				break;
+			case "hand02A_crv":
+				$PM = { "+","+","-","-","-","+"};
+				break;
+			case "hand02B_crv":
+				$PM = { "+","+","-","-","-","+"};
+				break;
+			case "finger_01_01_crv":
+				$PM = { "+","+","-","-","-","+"};
+				break;
+			case "finger_01_02_crv":
+				$PM = { "+","+","-","-","-","+"};
+				break;
+			case "finger_01_03_crv":
+				$PM = { "+","+","-","-","-","+"};
+				break;
+			case "finger_02_01_crv":
+				$PM = { "+","+","-","-","-","+"};
+				break;
+			case "finger_02_02_crv":
+				$PM = { "+","+","-","-","-","+"};
+				break;
+			case "finger_02_03_crv":
+				$PM = { "+","+","-","-","-","+"};
+				break;
+			case "finger_03_01_crv":
+				$PM = { "+","+","-","-","-","+"};
+				break;
+			case "finger_03_02_crv":
+				$PM = { "+","+","-","-","-","+"};
+				break;
+			case "finger_03_03_crv":
+				$PM = { "+","+","-","-","-","+"};
+				break;
+			case "finger_04_01_crv":
+				$PM = { "+","+","-","-","-","+"};
+				break;
+			case "finger_04_02_crv":
+				$PM = { "+","+","-","-","-","+"};
+				break;
+			case "finger_04_03_crv":
+				$PM = { "+","+","-","-","-","+"};
+				break;
+			case "finger_05_01_crv":
+				$PM = { "+","+","-","-","-","+"};
+				break;
+			case "finger_05_02_crv":
+				$PM = { "+","+","-","-","-","+"};
+				break;
+			case "finger_05_03_crv":
+				$PM = { "+","+","-","-","-","+"};
+				break;
+			case "hand00_crv":
+				$PM = { "-","+","+","+","-","-"};
+				break;
+			case "hand01_crv":
+				$PM = { "-","+","+","+","-","-"};
+				break;
+			case "positionElbow_crv":
+				$PM = { "-","+","+","+","-","-"};
+				break;
+			case "adjustVelcro_crv":
+				$PM = { "-","+","+","+","-","-"};
+				break;
+				
+			
+		}
+		
+		string $baseCRV = $code + "R_" + $one;
+		string $targetCRV = $code + "L_" + $one;
+		
+		string $attr[] = { "tx","ty","tz","rx","ry","rz" };
+		
+		for( $i=0; $i<size($attr); $i++ ){
+			if( $PM[$i] != "0" ){
+				float $value = getAttr ( $baseCRV + "." + $attr[$i] );
+				if( $PM[$i] == "-" ){
+					$value = $value*(-1.0);
+				}
+				setAttr ( $targetCRV + "." + $attr[$i] ) $value;
+			}
+		}
+		
+		
+		//手の「移動・回転・スケール」以外のアトリビュートを反対の手に転送////////////////////////////////////////////////////////////////////////////////////////////
+			
+		string $hand01_crv = "hand01_crv";
+		
+		string $handAttr[] = { 	"Finger_01_ROT",
+											"Finger_02_ROT",
+											"Finger_03_ROT",
+											"Finger_04_ROT",
+											"Finger_05_ROT",
+											"IKshrink_Limit",
+											"IKstretch_Limit",
+											"Position"							};
+											
+		string $baseHand = $code + "R_" + $hand01_crv;
+		string $targetHand = $code + "L_" + $hand01_crv;
+											
+		for( $i=0; $i<size($handAttr); $i++ ){
+			if( $handAttr[$i] != "Position" ){
+				float $value = getAttr ( $baseHand + "." + $handAttr[$i] );
+				setAttr ( $targetHand + "." + $handAttr[$i] ) $value;
+			}else{
+				int $value = getAttr ( $baseHand + ".Position" );
+				setAttr ( $targetHand + ".Position" ) $value;
+			}
+		}
+		
+		
+	}
+}
+
+
+
+
+
+
+
+
+

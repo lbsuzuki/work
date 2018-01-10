@@ -1,0 +1,42 @@
+///////////////////////////////////////////////////////////////////////////////
+//	CW_cameraWindow.res
+///////////////////////////////////////////////////////////////////////////////
+//
+//	AUTHOR: 		goto kazufumi
+//
+//	CREATION DATE:	2013_12_09
+//	UPDATED DATE:	2016_03_30
+//
+//	VERSION:				1.0
+//
+//////////////////////////////////////////////////////////////////
+
+/*================================================================
+
+	"CW_cameraWindow" Resource of English version
+
+================================================================*/
+
+/*================================================================
+
+	UPDATE
+
+================================================================*/
+
+displayString -r -v "Camera Window" zm_CW.windowTitle;
+displayString -r -v "You make a camera by the input name." zm_CW.tExp1;
+displayString -r -v "Camera Name" zm_CW.tCamName;
+displayString -r -v "With ImagePlane" zm_CW.cbWithImagePlane;
+displayString -r -v "Create Camera" zm_CW.btnCreateCamera;
+displayString -r -v "Connect ImagePlane" zm_CW.btnConnectImagePlane;
+displayString -r -v "You can connect the attribute of the image plane to a camera." zm_CW.tExp2;
+displayString -r -v "Connect Offset" zm_CW.btnConnectOffset;
+displayString -r -v "Disconnect Offset" zm_CW.btnDisconnectOffset;
+displayString -r -v "You add attribute to Transform of the camera and can be connected to Shape." zm_CW.tExp4;
+displayString -r -v "Add Attribute" zm_CW.btnAddAttr;
+displayString -r -v "Connect Attribute" zm_CW.btnConnectShape;
+displayString -r -v " As for the attribute of the next shape, some connection has been already accomplished." zm_CW.wShapeAttrAlreadyConnected;
+displayString -r -v " Because the next attribute did not exist, connection was ignored" zm_CW.wConnectionIgnoredAttrNot;
+displayString -r -v " Because the next attribute repeated, I ignored it." zm_CW.wIgnoredAddAttr;
+displayString -r -v "Choose camera." zm_CW.eChooseCamera;
+displayString -r -v " Because the next attribute did not exist, connection was ignored." zm_CW.wIgnoredAttrNotExists;

@@ -1,0 +1,82 @@
+///////////////////////////////////////////////////////////////////////////////
+//	PSTRP_SASBR_symmetricAdjustShoulderBaseR            //	肩の調整リグ　シンメトリー　右基準
+///////////////////////////////////////////////////////////////////////////////
+//
+//	AUTHOR: 		goto kazufumi
+//
+//	CREATION DATE:	2013_10_18
+//	UPDATED DATE:	2013_10_18
+//
+//	VERSION:			1.0
+//
+//	HOW TO USE:		run "PSTRP_SASBR_symmetricAdjustShoulderBaseR();"
+//
+//////////////////////////////////////////////////////////////////
+
+global proc PSTRP_SASBR_symmetricAdjustShoulderBaseR(){
+	
+	string $cord = `textField -q -text PST_tfCordName`;
+	int $size = `size $cord`;
+	string $last = `substring $cord $size $size`;
+	if( $last != "_" ){
+		$cord += "_";
+	}
+	
+	string $name[] = {		"adjustShoulder01",
+										"adjustShoulder02",
+										"adjustShoulder03",
+										"adjustShoulder04",
+										"adjustShoulder05"				};
+
+									
+	string $crvOne;
+	for( $one in $name ){
+	
+		string $PM[];
+		clear $PM;
+	
+		switch ( $one ){
+		
+			case "adjustShoulder01":
+				$PM = { "-","+","+","+","-","-"};
+				break;
+			case "adjustShoulder02":
+				$PM = { "-","+","+","+","-","-"};
+				break;
+			case "adjustShoulder03":
+				$PM = { "-","+","+","+","-","-"};
+				break;
+			case "adjustShoulder04":
+				$PM = { "-","+","+","+","-","-"};
+				break;
+			case "adjustShoulder05":
+				$PM = { "-","+","+","+","-","-"};
+				break;
+
+		}
+		
+		string $baseCRV = $cord + "R_" + $one + "_crv";
+		string $targetCRV = $cord + "L_" + $one + "_crv";
+		
+		string $attr[] = { "tx","ty","tz","rx","ry","rz" };
+		
+		for( $i=0; $i<size($attr); $i++ ){
+			if( $PM[$i] != "0" ){
+				float $value = getAttr ( $baseCRV + "." + $attr[$i] );
+				if( $PM[$i] == "-" ){
+					$value = $value*(-1.0);
+				}
+				setAttr ( $targetCRV + "." + $attr[$i] ) $value;
+			}
+		}
+	}
+}
+
+
+
+
+
+
+
+
+

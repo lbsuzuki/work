@@ -1,0 +1,27 @@
+PSTN_IMS_importMatSohoku>>総北マテリアルの読み込み>>240 225 65
+PSTN_IMH_importMatHakone>>箱根マテリアルの読み込み>>120 160 250 
+PSTN_IMO_importMatOther>>その他マテリアルの読み込み>>204 132 172
+PSTN_CLET_connectLEyeTex>>左目テクスチャとscvを接続>>165 211 172
+PSTN_CRET_connectREyeTex>>右目テクスチャとscvを接続>>165 211 172
+PSTN_CMT_connectMouthTex>>口テクスチャとscvを接続>>165 211 172
+PSTN_CLEV_connectLEyeVisibility>>左目の可視性とscvを接続>>133 122 176
+PSTN_CREV_connectREyeVisibility>>右目の可視性とscvを接続>>133 122 176
+PSTN_CMV_connectMouthVisibility>>口の可視性とscvを接続>>133 122 176
+PSTN_CFHS_connectFrontHairSine>>前髪サインと髪リグを接続>>159 216 245
+PSTN_CFHS_connectFrontLeftHairSine>>前左髪サインと髪リグを接続>>159 216 245
+PSTN_CFHS_connectFrontRightHairSine>>前右髪サインと髪リグを接続>>159 216 245
+PSTN_CLHS_connectLeftHairSine>>左髪サインと髪リグを接続>>159 216 245
+PSTN_CRHS_connectRightHairSine>>右髪サインと髪リグを接続>>159 216 245
+PSTN_CBHS_connectBackHairSine>>後ろ髪サインと髪リグを接続>>159 216 245
+PSTN_CFHS_connectBackLeftHairSine>>後ろ左髪サインと髪リグを接続>>159 216 245
+PSTN_CFHS_connectBackRightHairSine>>後ろ右髪サインと髪リグを接続>>159 216 245
+PSTN_CHHS_connectHeadHairSine>>頭髪サインと髪リグを接続>>159 216 245
+PSTN_CSBHS_connectSubBackHairSine>>サブ後ろ髪サインと髪リグを接続>>159 216 245
+PSTN_CAL_connectAdjustLink>>調整リグ リンク可視性とコントローラを接続>>244 174 142
+PSTN_CIK_connectIK>>IKハンドルと開発者用コントローラの接続>>244 174 142
+PSTN_CTF_connectTexFace>>TexFaceとフレーム拡張子の接続>>166 154 202
+PSTN_CFTS_connectFrontTexSkin>>FrontTexSkinとフレーム拡張子の接続>>166 154 202
+PSTN_CBTS_connectBackTexSkin>>BackTexSkinとフレーム拡張子の接続>>166 154 202
+PSTN_CFTW_connectFrontTexWear>>FrontTexWearとフレーム拡張子の接続>>166 154 202
+PSTN_CBTW_connectBackTexWear>>BackTexWearとフレーム拡張子の接続>>166 154 202
+PSTN_CLTN_createLineThicknessNetwork>>線の太さネットワーク作成>>133 122 176

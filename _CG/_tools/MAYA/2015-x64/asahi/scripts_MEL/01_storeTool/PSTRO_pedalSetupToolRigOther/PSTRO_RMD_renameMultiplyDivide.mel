@@ -1,0 +1,62 @@
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//	PSTRO_RMD_renameMultiplyDivide	//	
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+//	AUTHOR: 		goto kazufumi
+//
+//	CREATION DATE:	2013_12_03
+//	UPDATED DATE:	2014_01_27
+//
+//	VERSION:			1.0
+//
+//	HOW TO USE:		run "PSTRO_RMD_renameMultiplyDivide();"
+//
+//////////////////////////////////////////////////////////////////
+
+/*================================================================
+
+
+
+================================================================*/
+
+
+/*================================================================
+
+	■更新内容：
+
+
+================================================================*/
+
+
+/*----------------------------------------------------------------------
+
+	PSTRO_RMD_renameMultiplyDivide
+	
+	特定のmultiplyDivideの名前を変更します。
+	
+	texLine_multiplyDivide　→　facialLine_multiplyDivide	
+	
+----------------------------------------------------------------------*/
+
+global proc PSTRO_RMD_renameMultiplyDivide(){
+
+	string $mp[] = ` ls -type "multiplyDivide" "*texLine_multiplyDivide*" `;
+	if( size($mp) != 1 ){
+		string $error = "multiplyDivideの数に問題があります。" + " 数 " + string(size($mp));
+		string $one;
+		if( size($mp) != 0 ){
+			for( $one in $mp ){
+				$error += " ";
+				$error += $one;
+			}
+		}
+		error $error;
+	}
+
+	string $rename = substituteAllString( $mp[0] , "texLine" , "facialLine" );
+	rename $mp[0] $rename;
+	
+}
+
+
+

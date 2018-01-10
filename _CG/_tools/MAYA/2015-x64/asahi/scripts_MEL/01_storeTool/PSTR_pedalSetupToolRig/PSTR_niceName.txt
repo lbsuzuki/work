@@ -1,0 +1,25 @@
+PSTR_IR_importRig>>リグの読み込み>>240 206 125
+PSTR_CBBS_createBaseBlendShape>>ベース ブレンド シェイプ 作成>>240 206 125
+PSTR_ABBS_addBaseBlendShape>>ベース ブレンド シェイプ 追加作成>>240 206 125
+PSTR_AL_arrangeLocator>>ジョイントにロケータを配置>>133 122 176
+PSTR_ALU_arrangeLocatorUnparent>>ロケータのペアレント解除>>133 122 176
+PSTR_ALP_arrangeLocatorParent>>ロケータのペアレント再現>>133 122 176
+PSTR_A_arrangeSpine>>背骨から頭部にかけてのリグの調整>>116 197 195
+PSTR_A_arrangeLLeg>>左足のリグの調整>>245 145 151
+PSTR_A_arrangeLArm>>左腕のリグの調整>>245 145 151
+PSTR_A_arrangeLHand>>左手のリグの調整>>245 145 151
+PSTR_A_arrangeRLeg>>右足のリグの調整>>105 200 240
+PSTR_A_arrangeRArm>>右腕のリグの調整>>105 200 240
+PSTR_A_arrangeRHand>>右手のリグの調整>>105 200 240
+PSTR_A_arrangeAdjustNeck>>襟の調整リグの調整>>123 194 143
+PSTR_A_arrangeAdjustElbow>>肘の調整リグの調整>>123 194 143
+PSTR_A_arrangeAdjustBreast>>胸の調整リグの調整>>123 194 143
+PSTR_A_arrangeAdjustPocket>>ポケットの調整リグの調整>>123 194 143
+PSTR_A_arrangeAdjustBelly>>腹の調整リグの調整>>123 194 143
+PSTR_A_arrangeAdjustHip>>尻の調整リグの調整>>123 194 143
+PSTR_A_arrangeAdjustShoulder>>肩の調整リグの調整>>123 194 143
+PSTR_A_arrangeAdjustArmHem>>腕裾の調整リグの調整>>123 194 143
+PSTR_A_arrangeAdjustLegHem>>足裾の調整リグの調整>>123 194 143
+PSTR_DASC_deleteAdjustShoulderConstraint>>肩のリグのコンストレイント削除>>246 141 109
+PSTR_OAAS_onlyArrangeAdjustShoulder>>肩のリグの『位置』だけ調整>>246 141 109
+PSTR_AASC_asignAdjustShoulderConstraint>>肩のリグのコンストレイント再現>>246 141 109

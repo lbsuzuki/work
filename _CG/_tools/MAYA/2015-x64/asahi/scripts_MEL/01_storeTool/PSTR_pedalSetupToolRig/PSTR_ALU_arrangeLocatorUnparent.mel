@@ -1,0 +1,111 @@
+///////////////////////////////////////////////////////////////////////////////
+//	PSTR_ALU_arrangeLocatorUnparent            //	ロケータのペアレント解除
+///////////////////////////////////////////////////////////////////////////////
+//
+//	AUTHOR: 		goto kazufumi
+//
+//	CREATION DATE:	2013_11_04
+//	UPDATED DATE:	2013_11_04
+//
+//	VERSION:			1.0
+//
+//	HOW TO USE:		run "PSTR_ALU_arrangeLocatorUnparent();"
+//
+//////////////////////////////////////////////////////////////////
+
+global proc PSTR_ALU_arrangeLocatorUnparent(){
+
+	string $cord = `textField -q -text PST_tfCordName`;
+	int $size = `size $cord`;
+	string $last = `substring $cord $size $size`;
+	if( $last != "_" ){
+		$cord += "_";
+	}
+
+	
+	//ALct--------------------------------------------------------------------------------------------------------
+
+	string $ALct[] = {					"L_finger_01_02_jnt_ALct",
+												"L_finger_01_03_jnt_ALct",
+												"L_finger_01_04_end_ALct",
+												"L_finger_02_01_jnt_ALct",
+												"L_finger_02_02_jnt_ALct",
+												"L_finger_02_03_jnt_ALct",
+												"L_finger_02_04_end_ALct",
+												"L_finger_03_01_jnt_ALct",
+												"L_finger_03_02_jnt_ALct",
+												"L_finger_03_03_jnt_ALct",
+												"L_finger_03_04_end_ALct",
+												"L_finger_04_01_jnt_ALct",
+												"L_finger_04_02_jnt_ALct",
+												"L_finger_04_03_jnt_ALct",
+												"L_finger_04_04_end_ALct",
+												"L_finger_05_01_jnt_ALct",
+												"L_finger_05_02_jnt_ALct",
+												"L_finger_05_03_jnt_ALct",
+												"L_finger_05_04_end_ALct",
+
+												"R_finger_01_02_jnt_ALct",
+												"R_finger_01_03_jnt_ALct",
+												"R_finger_01_04_end_ALct",
+												"R_finger_02_01_jnt_ALct",
+												"R_finger_02_02_jnt_ALct",
+												"R_finger_02_03_jnt_ALct",
+												"R_finger_02_04_end_ALct",
+												"R_finger_03_01_jnt_ALct",
+												"R_finger_03_02_jnt_ALct",
+												"R_finger_03_03_jnt_ALct",
+												"R_finger_03_04_end_ALct",
+												"R_finger_04_01_jnt_ALct",
+												"R_finger_04_02_jnt_ALct",
+												"R_finger_04_03_jnt_ALct",
+												"R_finger_04_04_end_ALct",
+												"R_finger_05_01_jnt_ALct",
+												"R_finger_05_02_jnt_ALct",
+												"R_finger_05_03_jnt_ALct",
+												"R_finger_05_04_end_ALct",
+
+												"L_finger_01_01_jnt_ALct",
+												"L_hand02A_jnt_ALct",
+												"L_hand02B_jnt_ALct",
+												"L_arm_poleVector_lct_ALct",
+												"L_hand01_jnt_ALct",
+												"L_arm_jnt_ALct",
+												"L_adjustElbow_jnt_ALct",
+												"L_shoulder02_jnt_ALct",
+												
+												"R_finger_01_01_jnt_ALct",
+												"R_hand02A_jnt_ALct",
+												"R_hand02B_jnt_ALct",
+												"R_arm_poleVector_lct_ALct",
+												"R_hand01_jnt_ALct",
+												"R_arm_jnt_ALct",
+												"R_adjustElbow_jnt_ALct",
+												"R_shoulder02_jnt_ALct",
+
+												"L_leg02_jnt_ALct",
+												"L_leg_poleVector_lct_ALct",
+												"L_foot01_jnt_ALct",
+												"L_foot02_jnt_ALct",
+												"L_foot03_end_ALct",
+
+												"R_leg02_jnt_ALct",
+												"R_leg_poleVector_lct_ALct",
+												"R_foot01_jnt_ALct",
+												"R_foot02_jnt_ALct",
+												"R_foot03_end_ALct",
+
+												"L_foot_crv_pivotALct",
+												"R_foot_crv_pivotALct"				};
+
+	
+	string $one;
+	for( $one in $ALct ){
+		parent ( $cord + $one ) ( $cord + "baseLct_grp" );
+	}
+		
+
+}
+
+
+

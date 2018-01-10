@@ -1,0 +1,953 @@
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//	PSTRO_PCT_pedalChangeTool	//	Change Tool ver.SetupTool	//	切り替えツール（verセットアップツール）
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+//	AUTHOR: 		goto kazufumi
+//
+//	CREATION DATE:	2013_12_03
+//	UPDATED DATE:	2013_12_03
+//
+//	VERSION:			1.1
+//
+//	HOW TO USE:		run "PSTRO_PCT_pedalChangeTool();"
+//
+//////////////////////////////////////////////////////////////////
+
+/*================================================================
+
+	PSTRO	…Pedal Setup Tool Rig Other（弱虫ペダル セットアップツール その他）
+
+	PCT	…Pedal Change Tool（弱虫ペダル専用 チェンジツール）
+	
+	CA	…Change anti-aliasing
+	
+		アンチエイリアスをON/OFFする機構を作成します
+		・表情以外のluminanceノードの出力先としてantiRampを作成し、接続します
+		・表情テクスチャの読込先を次のように変更します
+		『I:\work\pedaru\3DCG\lib\models\_sourceimages\Anim_tex\コードネーム\normal』
+				↓
+		『I:\work\pedaru\3DCG\lib\models\_sourceimages\Anim_tex\コードネーム\normal_antiOFF』
+		・『レンダー設定』→『精度』→『フレームバッファ』→『補間サンプル』　　補間サンプルを切り替えます
+		
+		
+	CTB	…Change tire brush
+	
+		タイヤブラシの昼/夜バージョンを切り替えます。
+		・タイヤブラシテクスチャの読込先を次のように変更します
+
+================================================================*/
+
+
+/*================================================================
+
+	■更新内容：
+	
+		v1.1			夏色の表情テクスチャが読み込ま手れている状態でも機能するようにしました。
+						変更したプロシージャ
+							PCT_CA_antiON
+							PCT_CA_antiOFF
+	
+		v1.01		『PSTRO_PCT_CA_makeAntiCancellationMechanism』プロシージャに次の一文を追加しました。
+							$renameJ = substituteAllString( $renameJ, ":" , "_" );
+				
+	
+
+================================================================*/
+
+
+/*================================================================
+
+	プロシージャ
+	
+	COMMON-------------------------------------------------------------
+	
+		PSTRO_PCT_pedalChangeTool
+	
+	CA---------------------------------------------------------------------
+	
+		PSTRO_PCT_CA_inputAntiCurrentState
+		PSTRO_PCT_CA_lumiListReload
+		PSTRO_PCT_CA_lumiListSelectAll
+		PSTRO_PCT_CA_selectLumi
+		PSTRO_PCT_CA_makeAntiCancellationMechanism
+		PSTRO_PCT_CA_antiON
+		PSTRO_PCT_CA_antiOFF
+
+	CTB---------------------------------------------------------------------
+	
+		PSTRO_PCT_CTB_changeTireBrucshNOON
+		PSTRO_PCT_CTB_changeTireBrucshNIGHT
+		PSTRO_PCT_CTB_inputTireBrushCurrentState
+
+================================================================*/
+
+/*----------------------------------------------------------------------
+
+	PSTRO_PCT_pedalChangeTool
+	
+	切り替えツールウインドウを表示します
+	
+----------------------------------------------------------------------*/
+
+global proc PSTRO_PCT_pedalChangeTool(){
+
+	//CA		…change anti-aliasing
+	//CTB  …change tire brush
+
+	string $title = "Change Tool ver.SetupTool";
+	string $verStr = "  ver ";
+	string $verNum = "1.1";
+
+	if( ` window -exists PSTRO_PCT_CA_winMain ` ){
+		deleteUI PSTRO_PCT_CA_winMain;
+	}
+
+	window	-t ( $title + $verStr + $verNum ) PSTRO_PCT_CA_winMain;
+		tabLayout PSTRO_PCT_CA_tlAnti;
+		
+			formLayout PSTRO_PCT_CA_folAntiAll;
+				frameLayout -lv 0 -bs etchedOut PSTRO_PCT_CA_flAnti;
+					formLayout PSTRO_PCT_CA_folAnti;
+						frameLayout -l "Make Anti-aliasing cancellation mechanism" -bs etchedOut PSTRO_PCT_CA_flMakeAntiCancellationMechanism;
+							formLayout PSTRO_PCT_CA_folMakeAntiCancellationMechanism;
+								frameLayout -l "Luminance list" -bs etchedOut PSTRO_PCT_CA_flLumiList;
+									formLayout PSTRO_PCT_CA_folLumiList;
+										button -l "Reload" -c "PSTRO_PCT_CA_lumiListReload" PSTRO_PCT_CA_btnLumiListReload;		//更新
+										textScrollList -h 150 -ams 1 -selectCommand "PSTRO_PCT_CA_selectLumi()" PSTRO_PCT_CA_tslLumiList;
+										button -l "Select all" -c "PSTRO_PCT_CA_lumiListSelectAll" PSTRO_PCT_CA_btnLumiListAllSelect;			//全選択
+									setParent..;
+								setParent..;
+								button -l "Make Anti-aliasing cancellation mechanism" -c "PSTRO_PCT_CA_makeAntiCancellationMechanism()" PSTRO_PCT_CA_btnMakeAntiCancellationMechanism;		//アンチエイリアス解除機構を組む
+							setParent..;
+						setParent..;
+						frameLayout -l "Change Anti-aliasing" -bs etchedOut PSTRO_PCT_CA_flChangeAnti;
+							formLayout PSTRO_PCT_CA_folChangeAnti;
+								text -h 35 -l "Current state : " PSTRO_PCT_CA_tAntiCurrentStateExp;
+								text -h 35 -l "" PSTRO_PCT_CA_tAntiCurrentState;
+								button -l "Anti-aliasing ON" -c "PSTRO_PCT_CA_antiON()" PSTRO_PCT_CA_btnAntiOn;		//アンチエイリアス ON
+								button -l "Anti-aliasing OFF" -c "PSTRO_PCT_CA_antiOFF()" PSTRO_PCT_CA_btnAntiOff;		//アンチエイリアス OFF
+							setParent..;
+						setParent..;
+					setParent..;
+				setParent..;
+			setParent..;
+			
+			formLayout PSTRO_PCT_CTB_folChangeTireBrushAll;
+				frameLayout -l "Change tire brush" -bs etchedOut PSTRO_PCT_CTB_flChangeTireBrush;
+					formLayout PSTRO_PCT_CTB_folChangeTireBrush;
+						text -h 35 -l "Current state : " PSTRO_PCT_CTB_tCurrentStateExp;
+						text -h 35 -l "" PSTRO_PCT_CTB_tCurrentState;
+						button -l "NOON" -c "PSTRO_PCT_CTB_changeTireBrucshNOON()" PSTRO_PCT_CTB_btnNOON;
+						button -l "NIGHT" -c "PSTRO_PCT_CTB_changeTireBrucshNIGHT()" PSTRO_PCT_CTB_btnNIGHT;
+					setParent..;
+				setParent..;
+			setParent..;
+		setParent..;
+	showWindow;
+			
+			
+			
+	tabLayout	-e 
+					-tabLabel PSTRO_PCT_CA_folAntiAll "Anti-aliasing"
+					-tabLabel PSTRO_PCT_CTB_folChangeTireBrushAll "Tire brush"
+					PSTRO_PCT_CA_tlAnti;
+					
+		
+	formLayout -e
+	
+		-af	PSTRO_PCT_CA_flAnti		"top"				0
+		-af	PSTRO_PCT_CA_flAnti		"left"				0
+		-af	PSTRO_PCT_CA_flAnti		"right"			0
+		-af	PSTRO_PCT_CA_flAnti		"bottom"		0
+		
+		PSTRO_PCT_CA_folAntiAll;
+		
+	formLayout -e
+	
+		-af	PSTRO_PCT_CA_btnLumiListReload				"top"			0
+		-af	PSTRO_PCT_CA_btnLumiListReload				"left"			0
+		-af	PSTRO_PCT_CA_btnLumiListReload				"right"		0
+	
+		-ac	PSTRO_PCT_CA_tslLumiList						"top"			0	PSTRO_PCT_CA_btnLumiListReload
+		-af	PSTRO_PCT_CA_tslLumiList						"left"			0
+		-af	PSTRO_PCT_CA_tslLumiList						"right"		0
+		-ac	PSTRO_PCT_CA_tslLumiList						"bottom"	0	PSTRO_PCT_CA_btnLumiListAllSelect
+		
+		-af	PSTRO_PCT_CA_btnLumiListAllSelect			"left"			0
+		-af	PSTRO_PCT_CA_btnLumiListAllSelect			"right"		0
+		-af	PSTRO_PCT_CA_btnLumiListAllSelect			"bottom"	0
+		
+		PSTRO_PCT_CA_folLumiList;
+		
+
+	formLayout -e
+	
+		-af	PSTRO_PCT_CA_flLumiList	"top"				0
+		-af	PSTRO_PCT_CA_flLumiList	"left"				0
+		-af	PSTRO_PCT_CA_flLumiList	"right"			0
+		-ac	PSTRO_PCT_CA_flLumiList	"bottom"		0	PSTRO_PCT_CA_btnMakeAntiCancellationMechanism
+		
+		-af	PSTRO_PCT_CA_btnMakeAntiCancellationMechanism		"left"			0
+		-af	PSTRO_PCT_CA_btnMakeAntiCancellationMechanism		"right"		0
+		-af	PSTRO_PCT_CA_btnMakeAntiCancellationMechanism		"bottom"	0
+		
+		PSTRO_PCT_CA_folMakeAntiCancellationMechanism;
+		
+	formLayout -e
+	
+		-af	PSTRO_PCT_CA_flMakeAntiCancellationMechanism					"top"				0
+		-af	PSTRO_PCT_CA_flMakeAntiCancellationMechanism					"left"				0
+		-af	PSTRO_PCT_CA_flMakeAntiCancellationMechanism					"right"			0
+		-ac	PSTRO_PCT_CA_flMakeAntiCancellationMechanism					"bottom"		0	PSTRO_PCT_CA_flChangeAnti
+	
+		-af	PSTRO_PCT_CA_flChangeAnti		"left"				0
+		-af	PSTRO_PCT_CA_flChangeAnti		"right"			0
+		-af	PSTRO_PCT_CA_flChangeAnti		"bottom"		0
+		
+		PSTRO_PCT_CA_folAnti;
+		
+	formLayout -e
+	
+		-af	PSTRO_PCT_CA_tAntiCurrentStateExp				"top"				0
+		-ap	PSTRO_PCT_CA_tAntiCurrentStateExp				"left"				-80	50
+		
+		-af	PSTRO_PCT_CA_tAntiCurrentState					"top"				0
+		-ac	PSTRO_PCT_CA_tAntiCurrentState					"left"				0	PSTRO_PCT_CA_tAntiCurrentStateExp
+		
+		-ac	PSTRO_PCT_CA_btnAntiOn								"top"				0	PSTRO_PCT_CA_tAntiCurrentStateExp
+		-af	PSTRO_PCT_CA_btnAntiOn								"left"				0
+		-ap	PSTRO_PCT_CA_btnAntiOn								"right"			0	50
+
+		-ac	PSTRO_PCT_CA_btnAntiOff								"top"				0	PSTRO_PCT_CA_tAntiCurrentStateExp
+		-ap	PSTRO_PCT_CA_btnAntiOff								"left"				0	50
+		-af	PSTRO_PCT_CA_btnAntiOff								"right"			0
+		
+		PSTRO_PCT_CA_folChangeAnti;
+		
+	formLayout -e 
+		
+		-af	PSTRO_PCT_CTB_flChangeTireBrush				"top"				0
+		-af	PSTRO_PCT_CTB_flChangeTireBrush				"left"				0
+		-af	PSTRO_PCT_CTB_flChangeTireBrush				"right"			0
+		-af	PSTRO_PCT_CTB_flChangeTireBrush				"bottom"		0
+	
+		PSTRO_PCT_CTB_folChangeTireBrushAll;
+		
+		
+	formLayout -e
+	
+		-af	PSTRO_PCT_CTB_tCurrentStateExp		"top"			0
+		-ap	PSTRO_PCT_CTB_tCurrentStateExp		"left"			-80	50
+		
+		-af	PSTRO_PCT_CTB_tCurrentState			"top"			0
+		-ac	PSTRO_PCT_CTB_tCurrentState			"left"			0	PSTRO_PCT_CTB_tCurrentStateExp
+	
+		-ac	PSTRO_PCT_CTB_btnNOON					"top"			0	PSTRO_PCT_CTB_tCurrentState
+		-af	PSTRO_PCT_CTB_btnNOON					"left"			0
+		-af	PSTRO_PCT_CTB_btnNOON					"right"			0
+		
+		-ac	PSTRO_PCT_CTB_btnNIGHT					"top"			0	PSTRO_PCT_CTB_btnNOON
+		-af	PSTRO_PCT_CTB_btnNIGHT					"left"			0
+		-af	PSTRO_PCT_CTB_btnNIGHT					"right"			0
+		
+		PSTRO_PCT_CTB_folChangeTireBrush;
+		
+		
+		
+	PSTRO_PCT_CA_lumiListReload();
+	PSTRO_PCT_CTB_inputTireBrushCurrentState();
+	PSTRO_PCT_CA_inputAntiCurrentState();
+	
+}
+
+
+
+/*///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+	CA	…Change anti-aliasing
+
+	
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////*/
+
+
+/*-----------------------------------------------------------------------------------------------------------------
+
+	PSTRO_PCT_CA_inputAntiCurrentState
+	
+	『レンダー設定』→『精度』→『フレームバッファ』→『補間サンプル』の値を取得し
+	値をON/OFFで表示
+	
+-----------------------------------------------------------------------------------------------------------------*/
+
+global proc PSTRO_PCT_CA_inputAntiCurrentState(){
+
+	int $exist = ` objExists miDefaultFramebuffer `;
+	
+	if( $exist == 0 ){
+		text -e -l "There is no miDefaultFramebuffer." PSTRO_PCT_CA_tAntiCurrentState;
+	}else{
+		int $state = ` getAttr "miDefaultFramebuffer.interpolateSamples" `;
+			
+		if( !$state ){
+			text -e -l "OFF" PSTRO_PCT_CA_tAntiCurrentState;
+		}else if( $state ){
+			text -e -l "ON" PSTRO_PCT_CA_tAntiCurrentState;
+		}
+	}
+}
+
+
+
+/*-----------------------------------------------------------------------------------------------------------------
+
+	PSTRO_PCT_CA_lumiListReload
+	
+	Luminance list を更新します
+	
+-----------------------------------------------------------------------------------------------------------------*/
+
+global proc PSTRO_PCT_CA_lumiListReload(){
+
+	string $select[] = ` ls -sl `;
+	
+	string $allLumi[] = ` ls -type "luminance" `;
+	string $input[];
+	for( $lumi in $allLumi ){
+		
+	    string $source = ` connectionInfo -sfd ( $lumi + ".value" ) `;
+		string $parts[];
+		tokenize $source "." $parts;
+		string $node = $parts[0];
+		string $nodeType = ` objectType $node `;
+		int $matchPath = 0;	
+		
+		if( $nodeType == "file" ){
+			string $filePath = ` getAttr ( $node + ".fileTextureName" ) `;
+			$matchPath = ` gmatch $filePath "*work/pedaru/3DCG/lib/models/_sourceimages/Anim_tex*" `;
+		}
+		
+		int $matchName = ` gmatch $lumi "*Thickness*" `;
+		
+		if( $matchPath == 0 && $matchName == 0 ){
+			int $size = ` size $input `;
+			$input[$size] = $lumi;
+		}
+		
+	}
+	$input = ` sort $input `;
+	
+	string $selectItem[] = ` textScrollList -q -selectItem PSTRO_PCT_CA_tslLumiList `;
+	
+	textScrollList -e -removeAll PSTRO_PCT_CA_tslLumiList;
+	int $size = ` size $input `;
+	if( $size != 0 ){
+		string $one;
+		for( $one in $input ){
+			textScrollList -e -append $one PSTRO_PCT_CA_tslLumiList;
+		}
+	}
+	
+	string $item;
+	for( $item in $selectItem ){
+		int $contain = stringArrayContains( $item , $input );
+		if( $contain ){
+			textScrollList -e -selectItem $item PSTRO_PCT_CA_tslLumiList;
+		}
+	}
+	
+	select -r $select;
+	PSTRO_PCT_CA_inputAntiCurrentState;
+	
+}
+
+
+
+/*-----------------------------------------------------------------------------------------------------------------
+
+	PSTRO_PCT_CA_lumiListSelectAll
+	
+	Namespace list に表示されている項目すべてを選択します
+	
+-----------------------------------------------------------------------------------------------------------------*/
+
+global proc PSTRO_PCT_CA_lumiListSelectAll(){
+
+	string $items[] =` textScrollList -q -allItems PSTRO_PCT_CA_tslLumiList `;
+	string $item;
+	for( $item in $items ){
+		textScrollList -e -selectItem $item PSTRO_PCT_CA_tslLumiList;
+	}
+	PSTRO_PCT_CA_selectLumi;
+	
+}
+
+
+/*-----------------------------------------------------------------------------------------------------------------
+
+	PSTRO_PCT_CA_selectLumi
+	
+	Luminance list で選択されたネームスペースを持つオブジェクトを実際に選択する
+	
+-----------------------------------------------------------------------------------------------------------------*/
+
+global proc PSTRO_PCT_CA_selectLumi(){
+
+	select -cl;
+	string $selectItem[] = ` textScrollList -q -selectItem PSTRO_PCT_CA_tslLumiList `;
+	if( ` size $selectItem ` != 0 ){
+		string $item;
+		for( $item in $selectItem ){
+			int $exist = ` objExists $item `;	
+			if( $exist ){
+				select -add $item;
+			}
+		}
+	}
+}
+
+
+/*-----------------------------------------------------------------------------------------------------------------
+
+	PSTRO_PCT_CA_makeAntiCancellationMechanism
+	
+	Luminance list で選択したネームスペースを持つオブジェクトにアンチエイリアスON/OFF機構を
+	組み込みます。
+	
+-----------------------------------------------------------------------------------------------------------------*/
+
+
+global proc PSTRO_PCT_CA_makeAntiCancellationMechanism(){
+
+	string $type[] = {			"defaultTextureList",
+										"defaultShaderList",
+										"defaultLightList",
+										"defaultRenderUtilityList",
+										"defaultRenderingList",
+										"displayLayer",
+										"defaultHardwareRenderGlobals",
+										"hwRenderLayerFilter",
+										"objectMultiFilter",
+										"renderGlobals",
+										"renderLayer",
+										"renderQuality",
+										"resolution",
+										"viewColorManager"					};
+
+	PSTRO_PCT_CA_selectLumi();
+	string $lumi[] = ` ls -sl -type "luminance" `;
+	string $one;
+	for( $one in $lumi ){
+	    string $source = ` connectionInfo -sfd ( $one + ".value" ) `;
+		string $parts[];
+		tokenize $source "." $parts;
+		string $node = $parts[0];
+		string $nodeType = ` objectType $node `;
+		int $match = 0;
+		
+		if( $nodeType == "file" ){
+			string $filePath = ` getAttr ( $node + ".fileTextureName" ) `;
+			$match = ` gmatch $filePath "*work/pedaru/3DCG/lib/models/_sourceimages/Anim_tex*" `;
+		}
+		
+		if( $match == 0 ){
+		
+			string $renameJ = substituteAllString( $one, "_luminance" , "_antiRamp" );
+			int $exists = ` objExists $renameJ `;
+			
+			if( !$exists ){
+			
+				string $renameP;
+				$renameP = $renameJ + "_place2dTexture";
+				
+				string $newRamp = `createNode ramp`;
+				string $newP2d = `createNode place2dTexture`;
+				connectAttr ( $newP2d + ".outUV" ) ( $newRamp + ".uv" );
+				connectAttr ( $newP2d + ".outUvFilterSize" ) ( $newRamp + ".uvFilterSize" );
+				print $renameJ;
+				string $ramp = `rename $newRamp $renameJ`;
+				string $p2d = `rename $newP2d $renameP`;
+				removeMultiInstance -break 1 ( $ramp + ".colorEntryList[1]" );
+				setAttr ( $ramp + ".colorEntryList[2].color" ) -type double3 1 1 1 ;
+				setAttr ( $ramp + ".colorEntryList[0].color" ) -type double3 0 0 0 ;
+				setAttr ( $ramp + ".interpolation" ) 0;
+				setAttr ( $ramp + ".colorEntryList[2].position" ) 0.001;
+				
+				string $des[] = ` listConnections -s 0 -d 1 -p 1 $one `;
+				connectAttr -f ( $one + ".outValue" ) ( $ramp + ".vCoord" );
+				
+				for( $desOne in $des ){
+				
+					if( $desOne != $ramp ){
+						int $result = 0;
+						string $ignoreType;
+						for( $ignoreType in $type ){
+							string $desType = ` objectType $desOne `;
+							if( $ignoreType == $desType ){
+								$result = 1;
+							}
+						}
+						
+						if( !$result ){
+							connectAttr -f ( $ramp + ".outAlpha" ) $desOne;
+						}
+					}
+				}
+			}
+		}
+	}
+	
+	int $exist = ` objExists miDefaultFramebuffer `;
+	if( $exist ){
+		int $state = ` getAttr "miDefaultFramebuffer.interpolateSamples" `;
+		if( $state ){
+			PSTRO_PCT_CA_antiON;
+		}else{
+			PSTRO_PCT_CA_antiOFF;
+		}
+	}else{
+		PSTRO_PCT_CA_antiON;
+	}
+	
+}
+
+/*-----------------------------------------------------------------------------------------------------------------
+
+	PSTRO_PCT_CA_antiON
+		
+	アンチエイリアスをONにします。
+	
+-----------------------------------------------------------------------------------------------------------------*/
+
+global proc PSTRO_PCT_CA_antiON(){
+
+	string $antiRamp[] = ` ls -type ramp "*antiRamp*" `;
+	
+	if( size($antiRamp) == 0 ){
+		error "There is no antiRamp.";		//antiRampがありません。
+	}else{
+		string $ramp;
+		for( $ramp in $antiRamp ){
+			setAttr ( $ramp + ".colorEntryList[2].position" ) 1;
+			setAttr ( $ramp + ".interpolation" ) 1;
+			setAttr "miDefaultFramebuffer.interpolateSamples" 1;
+		}
+	}
+	
+	string $file[] = ` ls -type "file" `;
+	
+	for( $fileOne in $file ){
+		int $match = 0;
+		string $filePath = ` getAttr ( $fileOne + ".fileTextureName" ) `;
+		$match = ` gmatch $filePath "*work/pedaru/3DCG/lib/models/_sourceimages/Anim_tex*" `;
+		if( $match ){
+			
+			int $matchNormal = 0;
+			int $normalFront = ` gmatch $filePath "*normal_antiOFF/front*" `;
+			int $normalTilt = ` gmatch $filePath "*normal_antiOFF/tilt*" `;
+			int $normalSide = ` gmatch $filePath "*normal_antiOFF/side*" `;
+			
+			if( $normalFront==1  ||  $normalTilt==1  ||  $normalSide==1 ){
+				$matchNormal = 1;
+			}
+		
+			int $matchNa = 0;
+			int $naFront = ` gmatch $filePath "*na_antiOFF/front*" `;
+			int $naTilt = ` gmatch $filePath "*na_antiOFF/tilt*" `;
+			int $naSide = ` gmatch $filePath "*na_antiOFF/side*" `;
+			
+			if( $naFront==1  ||  $naTilt==1  ||  $naSide==1 ){
+				$matchNa = 1;
+			}
+		
+			string $rewrite;
+			if( $matchNormal ){
+				string $normal_front = "normal/front";
+				string $normal_antiOFF_front = "normal_antiOFF/front";
+				string $normal_side = "normal/side";
+				string $normal_antiOFF_side = "normal_antiOFF/side";
+				string $normal_tilt = "normal/tilt";
+				string $normal_antiOFF_tilt = "normal_antiOFF/tilt";
+				
+				int $number = 0;
+				if( ` gmatch $filePath ( "*" + $normal_front + "*" ) ` ) $number = 0;
+				if( ` gmatch $filePath ( "*" + $normal_antiOFF_front + "*" ) ` ) $number = 1;
+				if( ` gmatch $filePath ( "*" + $normal_side + "*" ) ` ) $number = 0;
+				if( ` gmatch $filePath ( "*" + $normal_antiOFF_side + "*" ) ` ) $number = 2;
+				if( ` gmatch $filePath ( "*" + $normal_tilt + "*" ) ` ) $number = 0;
+				if( ` gmatch $filePath ( "*" + $normal_antiOFF_tilt + "*" ) ` ) $number = 3;	
+				
+				if( $number != 0 ){
+					
+					switch( $number ){
+					
+						case 1:
+							$rewrite = substituteAllString( $filePath , $normal_antiOFF_front , $normal_front );
+							break;
+						case 2:
+							$rewrite = substituteAllString( $filePath , $normal_antiOFF_side , $normal_side );
+							break;
+						case 3:
+							$rewrite = substituteAllString( $filePath , $normal_antiOFF_tilt , $normal_tilt );
+							break;
+							
+					}
+					
+				}
+			
+			}else if( $matchNa ){
+				string $na_front = "na/front";
+				string $na_antiOFF_front = "na_antiOFF/front";
+				string $na_side = "na/side";
+				string $na_antiOFF_side = "na_antiOFF/side";
+				string $na_tilt = "na/tilt";
+				string $na_antiOFF_tilt = "na_antiOFF/tilt";
+				
+				int $number = 0;
+				if( ` gmatch $filePath ( "*" + $na_front + "*" ) ` ) $number = 0;
+				if( ` gmatch $filePath ( "*" + $na_antiOFF_front + "*" ) ` ) $number = 1;
+				if( ` gmatch $filePath ( "*" + $na_side + "*" ) ` ) $number = 0;
+				if( ` gmatch $filePath ( "*" + $na_antiOFF_side + "*" ) ` ) $number = 2;
+				if( ` gmatch $filePath ( "*" + $na_tilt + "*" ) ` ) $number = 0;
+				if( ` gmatch $filePath ( "*" + $na_antiOFF_tilt + "*" ) ` ) $number = 3;	
+				
+				if( $number != 0 ){
+					
+					switch( $number ){
+					
+						case 1:
+							$rewrite = substituteAllString( $filePath , $na_antiOFF_front , $na_front );
+							break;
+						case 2:
+							$rewrite = substituteAllString( $filePath , $na_antiOFF_side , $na_side );
+							break;
+						case 3:
+							$rewrite = substituteAllString( $filePath , $na_antiOFF_tilt , $na_tilt );
+							break;
+							
+					}
+					
+				}				
+			
+			}
+			
+			if( size($rewrite) != 0  ){
+				setAttr -type "string" ( $fileOne + ".fileTextureName" ) $rewrite;
+			}
+			
+		}
+	}
+	
+	PSTRO_PCT_CA_inputAntiCurrentState();
+	
+}
+
+
+/*-----------------------------------------------------------------------------------------------------------------
+
+	PSTRO_PCT_CA_antiOFF
+		
+	アンチエイリアスをOFFにします。
+	
+-----------------------------------------------------------------------------------------------------------------*/
+
+global proc PSTRO_PCT_CA_antiOFF(){
+
+	string $antiRamp[] = ` ls -type ramp "*antiRamp*" `;
+	
+	if( size($antiRamp) == 0 ){
+		error "Thare is no antiRamp.";		//antiRampがありません。
+	}else{
+		string $ramp;
+		for( $ramp in $antiRamp ){
+			setAttr ( $ramp + ".colorEntryList[2].position" ) 0.001;
+			setAttr ( $ramp + ".interpolation" ) 0;
+			setAttr "miDefaultFramebuffer.interpolateSamples" 0;
+		}
+	}
+	
+	string $file[] = ` ls -type "file" `;
+	
+	for( $fileOne in $file ){
+		int $match = 0;
+		string $filePath = ` getAttr ( $fileOne + ".fileTextureName" ) `;
+		$match = ` gmatch $filePath "*work/pedaru/3DCG/lib/models/_sourceimages/Anim_tex*" `;
+		if( $match ){
+		
+			int $matchNormal = 0;
+			int $normalFront = ` gmatch $filePath "*normal/front*" `;
+			int $normalTilt = ` gmatch $filePath "*normal/tilt*" `;
+			int $normalSide = ` gmatch $filePath "*normal/side*" `;
+			
+			if( $normalFront==1  ||  $normalTilt==1  ||  $normalSide==1 ){
+				$matchNormal = 1;
+			}
+		
+			int $matchNa = 0;
+			int $naFront = ` gmatch $filePath "*na/front*" `;
+			int $naTilt = ` gmatch $filePath "*na/tilt*" `;
+			int $naSide = ` gmatch $filePath "*na/side*" `;
+			
+			if( $naFront==1  ||  $naTilt==1  ||  $naSide==1 ){
+				$matchNa = 1;
+			}
+		
+			string $rewrite;
+			if( $matchNormal ){
+				string $normal_front = "normal/front";
+				string $normal_antiOFF_front = "normal_antiOFF/front";
+				string $normal_side = "normal/side";
+				string $normal_antiOFF_side = "normal_antiOFF/side";
+				string $normal_tilt = "normal/tilt";
+				string $normal_antiOFF_tilt = "normal_antiOFF/tilt";
+				
+				int $number = 0;
+				if( ` gmatch $filePath ( "*" + $normal_front + "*" ) ` ) $number = 1;
+				if( ` gmatch $filePath ( "*" + $normal_antiOFF_front + "*" ) ` ) $number = 0;
+				if( ` gmatch $filePath ( "*" + $normal_side + "*" ) ` ) $number = 2;
+				if( ` gmatch $filePath ( "*" + $normal_antiOFF_side + "*" ) ` ) $number = 0;
+				if( ` gmatch $filePath ( "*" + $normal_tilt + "*" ) ` ) $number = 3;
+				if( ` gmatch $filePath ( "*" + $normal_antiOFF_tilt + "*" ) ` ) $number = 0;			
+				
+				if( $number != 0 ){
+					
+					switch( $number ){
+					
+						case 1:
+							$rewrite = substituteAllString( $filePath , $normal_front , $normal_antiOFF_front );
+							break;
+						case 2:
+							$rewrite = substituteAllString( $filePath , $normal_side , $normal_antiOFF_side );
+							break;
+						case 3:
+							$rewrite = substituteAllString( $filePath , $normal_tilt , $normal_antiOFF_tilt );
+							break;
+							
+					}
+					
+				}
+				
+			}else if( $matchNa ){
+				string $na_front = "na/front";
+				string $na_antiOFF_front = "na_antiOFF/front";
+				string $na_side = "na/side";
+				string $na_antiOFF_side = "na_antiOFF/side";
+				string $na_tilt = "na/tilt";
+				string $na_antiOFF_tilt = "na_antiOFF/tilt";
+				
+				int $number = 0;
+				if( ` gmatch $filePath ( "*" + $na_front + "*" ) ` ) $number = 1;
+				if( ` gmatch $filePath ( "*" + $na_antiOFF_front + "*" ) ` ) $number = 0;
+				if( ` gmatch $filePath ( "*" + $na_side + "*" ) ` ) $number = 2;
+				if( ` gmatch $filePath ( "*" + $na_antiOFF_side + "*" ) ` ) $number = 0;
+				if( ` gmatch $filePath ( "*" + $na_tilt + "*" ) ` ) $number = 3;
+				if( ` gmatch $filePath ( "*" + $na_antiOFF_tilt + "*" ) ` ) $number = 0;			
+				
+				if( $number != 0 ){
+					
+					switch( $number ){
+					
+						case 1:
+							$rewrite = substituteAllString( $filePath , $na_front , $na_antiOFF_front );
+							break;
+						case 2:
+							$rewrite = substituteAllString( $filePath , $na_side , $na_antiOFF_side );
+							break;
+						case 3:
+							$rewrite = substituteAllString( $filePath , $na_tilt , $na_antiOFF_tilt );
+							break;
+							
+					}
+					
+				}			
+			
+			}
+			
+			if( size($rewrite) != 0  ){
+				setAttr -type "string" ( $fileOne + ".fileTextureName" ) $rewrite;
+			}
+			
+		}
+	}
+	
+	PSTRO_PCT_CA_inputAntiCurrentState();
+	
+}
+
+
+/*///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+	CTB	…Change tire brush
+
+	
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////*/
+
+/*-----------------------------------------------------------------------------------------------------------------
+
+	PSTRO_PCT_CTB_changeTireBrucshNOON
+		
+	タイヤブラシを昼用に変更します。
+	
+-----------------------------------------------------------------------------------------------------------------*/
+
+global proc PSTRO_PCT_CTB_changeTireBrucshNOON(){
+
+	string $file[] = ` ls -type "file" `;
+	string $upA = "TireBrush_upA/TireBrush_upA";
+	string $upA_night = "TireBrush_upN/TireBrush_upN";
+	string $longA = "TireBrush_longA/TireBrush_longA";
+	string $longA_night = "TireBrush_longN/TireBrush_longN";
+	
+	string $fileOne;
+	for( $fileOne in $file ){
+
+		int $number = 0;
+		string $filePath = ` getAttr ( $fileOne + ".fileTextureName" ) `;
+		
+		int $match = ` gmatch $filePath "*work/pedaru/3DCG/lib/models/_sourceimages/Effect/*" `;
+		if( $match ){
+		
+			if( ` gmatch $filePath ( "*" + $upA + "*" ) ` ) $number = 1;
+			if( ` gmatch $filePath ( "*" + $upA_night + "*" ) ` ) $number = 2;
+			if( ` gmatch $filePath ( "*" + $longA + "*" ) ` ) $number = 3;
+			if( ` gmatch $filePath ( "*" + $longA_night + "*" ) ` ) $number = 4;
+			
+			if( $number != 1  &&  $number != 3 ){
+			
+				string $rewrite;
+				
+				switch( $number ){
+				
+					case 2:
+						$rewrite = substituteAllString( $filePath , $upA_night , $upA );
+						break;
+					case 4:
+						$rewrite = substituteAllString( $filePath , $longA_night , $longA );
+						break;
+								
+				}
+				
+				setAttr -type "string" ( $fileOne + ".fileTextureName" ) $rewrite;
+			}
+		}
+	}
+	
+	PSTRO_PCT_CTB_inputTireBrushCurrentState();
+}
+
+
+
+
+/*-----------------------------------------------------------------------------------------------------------------
+
+	PSTRO_PCT_CTB_changeTireBrucshNIGHT
+		
+	タイヤブラシを夜用に変更します。
+	
+-----------------------------------------------------------------------------------------------------------------*/
+
+global proc PSTRO_PCT_CTB_changeTireBrucshNIGHT(){
+
+	string $file[] = ` ls -type "file" `;
+	string $upA = "TireBrush_upA/TireBrush_upA";
+	string $upA_night = "TireBrush_upN/TireBrush_upN";
+	string $longA = "TireBrush_longA/TireBrush_longA";
+	string $longA_night = "TireBrush_longN/TireBrush_longN";
+	
+	string $fileOne;
+	for( $fileOne in $file ){
+	
+		string $filePath = ` getAttr ( $fileOne + ".fileTextureName" ) `;
+		int $match = ` gmatch $filePath "*work/pedaru/3DCG/lib/models/_sourceimages/Effect/*" `;
+		if( $match ){
+	
+			int $number = 0;
+			
+			if( ` gmatch $filePath ( "*" + $upA + "*" ) ` ) $number = 1;
+			if( ` gmatch $filePath ( "*" + $upA_night + "*" ) ` ) $number = 2;
+			if( ` gmatch $filePath ( "*" + $longA + "*" ) ` ) $number = 3;
+			if( ` gmatch $filePath ( "*" + $longA_night + "*" ) ` ) $number = 4;
+			
+			if( $number != 2  &&  $number != 4 ){
+			
+				string $rewrite;
+				
+				switch( $number ){
+				
+					case 1:
+						$rewrite = substituteAllString( $filePath , $upA , $upA_night );
+						break;
+					case 3:
+						$rewrite = substituteAllString( $filePath , $longA , $longA_night );
+						break;
+								
+				}
+				
+				setAttr -type "string" ( $fileOne + ".fileTextureName" ) $rewrite;
+			}
+		}
+	}
+	
+	PSTRO_PCT_CTB_inputTireBrushCurrentState();
+}
+
+
+
+/*-----------------------------------------------------------------------------------------------------------------
+
+	PSTRO_PCT_CTB_inputTireBrushCurrentState
+		
+	現在の状態を表示します。
+	
+-----------------------------------------------------------------------------------------------------------------*/
+
+global proc PSTRO_PCT_CTB_inputTireBrushCurrentState(){
+
+	string $file[] = ` ls -type "file" `;
+	string $upA = "TireBrush_upA/TireBrush_upA";
+	string $upA_night = "TireBrush_upN/TireBrush_upN";
+	string $longA = "TireBrush_longA/TireBrush_longA";
+	string $longA_night = "TireBrush_longN/TireBrush_longN";
+	
+	string $result[];
+	
+	for( $fileOne in $file ){
+	
+		string $filePath = ` getAttr ( $fileOne + ".fileTextureName" ) `;
+		int $match = ` gmatch $filePath "*work/pedaru/3DCG/lib/models/_sourceimages/Effect/*" `;
+		if( $match ){
+		
+			int $number = 0;
+
+			if( ` gmatch $filePath ( "*" + $upA + "*" ) ` ) $number = 0;
+			if( ` gmatch $filePath ( "*" + $upA_night + "*" ) ` ) $number = 1;
+			if( ` gmatch $filePath ( "*" + $longA + "*" ) ` ) $number = 0;
+			if( ` gmatch $filePath ( "*" + $longA_night + "*" ) ` ) $number = 1;
+			
+			string $rewrite;
+			
+			int $size = ` size $result `;
+			$result[$size] = string($number);
+		
+		}		
+	}
+	
+	string $fin[] = stringArrayRemoveDuplicates($result);
+	int $size = ` size $fin `;
+	if( $size == 0 ){
+		text -e -l "none" PSTRO_PCT_CTB_tCurrentState;
+	}else if( $size == 1 ){
+		
+		if( $fin[0] == 0 ){
+			text -e -l "NOON" PSTRO_PCT_CTB_tCurrentState;
+		}else if( $fin[0] == 1 ){
+			text -e -l "NIGHT" PSTRO_PCT_CTB_tCurrentState;
+		}
+	
+	}else if( $size >= 2 ){
+		text -e -l "mixed" PSTRO_PCT_CTB_tCurrentState;
+	}
+
+}
+

@@ -1,0 +1,245 @@
+///////////////////////////////////////////////////////////////////////////////
+//	PSTRO_RSA_rigScaleSubstraction            //		
+///////////////////////////////////////////////////////////////////////////////
+//
+//	AUTHOR: 		goto kazufumi
+//
+//	CREATION DATE:	2016_04_15
+//	UPDATED DATE:	2016_07_13
+//
+//	VERSION:			1.1
+//
+//	HOW TO USE:		run "PSTRO_RSA_rigScaleSubstraction();"
+//
+//////////////////////////////////////////////////////////////////
+
+/*================================================================
+
+	更新内容
+	
+		1.1		【adjustWaist_crv】に対応しました
+
+================================================================*/
+
+global proc PSTRO_RSA_rigScaleSubstraction(){
+
+	string $sl[] = ` ls -sl `;
+	
+	float $scale = 0.9;
+	
+	for( $one in $sl ){
+		string $shape[] = ` listRelatives -shapes $one `;
+		if( ` objectType $shape[0] ` == "nurbsCurve" ){
+			
+			if( ` gmatch $one "*adjust*" ` ){
+				//名前にadjustがあるとき
+				if( ` gmatch $one "*Waist*" ` ){
+					//名前にWaistがあるとき
+					float $piv[] = ` xform -q -ws -piv $one `;
+					select -r $one ;
+					selectCurveCV("all");
+					scale -ws -r -p $piv[0] $piv[1] $piv[2] $scale $scale $scale;
+				}else if( ` gmatch $one "*Shoulder*" ` ){
+					//名前にShoulderがあるとき
+					select -r ( $shape[0] + ".cv[2]" ) ( $shape[1] + ".cv[0:4]" ) ;
+					move -r -os -wd 0 0 1 ;
+					if( ` gmatch $one "*L_adjustShoulder*" ` ){
+						string $R0 = substituteAllString( $shape[0] , "L_adjustShoulder" , "R_adjustShoulder" );
+						string $R1 = substituteAllString( $shape[1] , "L_adjustShoulder" , "R_adjustShoulder" );
+						select -r ( $R0 + ".cv[2]" ) ( $R1 + ".cv[0:4]" ) ;
+						move -r -os -wd 0 0 1 ;
+					}else if( ` gmatch $one "*R_adjust*" ` ){
+						string $L0 = substituteAllString( $shape[0] , "R_adjustShoulder" , "L_adjustShoulder" );
+						string $L1 = substituteAllString( $shape[1] , "R_adjustShoulder" , "L_adjustShoulder" );
+						select -r ( $L0 + ".cv[2]" ) ( $L1 + ".cv[0:4]" ) ;
+						move -r -os -wd 0 0 1 ;
+					}
+				}else if( ` gmatch $one "*Velcro*" ` ){
+					//名前にVelcroがあるとき
+					float $piv[] = ` xform -q -ws -piv $one `;
+					select -r $one ;
+					selectCurveCV("all");
+					scale -ws -r -p $piv[0] $piv[1] $piv[2] $scale $scale $scale;
+					if( ` gmatch $one "*L_*" ` ){
+						string $R = substituteAllString( $one , "L_" , "R_" );
+						float $piv[] = ` xform -q -ws -piv $R `;
+						select -r $R ;
+						selectCurveCV("all");
+						scale -ws -r -p $piv[0] $piv[1] $piv[2] $scale $scale $scale;
+					}else if( ` gmatch $one "*R_*" ` ){
+						string $L = substituteAllString( $one , "R_" , "L_" );
+						float $piv[] = ` xform -q -ws -piv $L `;
+						select -r $L ;
+						selectCurveCV("all");
+						scale -ws -r -p $piv[0] $piv[1] $piv[2] $scale $scale $scale;
+					}
+				
+				}else{
+					select -r ( $one + ".cv[1:14]" ) ;
+					move -r -os -wd 0 0 -1 ;
+					if( ` gmatch $one "*L_adjust*" ` ){
+						string $R = substituteAllString( $one , "L_adjust" , "R_adjust" );
+						select -r ( $R + ".cv[1:14]" ) ;
+						move -r -os -wd 0 0 -1 ;
+					}else if( ` gmatch $one "*R_adjust*" ` ){
+						string $L = substituteAllString( $one , "R_adjust" , "L_adjust" );
+						select -r ( $L + ".cv[1:14]" ) ;
+						move -r -os -wd 0 0 -1 ;
+					}
+				}
+				
+			}else if( ` gmatch $one "*spine*" `  ||  ` gmatch $one "*hip_crv*" ` ||  ` gmatch $one "*head01_crv*" `||   ` gmatch $one "*shoulder01_crv*" `){
+				if( ` gmatch $one "*spine01*" ` ){
+					select -r ( $shape[0] + ".cv[0:17]" ) ;
+					float $piv[] = ` xform -q -ws -piv $one `;
+					scale -ws -r -p $piv[0] $piv[1] $piv[2] $scale $scale $scale;
+					float $cv17pos[] = ` xform -q -ws -t ( $shape[0] + ".cv[17]" ) `;
+					float $cv18pos[] = ` xform -q -ws -t ( $shape[0] + ".cv[18]" ) `;
+					move -ws $cv17pos[0] $cv18pos[1] $cv17pos[2] ( $shape[0] + ".cv[18]" );
+					
+					float $cvPos[] = ` xform -q -ws -boundingBox ( $shape[0] + ".cv[19:40]" ) `;
+					float $bx = (( $cvPos[3] - $cvPos[0] )/2) + $cvPos[0];
+					float $by = (( $cvPos[4] - $cvPos[1] )/2) + $cvPos[1];
+					float $bz = (( $cvPos[5] - $cvPos[2] )/2) + $cvPos[2];
+					float $x = $cv18pos[0] - $bx;
+					float $y = $cv18pos[1] - $by;
+					float $z = $cv18pos[2] - $bz;
+					move -r $x $y $z ( $shape[0] + ".cv[19:40]" );
+					select -r ( $shape[0] + ".cv[19:40]" );
+					move -r -os -wd 0 0 -9.8 ;
+				}else if( ` gmatch $one "*hip_crv*" ` ){
+					select -r ( $shape[0] + ".cv[0:16]" ) ;
+					float $piv[] = ` xform -q -ws -piv $one `;
+					
+					float $cv0pos[] = ` xform -q -ws -t ( $shape[0] + ".cv[0]" ) `;
+					float $cvPos[] = ` xform -q -ws -boundingBox ( $shape[0] + ".cv[17:38]" ) `;
+					float $bx = (( $cvPos[3] - $cvPos[0] )/2) + $cvPos[0];
+					float $by = (( $cvPos[4] - $cvPos[1] )/2) + $cvPos[1];
+					float $bz = (( $cvPos[5] - $cvPos[2] )/2) + $cvPos[2];
+					float $x = $cv0pos[0] - $bx;
+					float $y = $cv0pos[1] - $by;
+					float $z = $cv0pos[2] - $bz;
+					
+					scale -ws -r -p $piv[0] $by $piv[2] $scale $scale $scale;
+
+					move -r $x 0 $z ( $shape[0] + ".cv[17:38]" );
+					select -r ( $shape[0] + ".cv[17:38]" ) ;
+					move -r -os -wd 0 0 -14 ;
+					
+				}else if( ` gmatch $one "*head01_crv*" ` ){
+					select -r ( $shape[0] + ".cv[0:21]" ) ;
+					float $piv[] = ` xform -q -ws -piv $one `;
+					float $cvPos[] = ` xform -q -ws -boundingBox ( $shape[0] + ".cv[0:21]" ) `;
+					
+					scale -ws -r -p $piv[0] $cvPos[1] $piv[2] $scale $scale $scale;
+				
+				}else if( ` gmatch $one "*shoulder01_crv*" ` ){
+					select -r ( $shape[0] + ".cv[0:16]" ) ;
+					float $piv[] = ` xform -q -ws -piv $one `;
+					float $cvPos[] = ` xform -q -ws -boundingBox ( $shape[0] + ".cv[0:16]" ) `;
+					
+					scale -ws -r -p $cvPos[0] $piv[1] $piv[2] $scale $scale $scale;
+					
+					if( ` gmatch $one "*L_*" ` ){
+					
+						string $R = substituteAllString( $one , "L_" , "R_" );
+						select -r ( $R + ".cv[0:16]" ) ;
+						float $piv[] = ` xform -q -ws -piv $R `;
+						float $cvPos[] = ` xform -q -ws -boundingBox ( $R + ".cv[0:16]" ) `;
+						scale -ws -r -p $cvPos[0] $piv[1] $piv[2] $scale $scale $scale;
+						
+					}else if( ` gmatch $one "*R_*" `){
+					
+						string $L = substituteAllString( $one , "R_" , "L_" );
+						select -r ( $L + ".cv[0:16]" ) ;
+						float $piv[] = ` xform -q -ws -piv $L `;
+						float $cvPos[] = ` xform -q -ws -boundingBox ( $L + ".cv[0:16]" ) `;
+						scale -ws -r -p $cvPos[0] $piv[1] $piv[2] $scale $scale $scale;
+						
+					}
+					
+				}else{
+					select -r ( $shape[0] + ".cv[0:16]" ) ;
+					float $piv[] = ` xform -q -ws -piv $one `;
+					scale -ws -r -p $piv[0] $piv[1] $piv[2] $scale $scale $scale;
+					float $cv0pos[] = ` xform -q -ws -t ( $shape[0] + ".cv[0]" ) `;
+					float $cvPos[] = ` xform -q -ws -boundingBox ( $shape[0] + ".cv[17:38]" ) `;
+					float $bx = (( $cvPos[3] - $cvPos[0] )/2) + $cvPos[0];
+					float $by = (( $cvPos[4] - $cvPos[1] )/2) + $cvPos[1];
+					float $bz = (( $cvPos[5] - $cvPos[2] )/2) + $cvPos[2];
+					float $x = $cv0pos[0] - $bx;
+					float $y = $cv0pos[1] - $by;
+					float $z = $cv0pos[2] - $bz;
+					move -r $x $y $z ( $shape[0] + ".cv[17:38]" );
+					select -r ( $shape[0] + ".cv[17:38]" ) ;
+					move -r -os -wd 0 0 -14 ;
+				}
+			
+			}else if( ` gmatch $one "*leg01*" ` ){
+				select -r ( $one + ".cv[1:22]" ) ;
+				move -r -os -wd 1 0 0 ;
+				if( ` gmatch $one "*L_*" ` ){
+					string $R = substituteAllString( $one , "L_" , "R_" );
+					select -r ( $R + ".cv[1:22]" ) ;
+					move -r -os -wd -1 0 0 ;
+				}else if( ` gmatch $one "*R_*" ` ){
+					string $L = substituteAllString( $one , "R_" , "L_" );
+					select -r ( $L + ".cv[1:22]" ) ;
+					move -r -os -wd 1 0 0 ;
+				}
+		
+			}else if( ` gmatch $one "*hand00*" ` ){
+				float $cvPos[] = ` xform -q -ws -boundingBox ( $shape[0] + ".cv[0:7]" ) `;
+				float $bx = (( $cvPos[3] - $cvPos[0] )/2) + $cvPos[0];
+				float $by = (( $cvPos[4] - $cvPos[1] )/2) + $cvPos[1];
+				float $bz = (( $cvPos[5] - $cvPos[2] )/2) + $cvPos[2];
+				select -r $one;
+				selectCurveCV("all");
+				scale -ws -r -p $bx $by $bz $scale $scale $scale;
+				if( ` gmatch $one "*L_*" ` ){
+					string $R = substituteAllString( $one , "L_" , "R_" );
+					float $cvPos[] = ` xform -q -ws -boundingBox ( $R + ".cv[0:7]" ) `;
+					float $bx = (( $cvPos[3] - $cvPos[0] )/2) + $cvPos[0];
+					float $by = (( $cvPos[4] - $cvPos[1] )/2) + $cvPos[1];
+					float $bz = (( $cvPos[5] - $cvPos[2] )/2) + $cvPos[2];
+					select -r ( $R + ".cv[0:7]" );
+					selectCurveCV("all");
+					scale -ws -r -p $bx $by $bz $scale $scale $scale;
+				}else if( ` gmatch $one "*R_*" ` ){
+					string $L = substituteAllString( $one , "R_" , "L_" );
+					float $cvPos[] = ` xform -q -ws -boundingBox ( $L + ".cv[0:7]" ) `;
+					float $bx = (( $cvPos[3] - $cvPos[0] )/2) + $cvPos[0];
+					float $by = (( $cvPos[4] - $cvPos[1] )/2) + $cvPos[1];
+					float $bz = (( $cvPos[5] - $cvPos[2] )/2) + $cvPos[2];
+					select -r ( $L + ".cv[0:7]" );
+					selectCurveCV("all");
+					scale -ws -r -p $bx $by $bz $scale $scale $scale;
+				}
+			
+			}else{
+				float $piv[] = ` xform -q -ws -piv $one `;
+				select -r $one;
+				selectCurveCV("all");
+				scale -ws -r -p $piv[0] $piv[1] $piv[2] $scale $scale $scale;
+				if( ` gmatch $one "*L_*" ` &&  !` gmatch $one "*CTRL_*" ` ){
+					string $R = substituteAllString( $one , "L_" , "R_" );
+					float $piv[] = ` xform -q -ws -piv $R `;
+					select -r $R;
+					selectCurveCV("all");
+					scale -ws -r -p $piv[0] $piv[1] $piv[2] $scale $scale $scale;
+				}else if( ` gmatch $one "*R_*" ` &&  !` gmatch $one "*CTRL_*" `){
+					string $L = substituteAllString( $one , "R_" , "L_" );
+					float $piv[] = ` xform -q -ws -piv $L `;
+					select -r $L;
+					selectCurveCV("all");
+					scale -ws -r -p $piv[0] $piv[1] $piv[2] $scale $scale $scale;
+				}
+				
+				
+			}
+		}
+	}
+	
+	select -r $sl;
+}
+

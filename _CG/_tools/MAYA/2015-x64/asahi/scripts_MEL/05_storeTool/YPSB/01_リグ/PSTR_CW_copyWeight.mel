@@ -1,0 +1,518 @@
+///////////////////////////////////////////////////////////////////////////////
+//	PSTR_CW_copyWeight            //
+///////////////////////////////////////////////////////////////////////////////
+//
+//	AUTHOR: 		goto kazufumi
+//
+//	CREATION DATE:	2016_04_15
+//	UPDATED DATE:	2016_04_15
+//
+//	VERSION:		1.0
+//
+//	HOW TO USE:		run "PSTR_CW_copyWeight();"
+//
+//////////////////////////////////////////////////////////////////
+
+global proc PSTR_CW_copyWeight(){
+
+	string $tool = "Copy Weight";
+	string $version = "(v1.0)";
+	
+	//テンプレート定義
+	if( !` uiTemplate -exists PSTR_CW_uiTempInput ` ){
+		uiTemplate PSTR_CW_uiTempInput;
+	}
+	
+	text -dt PSTR_CW_uiTempInput -h 20;
+	checkBox -dt PSTR_CW_uiTempInput -h 20;
+	optionMenu -dt PSTR_CW_uiTempInput -w 100 -h 20;
+	radioButton -dt PSTR_CW_uiTempInput -h 20;
+	formLayout -dt PSTR_CW_uiTempInput -w 150;
+
+	
+	
+	//PSTR_CW_window存在確認
+	if(`window -q -exists PSTR_CW_window`) deleteUI PSTR_CW_window;
+	
+	
+	//ウインドウ作成
+	window -title ($tool + $version) PSTR_CW_window;
+
+		setUITemplate -pst PSTR_CW_uiTempInput;
+	
+		//全体
+		formLayout PSTR_CW_folAll;
+
+			formLayout PSTR_CW_folListButton;
+				
+				//スクロール
+				scrollLayout	-horizontalScrollBarThickness 10
+									-verticalScrollBarThickness 10
+									-childResizable 1
+									PSTR_CW_slList;
+					//受動、基準リスト
+					formLayout	PSTR_CW_folList;					
+						text	-label "受動オブジェクト" -h 25 PSTR_CW_tPassive;
+						text	-label "基準オブジェクト" -h 25 PSTR_CW_tBase;
+						textScrollList	-allowMultiSelection 1 -h 500 PSTR_CW_tslPassiveList;
+						textScrollList	-allowMultiSelection 1 -h 500 PSTR_CW_tslBaseList;
+					setParent..;	
+				setParent..;
+				
+				//ボタン群
+				formLayout	PSTR_CW_folButton;
+					button			-label "読込"			-command "PSTR_CW_loadPassive()"		PSTR_CW_bPassiveLoad;
+					button			-label "読込"			-command "PSTR_CW_loadBase()"			PSTR_CW_bBaseLoad;
+					button			-label "全消去"			-command "PSTR_CW_deleteAllPassive()"	PSTR_CW_bPassiveAllDelete;
+					button			-label "全消去"			-command "PSTR_CW_deleteAllBase()"		PSTR_CW_bBaseAllDelete;
+					button			-label "適用"			-command "PSTR_CW_run(\"Assign\")"		PSTR_CW_bAssign;
+					button			-label "キャンセル"		-command "PSTR_CW_run(\"Cancel\")"		PSTR_CW_bCancel;
+				setParent..;
+			setParent..;
+			formLayout PSTR_CW_folOptionAll;
+				frameLayout -l "Option" PSTR_CW_flOptionAll;
+					formLayout PSTR_CW_folOption;
+						text -l "Surface Association: " PSTR_CW_tSurAsso;
+						
+						radioCollection PSTR_CW_rcAssociation;
+							radioButton -l "Closest point on surface" -sl PSTR_CW_rbClosestPoint;
+							radioButton -l "Ray cast" PSTR_CW_rbRayCast;
+							radioButton -l "Closest component" PSTR_CW_rbClosestComponent;
+							radioButton -l "UV space" PSTR_CW_rbUvSpace;
+							
+						separator -style "in" PSTR_CW_sep01;
+						
+						optionMenu PSTR_CW_omInfAsso1;
+							menuItem -l "Closest joint" PSTR_CW_mi1ClosestJoint;
+							menuItem -l "Closest bone" PSTR_CW_mi1ClosestBone;
+							menuItem -l "One to one" PSTR_CW_mi1OneToOne;
+							menuItem -l "Name" PSTR_CW_mi1Name;
+							menuItem -l "Label" PSTR_CW_mi1Label;
+							
+						optionMenu PSTR_CW_omInfAsso2;
+							menuItem -l "None" PSTR_CW_mi2None;
+							menuItem -l "Closest joint" PSTR_CW_mi2ClosestJoint;
+							menuItem -l "Closest bone" PSTR_CW_mi2ClosestBone;
+							menuItem -l "One to one" PSTR_CW_mi2OneToOne;
+							menuItem -l "Name" PSTR_CW_mi2Name;
+							menuItem -l "Label" PSTR_CW_mi2Label;
+							
+						optionMenu PSTR_CW_omInfAsso3;
+							menuItem -l "None" PSTR_CW_mi3None;
+							menuItem -l "Closest joint" PSTR_CW_mi3ClosestJoint;
+							menuItem -l "Closest bone" PSTR_CW_mi3ClosestBone;
+							menuItem -l "One to one" PSTR_CW_mi3OneToOne;
+							menuItem -l "Name" PSTR_CW_mi3Name;
+							menuItem -l "Label" PSTR_CW_mi3Label;
+							
+						text -l "Influence Association 1: " PSTR_CW_tInfAsso1;
+						text -l "Influence Association 2: " PSTR_CW_tInfAsso2;
+						text -l "Influence Association 3: " PSTR_CW_tInfAsso3;
+						
+						separator -style "in" PSTR_CW_sep02;
+					
+						checkBox -l "Normalize" PSTR_CW_cbNormalize;
+					setParent..;
+				setParent..;
+			setParent..;
+		setParent..;
+	showWindow;
+	
+	//全体レイアウト編集
+	
+	formLayout -e 
+		
+		-af	PSTR_CW_folListButton					"top"		0
+		-ap	PSTR_CW_folListButton					"right"		0	50
+		-af	PSTR_CW_folListButton					"left"		0
+		-af	PSTR_CW_folListButton					"bottom"	0
+		
+		-af	PSTR_CW_folOptionAll					"top"		0
+		-af	PSTR_CW_folOptionAll					"right"		0
+		-ap	PSTR_CW_folOptionAll					"left"		0	50
+		-af	PSTR_CW_folOptionAll					"bottom"	0
+		
+		PSTR_CW_folAll;
+		
+	formLayout -e
+	
+		-af	PSTR_CW_flOptionAll					"top"		0
+		-af	PSTR_CW_flOptionAll					"right"		0
+		-af	PSTR_CW_flOptionAll					"left"		0
+		-af	PSTR_CW_flOptionAll					"bottom"	0
+
+	
+		PSTR_CW_folOptionAll;
+		
+		
+	formLayout -e
+	
+		-af	PSTR_CW_slList					"top"		0
+		-af	PSTR_CW_slList					"right"		0
+		-af	PSTR_CW_slList					"left"		0
+		-ac	PSTR_CW_slList					"bottom"	0	PSTR_CW_folButton
+		
+		-af	PSTR_CW_folButton				"right"		0
+		-af	PSTR_CW_folButton				"left"		0
+		-af	PSTR_CW_folButton				"bottom"	0
+		
+		PSTR_CW_folListButton;
+		
+	formLayout -e
+	
+		-af	PSTR_CW_tSurAsso				"top"		5
+		-ac	PSTR_CW_tSurAsso				"right"		0	PSTR_CW_rbClosestPoint
+	
+		-af	PSTR_CW_rbClosestPoint			"top"		5
+		-af	PSTR_CW_rbClosestPoint			"left"		150
+		
+		-ac	PSTR_CW_rbRayCast				"top"		5	PSTR_CW_rbClosestPoint
+		-af	PSTR_CW_rbRayCast				"left"		150
+		
+		-ac	PSTR_CW_rbClosestComponent		"top"		5	PSTR_CW_rbRayCast
+		-af	PSTR_CW_rbClosestComponent		"left"		150
+		
+		-ac	PSTR_CW_rbUvSpace				"top"		5	PSTR_CW_rbClosestComponent
+		-af	PSTR_CW_rbUvSpace				"left"		150
+		
+		-ac	PSTR_CW_sep01					"top"		5	PSTR_CW_rbUvSpace
+		-af	PSTR_CW_sep01					"right"		0
+		-af	PSTR_CW_sep01					"left"		0
+		
+		-ac	PSTR_CW_omInfAsso1				"top"		5	PSTR_CW_sep01
+		-af	PSTR_CW_omInfAsso1				"left"		150
+		
+		-ac	PSTR_CW_tInfAsso1				"top"		5	PSTR_CW_sep01
+		-ac	PSTR_CW_tInfAsso1				"right"		0	PSTR_CW_omInfAsso1
+		
+		-ac	PSTR_CW_omInfAsso2				"top"		5	PSTR_CW_omInfAsso1
+		-af	PSTR_CW_omInfAsso2				"left"		150
+		
+		-ac	PSTR_CW_tInfAsso2				"top"		5	PSTR_CW_omInfAsso1
+		-ac	PSTR_CW_tInfAsso2				"right"		0	PSTR_CW_omInfAsso2
+		
+		-ac	PSTR_CW_omInfAsso3				"top"		5	PSTR_CW_omInfAsso2
+		-af	PSTR_CW_omInfAsso3				"left"		150
+		
+		-ac	PSTR_CW_tInfAsso3				"top"		5	PSTR_CW_omInfAsso2
+		-ac	PSTR_CW_tInfAsso3				"right"		0	PSTR_CW_omInfAsso3
+		
+		-ac	PSTR_CW_sep02					"top"		5	PSTR_CW_omInfAsso3
+		-af	PSTR_CW_sep02					"right"		0
+		-af	PSTR_CW_sep02					"left"		0
+		
+		-ac	PSTR_CW_cbNormalize				"top"		5	PSTR_CW_sep02
+		-af	PSTR_CW_cbNormalize				"left"		150
+
+		PSTR_CW_folOption;
+		
+		
+	
+	formLayout -e
+	
+		-af	PSTR_CW_tPassive					"top"		0
+		-ap	PSTR_CW_tPassive					"right"		0	50
+		-af	PSTR_CW_tPassive					"left"		0
+		
+		-af	PSTR_CW_tBase						"top"		0
+		-af	PSTR_CW_tBase						"right"		0
+		-ap	PSTR_CW_tBase						"left"		0	50
+	
+		-ac	PSTR_CW_tslPassiveList				"top"		0	PSTR_CW_tPassive
+		-ap	PSTR_CW_tslPassiveList				"right"		0	50
+		-af	PSTR_CW_tslPassiveList				"left"		0
+		-af	PSTR_CW_tslPassiveList				"bottom"	0
+	
+		-ac	PSTR_CW_tslBaseList					"top"		0	PSTR_CW_tBase
+		-af	PSTR_CW_tslBaseList					"right"		0
+		-ap	PSTR_CW_tslBaseList					"left"		0	50
+		-af	PSTR_CW_tslBaseList					"bottom"	0
+		
+		
+		PSTR_CW_folList;
+		
+	
+	formLayout -e
+	
+		-af	PSTR_CW_bPassiveLoad				"top"		0
+		-ap	PSTR_CW_bPassiveLoad				"right"		0	50
+		-af	PSTR_CW_bPassiveLoad				"left"		0
+		
+		-af	PSTR_CW_bBaseLoad					"top"		0
+		-af	PSTR_CW_bBaseLoad					"right"		0
+		-ap	PSTR_CW_bBaseLoad					"left"		0	50
+		
+		-ap	PSTR_CW_bPassiveAllDelete			"right"		0	50
+		-af	PSTR_CW_bPassiveAllDelete			"left"		0
+		-ac	PSTR_CW_bPassiveAllDelete			"bottom"	0	PSTR_CW_bAssign
+
+		-af	PSTR_CW_bBaseAllDelete				"right"		0
+		-ap	PSTR_CW_bBaseAllDelete				"left"		0	50
+		-ac	PSTR_CW_bBaseAllDelete				"bottom"	0	PSTR_CW_bCancel
+	
+		-ap	PSTR_CW_bAssign						"right"		0	50
+		-af	PSTR_CW_bAssign						"left"		0
+		-af	PSTR_CW_bAssign						"bottom"	0
+
+		-af	PSTR_CW_bCancel						"right"		0
+		-ap	PSTR_CW_bCancel						"left"		0	50
+		-af	PSTR_CW_bCancel						"bottom"	0
+		
+		
+		PSTR_CW_folButton;
+		
+
+}
+
+
+/*------------------------------------------------------------------------------------------------
+
+	PSTR_CW_changeListHeight
+
+	読み込むオブジェクトの数によってリストの高さを調整します。
+
+------------------------------------------------------------------------------------------------*/
+
+global proc PSTR_CW_changeListHeight(){
+
+	//基準オブジェクトリスト、受動オブジェクトリストの全項目を取得
+	string $baseListItems[] = `textScrollList -q -allItems PSTR_CW_tslBaseList`;
+	string $passiveListItems[] = `textScrollList -q -allItems PSTR_CW_tslPassiveList`;
+	
+	//基準オブジェクトリスト、受動オブジェクトリストのどちらかの全項目の数が68より大きいとき
+	if( ( size($baseListItems) > 68 ) || ( size($passiveListItems) > 68 ) ){
+	
+		//基準オブジェクトリスト全項目数、受動オブジェクトリスト全項目数　どちらか大きいほうの数に14.5を掛け、実数を取得
+		int $height;
+		if( size($baseListItems) >= size($passiveListItems) ){
+			$height = size($baseListItems)*14.5;
+		}else if( size($baseListItems) <= size($passiveListItems) ){
+			$height = size($passiveListItems)*14.5;
+		}
+		
+		//$heightをそれぞれのリストの高さ、PSTR_CW_folListの高さとして適用
+		textScrollList -e -h $height PSTR_CW_tslPassiveList;
+		textScrollList -e -h $height PSTR_CW_tslBaseList;
+		formLayout -e -h $height PSTR_CW_folList;
+	
+	//そうでないとき
+	}else{
+
+		//それぞれのリストの高さ、PSTR_CW_folListの高さを986とする
+		textScrollList -e -h 986 PSTR_CW_tslPassiveList;
+		textScrollList -e -h 986 PSTR_CW_tslBaseList;
+		formLayout -e -h 986 PSTR_CW_folList;
+
+	}
+
+}
+
+
+
+
+
+/*------------------------------------------------------------------------------------------------
+
+	PSTR_CW_numTokenize( string 項目名 )
+	
+	戻り値：	string 「番号＋". "」を排除した項目名
+	
+	リストの項目名から　番号＋". "　を排除し、返します。
+
+------------------------------------------------------------------------------------------------*/
+
+global proc string PSTR_CW_numTokenize( string $item ){
+	
+	string $itemParts[];
+	int $token = `tokenize $item ". " $itemParts`;
+	
+	if( $token != 2 ){
+		$itemParts[1] = "";
+	}
+	
+	return $itemParts[1];
+	
+}
+
+
+
+/*------------------------------------------------------------------------------------------------
+
+	PSTR_CW_loadPassive
+
+	現在選択しているオブジェクトを受動オブジェクトとしてリスト化します。
+
+------------------------------------------------------------------------------------------------*/
+
+global proc PSTR_CW_loadPassive(){
+
+	//選択しているオブジェクト取得
+	string $obj[] = `ls -sl`;
+	
+	//現在の受動オブジェクトリスト全項目を取得
+	//項目名から「番号＋". "」を除去したものを改めて取得
+	string $allItems[] = `textScrollList -q -allItems PSTR_CW_tslPassiveList`;
+	string $nonNumAllItems[];
+	string $item;
+	for( $item in $allItems ){
+		int $size = size($nonNumAllItems);
+		$nonNumAllItems[$size] = PSTR_CW_numTokenize( $item );
+	}
+	
+	//$objと$nonNumAllItemsで重複していない項目を受動オブジェクトリストに追加
+	//その際、「番号＋". "」を項目名の頭に追加
+	string $objOne;
+	for($objOne in $obj){
+
+		int $result = stringArrayContains($objOne,$nonNumAllItems);
+				
+		if(!$result){
+			string $list[] = `textScrollList -q -allItems PSTR_CW_tslPassiveList`;
+			int $num = size($list) + 1;
+			string $addObj = $num + ". " + $objOne;
+			textScrollList -e -append $addObj PSTR_CW_tslPassiveList;
+		}
+	}
+	
+	//リストの高さ調整
+	PSTR_CW_changeListHeight();
+	
+}
+
+
+
+/*------------------------------------------------------------------------------------------------
+
+	PSTR_CW_loadBase
+
+	現在選択しているオブジェクトを基準オブジェクトとしてリスト化します。
+	基準オブジェクトは項目名の重複可能
+
+------------------------------------------------------------------------------------------------*/
+
+global proc PSTR_CW_loadBase(){
+
+	//選択しているオブジェクト取得
+	string $obj[] = `ls -sl`;
+	
+	//$objを基準オブジェクトリストに追加
+	//その際、「番号＋". "」を項目名の頭に追加
+	string $objOne;
+	for($objOne in $obj){
+		string $list[] = `textScrollList -q -allItems PSTR_CW_tslBaseList`;
+		int $num = size($list) + 1;
+		string $addObj = $num + ". " + $objOne;
+		textScrollList -e -append $addObj PSTR_CW_tslBaseList;
+	}
+
+	//リストの高さ調整
+	PSTR_CW_changeListHeight();
+	
+}
+
+
+
+/*------------------------------------------------------------------------------------------------
+
+	PSTR_CW_deleteAllPassive
+
+	受動オブジェクトリストの項目全てを除去します。
+
+------------------------------------------------------------------------------------------------*/
+
+global proc PSTR_CW_deleteAllPassive(){
+
+	textScrollList -e -removeAll PSTR_CW_tslPassiveList;
+
+}
+
+
+
+/*------------------------------------------------------------------------------------------------
+
+	PSTR_CW_deleteAllBase
+
+	基準オブジェクトリストの項目全てを除去します。
+
+------------------------------------------------------------------------------------------------*/
+
+global proc PSTR_CW_deleteAllBase(){
+
+	textScrollList -e -removeAll PSTR_CW_tslBaseList;
+
+}
+
+/*------------------------------------------------------------------------------------------------
+
+	PSTR_CW_run( string ボタン名 )
+
+	一括コンストレイントを実行します。
+
+------------------------------------------------------------------------------------------------*/
+
+global proc PSTR_CW_run(string $button){
+
+	if($button == "Assign"){
+		PSTR_CW_copyWeightRun;
+	}else if($button == "Cancel"){
+		deleteUI PSTR_CW_window;
+	}
+}
+
+
+
+/*------------------------------------------------------------------------------------------------
+
+	PSTR_CW_copyWeightRun
+	
+	コンストレイントチェックボックスの状態を取得し、
+	リストとオプションに沿って一括でコンストレイントを実行します。
+
+------------------------------------------------------------------------------------------------*/
+
+global proc PSTR_CW_copyWeightRun(){
+
+	string $select[] = `ls -sl`;
+
+
+	string $passiveList[] = `textScrollList -q -allItems PSTR_CW_tslPassiveList`;
+	string $passiveListOne;
+	string $passive[];
+	for( $passiveListOne in $passiveList ){
+		string $add = PSTR_CW_numTokenize( $passiveListOne );
+		int $size = size($passive);
+		$passive[$size] = $add;
+	}
+	
+	string $baseList[] = `textScrollList -q -allItems PSTR_CW_tslBaseList`;
+	string $baseListOne;
+	string $base[];
+	for( $baseListOne in $baseList ){
+		string $add = PSTR_CW_numTokenize( $baseListOne );
+		int $size = size($base);
+		$base[$size] = $add;
+	}
+
+	string $addScript;
+	string $script;
+
+	for($i=0; $i<size($passive);$i++){
+	
+		if( ( size($passive[$i]) != 0 ) && ( size($base[$i]) != 0 ) ){
+		
+
+			select -r $base[$i];
+			select -add $passive[$i];
+
+
+			copySkinWeights  -noMirror -surfaceAssociation closestPoint -uvSpace map1 map1 -influenceAssociation closestJoint;
+
+		}
+	}
+	
+	print "コピーウェイトの実行が終わりました。\n";
+}
+
+
+
+

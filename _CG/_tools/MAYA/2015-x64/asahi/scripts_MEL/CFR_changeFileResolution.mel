@@ -1,0 +1,432 @@
+////////////////////////////////////////////////////////////////////////////
+//	CFR_changeFileResolution            //     テクスチャ解像度切り替え
+////////////////////////////////////////////////////////////////////////////
+//
+//	AUTHOR: 		goto kazufumi
+//
+//	CREATION DATE: 		2016_05_04
+//	UPDATED DATE:		2016_06_10
+//
+//	VERSION:		1.1
+//
+//	HOW TO USE:		run "CFR_changeFileResolution();"
+//
+//////////////////////////////////////////////////////////////////
+
+/*=====================================================
+
+	Fileノードのパスを切り替えます
+	
+=====================================================*/
+
+/*------------------------------------------------------------------------------------------------
+
+	更新:
+	
+		v1.1		・fileノードのfileTextureNameアトリビュートにchoiceノードをつないでいる場合、
+					　choiceノードのinputにつながっているノードのアトリビュートをパス変更対象とするようにしました
+					・【高解像度時のパネル状態】の設定を保存し再現できるようにしました
+
+------------------------------------------------------------------------------------------------*/
+
+
+/*------------------------------------------------------------------------------------------------
+
+	CFR_changeFileResolution
+
+	ウインドウを表示します
+
+------------------------------------------------------------------------------------------------*/
+
+
+global proc CFR_changeFileResolution(){
+
+
+	//ツール名・バージョン
+	string $title = "テクスチャ解像度切り替え";
+	string $version = " (v1.1)";
+	
+	string $CFR_rcTarget = "CFR_rbAll";
+	string $CFR_rcState = "CFR_rbRendering";
+	string $CFR_rcChangeAction = "CFR_rbShade";
+	int $CFR_cbRemoveHS = 0;
+	
+	if( ` optionVar -exists CFR_rcTarget ` ){
+		$CFR_rcTarget = ` optionVar -q CFR_rcTarget `;
+	}
+	
+	if( ` optionVar -exists CFR_rcState ` ){
+		$CFR_rcState = ` optionVar -q CFR_rcState `;
+	}
+	
+	if( ` optionVar -exists CFR_rcChangeAction ` ){
+		$CFR_rcChangeAction = ` optionVar -q CFR_rcChangeAction `;
+	}
+	
+	if( ` optionVar -exists CFR_cbRemoveHS ` ){
+		$CFR_cbRemoveHS = ` optionVar -q CFR_cbRemoveHS `;
+	}
+	
+	//テンプレート定義
+	if( !` uiTemplate -exists CFR_uiTempInput ` ){
+		uiTemplate CFR_uiTempInput;
+	}
+	
+	text -dt CFR_uiTempInput -h 25;
+	button -dt CFR_uiTempInput -h 25;
+	radioButton -dt CFR_uiTempInput -h 25;
+	frameLayout -dt CFR_uiTempInput -w 100;
+	
+	
+	//重複ウインドウ削除
+	if( ` window -exists CFR_window ` ){
+		deleteUI CFR_window;
+	}
+	
+	window -title ( $title + $version ) -mb 1 CFR_window;
+
+		setUITemplate -pst CFR_uiTempInput;
+
+		menu -l "ヘルプ" CFR_mHelp;
+			menuItem -l "melファイルを編集" -c "ZIN_OM_openMel( ` whatIs CFR_changeFileResolution ` )" CFR_miOpenMel;
+			menuItem -l "ツールフォルダを開く" -c "ZIN_OMF_openMelFolder( ` whatIs CFR_changeFileResolution ` )" CFR_miOpenMelFolder;
+		
+		frameLayout -l "テクスチャ解像度切り替え" -bs etchedOut CFR_flAll;
+			formLayout CFR_folAll;
+				text -l "Fileノードのパスを次のように切り替えます。" CFR_tExp1;
+				separator -st "in" CFR_sep1;
+				text -l "アニメーションのとき:" CFR_tExpToTexLow1;
+				text -l "XXXX/OOOO/tex.png\n      　　 　   ▼\nXXXX/OOOO/tex_low/tex.png" -al left -h 50 CFR_tExpToTexLow2;
+				text -l "レンダリングのとき:" CFR_tExpToTexHigh1;
+				text -l "XXXX/OOOO/tex_low/tex.png\n     　　　     ▼\nXXXX/OOOO/tex.png" -al left -h 50 CFR_tExpToTexHigh2;
+				separator -st "in"	CFR_sep2;
+				text -l "fileノード:" CFR_tTarget;
+				radioCollection CFR_rcTarget;
+					radioButton -l "すべて" -sl -cc "CFR_saveSetting()" CFR_rbAll;
+					radioButton -l "選択" -cc "CFR_saveSetting()" CFR_rbSelected;
+					
+				separator -st "in"	CFR_sep3;
+				text -l "解像度状態:" CFR_tState;
+				radioCollection CFR_rcState;
+					radioButton -l "アニメーション" -cc "CFR_saveSetting()" CFR_rbAnimation;
+					radioButton -l "レンダリング" -sl -cc "CFR_saveSetting()" CFR_rbRendering;
+					
+				text -l "（　低解像度　）" CFR_tAnimation;
+				text -l "（　高解像度　）" CFR_tRendering;
+				separator -st "in"	CFR_sep4;
+				text -l "高解像度時のパネル状態:" CFR_tPanelState;
+				radioCollection CFR_rcChangeAction;
+					radioButton -l "高解像度切り替え時 ワイヤーフレーム表示" -cc "CFR_saveSetting()" CFR_rbWireframe;
+					radioButton -l "高解像度切り替え時 シェード表示" -sl -cc "CFR_saveSetting()" CFR_rbShade;
+					radioButton -l "切り替え時 何もしない" -cc "CFR_saveSetting()" CFR_rbNoting;
+				checkBox -l "高解像度切り替え時 ハイパーシェードを閉じる" -v 1 -cc "CFR_saveSetting()" CFR_cbRemoveHS;
+				
+				button -l "適用" -c "CFR_run()" CFR_btnApply;
+				button -l "キャンセル" CFR_btnCancel;
+			setParent..;
+		setParent..;
+	showWindow;
+	
+	radioCollection -e -sl $CFR_rcTarget CFR_rcTarget;
+	radioCollection -e -sl $CFR_rcState CFR_rcState;
+	radioCollection -e -sl $CFR_rcChangeAction CFR_rcChangeAction;
+	checkBox -e -v $CFR_cbRemoveHS CFR_cbRemoveHS;
+	
+	formLayout -e
+	
+		-af	CFR_tExp1						"top"		5
+		-af	CFR_tExp1						"left"		50
+		
+		-ac	CFR_sep1							"top"		5	CFR_tExp1
+		-af	CFR_sep1							"left"		0
+		-af	CFR_sep1							"right"		0
+	
+		-ac	CFR_tExpToTexLow1		"top"			5	CFR_sep1
+		-ac	CFR_tExpToTexLow1		"right"			10	CFR_tExpToTexLow2
+		
+		-ac	CFR_tExpToTexLow2		"top"			5	CFR_sep1
+		-af	CFR_tExpToTexLow2		"left"			160
+		
+		-ac	CFR_tExpToTexHigh1		"top"		5	CFR_sep1
+		-ac	CFR_tExpToTexHigh1		"right"		10	CFR_tExpToTexHigh2
+		
+		-ac	CFR_tExpToTexHigh2		"top"		5	CFR_sep1
+		-af	CFR_tExpToTexHigh2		"left"		420
+		
+		-ac	CFR_sep2							"top"		5	CFR_tExpToTexHigh2
+		-af	CFR_sep2							"left"		0
+		-af	CFR_sep2							"right"		0
+		
+		-ac	CFR_tTarget						"top"		5	CFR_sep2
+		-ac	CFR_tTarget						"right"		10	CFR_rbAll
+		
+		-ac	CFR_rbAll							"top"		5	CFR_sep2
+		-af	CFR_rbAll							"left"		160
+		
+		-ac	CFR_rbSelected				"top"		5	CFR_rbAll
+		-af	CFR_rbSelected				"left"		160
+		
+		-ac	CFR_sep3							"top"		5	CFR_rbSelected
+		-af	CFR_sep3							"left"		0
+		-af	CFR_sep3							"right"		0
+		
+		-ac	CFR_tState						"top"		5	CFR_sep3
+		-ac	CFR_tState						"right"		10	CFR_rbAnimation
+		
+		-ac	CFR_rbAnimation				"top"		5	CFR_sep3
+		-af	CFR_rbAnimation				"left"		160
+		
+		-ac	CFR_rbRendering				"top"		5	CFR_rbAnimation
+		-af	CFR_rbRendering				"left"		160
+		
+		-ac	CFR_tAnimation				"top"		5	CFR_sep3
+		-ac	CFR_tAnimation				"left"		130	CFR_tState
+		
+		-ac	CFR_tRendering				"top"		5	CFR_rbAnimation
+		-ac	CFR_tRendering				"left"		130	CFR_tState
+		
+		-ac	CFR_sep4							"top"		5	CFR_tRendering
+		-af	CFR_sep4							"left"		0
+		-af	CFR_sep4							"right"		0
+		
+		-ac	CFR_tPanelState				"top"		5	CFR_sep4
+		-ac	CFR_tPanelState				"right"		10	CFR_rbWireframe
+		
+		-ac	CFR_rbWireframe				"top"		5	CFR_sep4
+		-af	CFR_rbWireframe				"left"		160
+		
+		-ac	CFR_rbShade					"top"		5	CFR_rbWireframe
+		-af	CFR_rbShade					"left"		160
+		
+		-ac	CFR_rbNoting					"top"		5	CFR_rbShade
+		-af	CFR_rbNoting					"left"		160
+		
+		-ac	CFR_cbRemoveHS			"top"		15	CFR_rbNoting
+		-af	CFR_cbRemoveHS			"left"		160
+		
+		-af	CFR_btnApply					"left"		0
+		-ap	CFR_btnApply					"right"		0	50
+		-af	CFR_btnApply					"bottom"	0
+
+		-ap	CFR_btnCancel					"left"		0	50
+		-af	CFR_btnCancel					"right"		0
+		-af	CFR_btnCancel					"bottom"	0
+		
+		CFR_folAll;
+		
+		
+		
+}
+
+/*------------------------------------------------------------------------------------------------
+
+	CFR_saveSetting
+
+	設定を保存します
+
+------------------------------------------------------------------------------------------------*/
+
+global proc CFR_saveSetting(){
+
+	string $rcTarget = ` radioCollection -q -select CFR_rcTarget `;
+	string $rcState = ` radioCollection -q -select CFR_rcState `;
+	string $rcChangeAction = ` radioCollection -q -select CFR_rcChangeAction `;
+	int $cbRemoveHS = ` checkBox -q -v CFR_cbRemoveHS `;
+
+	optionVar -stringValue CFR_rcTarget $rcTarget;
+	optionVar -stringValue CFR_rcState $rcState;
+	optionVar -stringValue CFR_rcChangeAction $rcChangeAction;
+	optionVar -intValue CFR_cbRemoveHS $cbRemoveHS;
+
+		
+}
+
+/*------------------------------------------------------------------------------------------------
+
+	CFR_run
+
+	解像度切り替えを実行します
+
+------------------------------------------------------------------------------------------------*/
+
+global proc CFR_run(){
+	
+	string $rcTarget = ` radioCollection -q -select CFR_rcTarget `;
+	string $rcState = ` radioCollection -q -select CFR_rcState `;
+	string $rcChangeAction = ` radioCollection -q -sl CFR_rcChangeAction `;
+	int $cbRemoveHS = ` checkBox -q -v CFR_cbRemoveHS `;
+	
+	string $file[];
+	if( $rcTarget == "CFR_rbAll" ){
+		$file = ` ls -type "file" `;
+	}else if( $rcTarget == "CFR_rbSelected" ){
+		$file = ` ls -sl -type "file" `;
+	}
+	
+
+	
+	if( size($file) != 0 ){
+		
+		if( $rcState == "CFR_rbRendering" ){
+			string $panels[] = ` getPanel -type modelPanel `;
+			if( size($panels) != 0 ){
+				if( $rcChangeAction == "CFR_rbWireframe" ){
+					for( $panel in $panels ){
+						modelEditor -e -displayAppearance smoothShaded -activeOnly 1 $panel;
+					}
+				}else if( $rcChangeAction == "CFR_rbShade" ){
+					for( $panel in $panels ){
+						modelEditor -e -displayAppearance smoothShaded -activeOnly 0 $panel;
+						modelEditor -e -displayTextures 0 $panel;
+					}
+				}
+			}
+			
+			if( $cbRemoveHS == 1 ){
+				string $win[] = ` lsUI -windows `;
+				string $hs[];
+				for( $winOne in $win ){
+					if( ` gmatch $winOne "*hyperShadePanel*" ` ){
+						$hs[size($hs)] = $winOne;
+					}
+				}
+				if( size($hs) != 0 ){
+					for( $hsOne in $hs ){
+						deleteUI $hsOne;
+					}
+				}
+			}
+		}
+		
+		
+		
+		string $successFile[];
+		clear $successFile;
+		string $resultPath[];
+		clear $resultPath;
+		string $noChangeFile[];
+		clear $noChangeFile;
+		string $ignoreFile[];
+		clear $ignoreFile;
+		for( $one in $file ){
+			string $path[];
+			clear $path;
+			string $infoAttr[];
+			clear $infoAttr;
+			int $choice = 0;
+			string $source[] = ` listConnections -s 1 ( $one + ".fileTextureName" ) `;
+			if( size($source) != 0 ){
+				string $type = ` objectType $source[0] `;
+				if( $type == "choice" ){
+					$choice = 1;
+					string $inputs[] = ` listAttr -multi  ( $source[0] + ".input" ) `;
+					if( size($inputs) != 0 ){
+						for( $input in $inputs ){
+							string $plug[] = ` listConnections -s 1 -p 1 ( $source[0] + "." + $input ) `;
+							if( size($plug) != 0 ){
+								string $value = ` getAttr $plug[0] `;
+								if( size($value) != 0 ){
+									$path[size($path)] = $value;
+									$infoAttr[size($infoAttr)] = $plug[0];
+								}
+							}
+						}
+					}
+				}
+			}else{
+				$path[0] = ` getAttr ( $one + ".fileTextureName" ) `;
+			}
+
+			
+			for( $i=0; $i<size($path); $i++ ){
+			
+				string $dir = ` dirname $path[$i] `;
+				string $filename = ` basenameEx $path[$i] `;
+				string $fileEx = ` fileExtension $path[$i] `;
+				
+				if( size($path[$i]) != 0 ){
+					if( $rcState == "CFR_rbAnimation" ){
+						
+						//すでに低解像度または高解像度になっていないかを調査
+						string $result = ` basenameEx $dir `;
+						if( $result != "tex_low" ){
+							string $newPath = $dir + "/tex_low/" + $filename + "." + $fileEx;
+							int $exist = ` filetest -f $newPath `;
+							if( $exist ){
+								if( $choice ){
+									setAttr -type "string" $infoAttr[$i] $newPath;
+									$successFile[size($successFile)] = $infoAttr[$i];
+									$resultPath[size($resultPath)] = $newPath;
+								}else{
+									setAttr -type "string" ( $one + ".fileTextureName" ) $newPath;
+									$successFile[size($successFile)] = $one;
+									$resultPath[size($resultPath)] = $newPath;
+								}
+							}else{
+								$ignoreFile[size($ignoreFile)] = $newPath;
+							}
+						}else{
+							$noChangeFile[size($noChangeFile)] = $one;
+						}
+					}else if( $rcState == "CFR_rbRendering" ){
+						string $result = ` basenameEx $dir `;
+						if( $result == "tex_low" ){
+							string $newdir = ` dirname $dir `;
+							string $newPath = $newdir + "/" + $filename + "." + $fileEx;
+							int $exist = ` filetest -f $newPath `;
+							if( $exist ){
+								if( $choice ){
+									setAttr -type "string" $infoAttr[$i] $newPath;
+									$successFile[size($successFile)] = $infoAttr[$i];
+									$resultPath[size($resultPath)] = $newPath;
+								}else{
+									setAttr -type "string" ( $one + ".fileTextureName" ) $newPath;
+									$successFile[size($successFile)] = $one;
+									$resultPath[size($resultPath)] = $newPath;
+								}
+							}else{
+								$ignoreFile[size($ignoreFile)] = $newPath;
+							}
+						}else{
+							$noChangeFile[size($noChangeFile)] = $one;
+						}
+					}
+				}
+			}
+		}
+		
+
+		
+		if( size($successFile) != 0 ){
+			for( $i=0; $i<size($successFile); $i++ ){
+				string $print = "";
+				if( $rcState == "CFR_rbRendering" ){
+					$print += "高解像度に切り替えました";
+				}else if( $rcState == "CFR_rbAnimation" ){
+					$print += "低解像度に切り替えました";
+				}
+				$print += " 　";
+				$print +=  $successFile[$i];
+				$print += " 　";
+				$print += $resultPath[$i];
+				$print += "\n";
+				print $print;
+			}
+		}
+		
+		if( size($ignoreFile) != 0 ){
+			for( $one in $ignoreFile ){
+				string $warning = "";
+				$warning += "次のパスもしくはファイルが見つからなかったため無視しました。";
+				$warning += "  ";
+				$warning += $one;
+				warning $warning;
+			}
+		}
+
+		
+	}
+}
+
+
+

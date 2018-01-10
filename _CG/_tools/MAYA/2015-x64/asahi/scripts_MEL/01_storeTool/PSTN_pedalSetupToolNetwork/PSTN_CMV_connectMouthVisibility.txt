@@ -1,0 +1,14 @@
+======================================================
+　■説明
+　口の可視性を切り替えるアニメーションカーブ（scv）を選択し、
+　実行すると口とscvを接続します。
+　下記は接続するソースとアニメーションカーブ（scv）です。
+　scv項目を選択して実行してください。
+
+　ソース： コード + CTRL_crv.mouthTex_atr
+
+　   scv： front_mouthPlane_link_visibility_scv
+　           side_mouthPlane_link_visibility_scv
+　           L_tilt_mouthPlane_link_visibility_scv
+　           R_tilt_mouthPlane_link_visibility_scv
+======================================================

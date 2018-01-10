@@ -1,0 +1,85 @@
+///////////////////////////////////////////////////////////////////////////////
+//	PSTR_A_arrangeAdjustShoulder            //	ÇªÇÃëºÇÃÉäÉOí≤êÆ
+///////////////////////////////////////////////////////////////////////////////
+//
+//	AUTHOR: 		goto kazufumi
+//
+//	CREATION DATE:	2013_09_07
+//	UPDATED DATE:	2013_10_11
+//
+//	VERSION:			1.1
+//
+//	HOW TO USE:		run "PSTR_A_arrangeAdjustShoulder();"
+//
+//////////////////////////////////////////////////////////////////
+
+global proc PSTR_A_arrangeAdjustShoulder(){
+
+	string $cord = `textField -q -text PST_tfCordName`;
+	int $size = `size $cord`;
+	string $last = `substring $cord $size $size`;
+	if( $last != "_" ){
+		$cord += "_";
+	}
+	
+	string $lct[] = {		"L_adjustShoulder01_jnt_ALct",
+								"L_adjustShoulder02_jnt_ALct",
+								"L_adjustShoulder03_jnt_ALct",
+								"L_adjustShoulder04_jnt_ALct",
+								"L_adjustShoulder05_jnt_ALct",
+								"R_adjustShoulder01_jnt_ALct",
+								"R_adjustShoulder02_jnt_ALct",
+								"R_adjustShoulder03_jnt_ALct",
+								"R_adjustShoulder04_jnt_ALct",
+								"R_adjustShoulder05_jnt_ALct"								};
+
+	string $rig[] = {		"L_adjustShoulder01_link",
+								"L_adjustShoulder02_link",
+								"L_adjustShoulder03_link",
+								"L_adjustShoulder04_link",
+								"L_adjustShoulder05_link",
+								"R_adjustShoulder01_link",
+								"R_adjustShoulder02_link",
+								"R_adjustShoulder03_link",
+								"R_adjustShoulder04_link",
+								"R_adjustShoulder05_link"										};
+
+	string $shoulder02[] = {		"L_shoulder02_crv",
+											"L_shoulder02_crv",
+											"L_shoulder02_crv",
+											"L_shoulder02_crv",
+											"L_shoulder02_crv",
+											"R_shoulder02_crv",
+											"R_shoulder02_crv",
+											"R_shoulder02_crv",
+											"R_shoulder02_crv",
+											"R_shoulder02_crv"								};
+								
+	for( $i=0; $i<size($lct); $i++ ){
+		$lct[$i] = $cord + $lct[$i];
+		$rig[$i] = $cord + $rig[$i];
+		$shoulder02[$i] = $cord + $shoulder02[$i];
+		string $paC[] = `listConnections -source 1 -destination 0 -type "parentConstraint" $rig[$i]`;
+		delete $paC[0];
+		string $scC[] = `listConnections -source 1 -destination 0 -type "scaleConstraint" $rig[$i]`;
+		delete $scC[0];
+		
+		int $result = 0;
+		$result = `objExists $rig[$i]`;
+		if( $result ){
+			float $pos[] = PSTR_A_translateXYZ( $lct[$i] , $rig[$i] );
+			move -r $pos[0] $pos[1] $pos[2] $rig[$i];
+		}
+		
+		select -r $shoulder02[$i] $rig[$i];
+		parentConstraint -mo -weight 1;
+		scaleConstraint -mo -weight 1;
+		
+	}
+}
+
+
+
+
+
+

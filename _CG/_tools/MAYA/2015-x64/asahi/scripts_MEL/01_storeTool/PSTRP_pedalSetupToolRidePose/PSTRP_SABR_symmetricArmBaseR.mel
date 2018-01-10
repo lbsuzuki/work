@@ -1,0 +1,149 @@
+///////////////////////////////////////////////////////////////////////////////
+//	PSTRP_SABR_symmetricArmBaseR            //	シンメトリー　左腕基準
+///////////////////////////////////////////////////////////////////////////////
+//
+//	AUTHOR: 		goto kazufumi
+//
+//	CREATION DATE:	2013_10_18
+//	UPDATED DATE:	2013_10_18
+//
+//	VERSION:			1.0
+//
+//	HOW TO USE:		run "PSTRP_SABR_symmetricArmBaseR();"
+//
+//////////////////////////////////////////////////////////////////
+
+global proc PSTRP_SABR_symmetricArmBaseR(){
+	
+	string $cord = `textField -q -text PST_tfCordName`;
+	int $size = `size $cord`;
+	string $last = `substring $cord $size $size`;
+	if( $last != "_" ){
+		$cord += "_";
+	}
+	
+	string $name[] = {		"shoulder01",
+										"shoulder02",
+										"adjustElbow",
+										"hand01",
+										"arm_poleVector",
+										"hand02A",
+										"hand02B",
+										"finger_01_01",
+										"finger_01_02",
+										"finger_01_03",
+										"finger_02_01",
+										"finger_02_02",
+										"finger_02_03",
+										"finger_03_01",
+										"finger_03_02",
+										"finger_03_03",
+										"finger_04_01",
+										"finger_04_02",
+										"finger_04_03",
+										"finger_05_01",
+										"finger_05_02",
+										"finger_05_03"				};
+
+									
+	string $crvOne;
+	for( $one in $name ){
+	
+		string $PM[];
+		clear $PM;
+	
+		switch ( $one ){
+		
+			case "shoulder01":
+				$PM = { "-","+","+","+","-","-"};
+				break;
+			case "shoulder02":
+				$PM = { "-","+","+","+","-","-"};
+				break;
+			case "adjustElbow":
+				$PM = { "-","-","+","+","-","-"};
+				break;
+			case "hand01":
+				$PM = { "-","+","+","+","-","-"};
+				break;
+			case "arm_poleVector":
+				$PM = { "-","+","+","0","0","0"};
+				break;
+			case "hand02A":
+				$PM = { "+","+","-","-","-","+"};
+				break;
+			case "hand02B":
+				$PM = { "+","+","-","-","-","+"};
+				break;
+			case "finger_01_01":
+				$PM = { "+","+","-","-","-","+"};
+				break;
+			case "finger_01_02":
+				$PM = { "+","+","-","-","-","+"};
+				break;
+			case "finger_01_03":
+				$PM = { "+","+","-","-","-","+"};
+				break;
+			case "finger_02_01":
+				$PM = { "+","+","-","-","-","+"};
+				break;
+			case "finger_02_02":
+				$PM = { "+","+","-","-","-","+"};
+				break;
+			case "finger_02_03":
+				$PM = { "+","+","-","-","-","+"};
+				break;
+			case "finger_03_01":
+				$PM = { "+","+","-","-","-","+"};
+				break;
+			case "finger_03_02":
+				$PM = { "+","+","-","-","-","+"};
+				break;
+			case "finger_03_03":
+				$PM = { "+","+","-","-","-","+"};
+				break;
+			case "finger_04_01":
+				$PM = { "+","+","-","-","-","+"};
+				break;
+			case "finger_04_02":
+				$PM = { "+","+","-","-","-","+"};
+				break;
+			case "finger_04_03":
+				$PM = { "+","+","-","-","-","+"};
+				break;
+			case "finger_05_01":
+				$PM = { "+","+","-","-","-","+"};
+				break;
+			case "finger_05_02":
+				$PM = { "+","+","-","-","-","+"};
+				break;
+			case "finger_05_03":
+				$PM = { "+","+","-","-","-","+"};
+				break;
+		}
+		
+		string $baseCRV = $cord + "R_" + $one + "_crv";
+		string $targetCRV = $cord + "L_" + $one + "_crv";
+		
+		string $attr[] = { "tx","ty","tz","rx","ry","rz" };
+		
+		for( $i=0; $i<size($attr); $i++ ){
+			if( $PM[$i] != "0" ){
+				float $value = getAttr ( $baseCRV + "." + $attr[$i] );
+				if( $PM[$i] == "-" ){
+					$value = $value*(-1.0);
+				}
+				setAttr ( $targetCRV + "." + $attr[$i] ) $value;
+			}
+		}
+	}
+}
+
+
+
+
+
+
+
+
+

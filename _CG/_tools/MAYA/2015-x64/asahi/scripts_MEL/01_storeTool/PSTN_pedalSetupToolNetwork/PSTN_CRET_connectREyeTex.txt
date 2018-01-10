@@ -1,0 +1,22 @@
+======================================================
+　■説明
+　右目の種類を切り替えるアニメーションカーブ（scv）を選択し、
+　実行すると左目テクスチャとscvを接続します。
+　下記は接続するソースとアニメーションカーブ（scv）です。
+　scv項目を選択して実行してください。
+
+　ソース： コード + texCTRL_link.R_eyeTex_atr
+
+　   scv： R_side_smile_eyeV_scv
+           　R_side_serious_eyeV_scv
+           　R_side_cool_eyeV_scv
+           　R_side_normal_eyeV_scv
+           　R_tilt_normal_eyeV_scv
+           　R_tilt_cool_eyeV_scv
+           　R_tilt_serious_eyeV_scv
+          　 R_tilt_smile_eyeV_scv
+          　 R_front_normal_eyeV_scv
+          　 R_front_cool_eyeV_scv
+          　 R_front_serious_eyeV_scv
+          　 R_front_smile_eyeV_scv
+======================================================

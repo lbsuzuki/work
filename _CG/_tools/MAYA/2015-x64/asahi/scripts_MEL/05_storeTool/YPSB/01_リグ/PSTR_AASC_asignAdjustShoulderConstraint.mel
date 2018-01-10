@@ -1,0 +1,108 @@
+///////////////////////////////////////////////////////////////////////////////
+//	PSTR_AASC_asignAdjustShoulderConstraint            //	肩のリグのコンストレイント再現
+///////////////////////////////////////////////////////////////////////////////
+//
+//	AUTHOR: 		goto kazufumi
+//
+//	CREATION DATE:	2013_09_07
+//	UPDATED DATE:	2013_10_11
+//
+//	VERSION:			1.1
+//
+//	HOW TO USE:		run "PSTR_AASC_asignAdjustShoulderConstraint();"
+//
+//////////////////////////////////////////////////////////////////
+
+global proc PSTR_AASC_asignAdjustShoulderConstraint(){
+
+	string $code = `textField -q -text PST_tfCordName`;
+	int $size = `size $code`;
+	if( $size != 0 ){
+		string $last = `substring $code $size $size`;
+		if( $last != "_" ){
+			if( $last != ":" ){
+				$code += "_";
+			}
+		}
+	}
+	
+	string $lct[] = {		"L_adjustShoulder01_jnt_ALct",
+								"L_adjustShoulder02_jnt_ALct",
+								"L_adjustShoulder03_jnt_ALct",
+								"L_adjustShoulder04_jnt_ALct",
+								"L_adjustShoulder05_jnt_ALct",
+								"R_adjustShoulder01_jnt_ALct",
+								"R_adjustShoulder02_jnt_ALct",
+								"R_adjustShoulder03_jnt_ALct",
+								"R_adjustShoulder04_jnt_ALct",
+								"R_adjustShoulder05_jnt_ALct"								};
+
+	string $link[] = {		"L_adjustShoulder01_link",
+								"L_adjustShoulder02_link",
+								"L_adjustShoulder03_link",
+								"L_adjustShoulder04_link",
+								"L_adjustShoulder05_link",
+								"R_adjustShoulder01_link",
+								"R_adjustShoulder02_link",
+								"R_adjustShoulder03_link",
+								"R_adjustShoulder04_link",
+								"R_adjustShoulder05_link"										};
+
+	string $shoulder02[] = {		"L_shoulder02_crv",
+											"L_shoulder02_crv",
+											"L_shoulder02_crv",
+											"L_shoulder02_crv",
+											"L_shoulder02_crv",
+											"R_shoulder02_crv",
+											"R_shoulder02_crv",
+											"R_shoulder02_crv",
+											"R_shoulder02_crv",
+											"R_shoulder02_crv"								};
+											
+	string $jnt[] = {				"L_adjustShoulder01_jnt",
+										"L_adjustShoulder02_jnt",
+										"L_adjustShoulder03_jnt",
+										"L_adjustShoulder04_jnt",
+										"L_adjustShoulder05_jnt",
+										"R_adjustShoulder01_jnt",
+										"R_adjustShoulder02_jnt",
+										"R_adjustShoulder03_jnt",
+										"R_adjustShoulder04_jnt",
+										"R_adjustShoulder05_jnt"										};
+										
+	string $crv[] = {				"L_adjustShoulder01_crv",
+										"L_adjustShoulder02_crv",
+										"L_adjustShoulder03_crv",
+										"L_adjustShoulder04_crv",
+										"L_adjustShoulder05_crv",
+										"R_adjustShoulder01_crv",
+										"R_adjustShoulder02_crv",
+										"R_adjustShoulder03_crv",
+										"R_adjustShoulder04_crv",
+										"R_adjustShoulder05_crv"										};
+								
+	for( $i=0; $i<size($lct); $i++ ){
+		$lct[$i] = $code + $lct[$i];
+		$link[$i] = $code + $link[$i];
+		$jnt[$i] = $code + $jnt[$i];
+		$crv[$i] = $code + $crv[$i];
+		$shoulder02[$i] = $code + $shoulder02[$i];
+		
+		//linkとshoulder02をコンストレイント
+		select -r $shoulder02[$i] $link[$i];
+		parentConstraint -mo -weight 1;
+		scaleConstraint -mo -weight 1;
+		
+		//jntとcrvをコンストレイント
+		select -r $crv[$i] $jnt[$i];
+		parentConstraint -mo -weight 1;
+		scaleConstraint -mo -weight 1;
+		
+	}
+}
+
+
+
+
+
+

@@ -1,0 +1,164 @@
+///////////////////////////////////////////////////////////////////////////////
+//	ZIN_setup.res
+///////////////////////////////////////////////////////////////////////////////
+//
+//	AUTHOR: 		goto kazufumi
+//
+//	CREATION DATE:	2013_12_09
+//	UPDATED DATE:	2016_08_11
+//
+//	VERSION:		1.15
+//
+//////////////////////////////////////////////////////////////////
+
+/*================================================================
+
+	【仁メニュー】英語バージョンのリソース
+
+================================================================*/
+
+/*================================================================
+
+	更新内容
+	
+	1.15	【DL】に【UVスケール チェッカー】を追加しました
+			【レンダリング】に【レイヤ作成】を追加しました
+	1.14	【DL】に【LWOファイルの読み込み】を追加しました
+	1.13	【仁について】を追加しました
+	1.12	【その他】に【チャンネルボックスからレイヤーオーバーライド】を追加しました
+	1.11	【レンダリング】に【テクスチャ解像度切り替え】を追加しました
+	1.1	【レンダリング】の【カメラセット】を【カメラ作成】として更新
+	1.09	【その他】に【ストア ツール】を追加しました
+	1.08	【DL】に【プロットカーブ】を追加しました
+	1.07	【その他】に【Turtleノード削除】を追加しました
+	1.05	【BB専用ツール】に【BB ＡＥへ情報出力】を追加しました
+	1.04	【DL】に【geoSphere 球体作成】【表面にオブジェクトを配置】を追加
+	1.03	【ペダル専用ツール】に【顔プレーン貼り込み】を追加
+	1.02	【DL】に【ジョイント オリエント】を追加
+	1.01	【その他】に【直線UVの比率を合わせる】、【UVを格子状に整列させる】を追加
+	
+
+================================================================*/
+
+displayString -r -v "　　仁　　" zm_ZIN_S.mMain;
+displayString -r -v "アニメーション" zm_ZIN_S.miAnimation;
+	displayString -r -v "指定時間への移動" zm_ZIN_S.miGT;
+	displayString -r -v "時間差アニメーション" zm_ZIN_S.miTDA;
+	displayString -r -v "タイムリマップ" zm_ZIN_S.miTR;
+	displayString -r -v "ポーズ ライブラリ" zm_ZIN_S.miPL;
+displayString -r -v "モデリング" zm_ZIN_S.miModeling;
+	displayString -r -v "位置合わせ" zm_ZIN_S.miIA;
+	displayString -r -v "原点ピボット" zm_ZIN_S.miZP;
+	displayString -r -v "シャープ エッジ" zm_ZIN_S.miSE;
+	displayString -r -v "セット作成（マテリアル）" zm_ZIN_S.miMS;
+	displayString -r -v "ＵＶセットの結合" zm_ZIN_S.miUU;
+	displayString -r -v "UV編集" zm_ZIN_S.miEU;
+	displayString -r -v "イメージ 板ポリ" zm_ZIN_S.miIP;
+displayString -r -v "ダイナミクス" zm_ZIN_S.miDynamics;
+	displayString -r -v "崩壊メッシュ" zm_ZIN_S.miCM;
+displayString -r -v "レンダリング" zm_ZIN_S.miRendering;
+	displayString -r -v "一括編集ツール" zm_ZIN_S.miET;
+	displayString -r -v "カメラ作成" zm_ZIN_S.miCW;
+	displayString -r -v "ビットマップサイズ" zm_ZIN_S.miBS;
+	displayString -r -v "テクスチャ解像度切り替え" zm_ZIN_S.miCFR;
+	displayString -r -v "緊急の線画の作成" zm_ZIN_S.miUL;
+	displayString -r -v "レイヤ作成" zm_ZIN_S.miCL;
+	displayString -r -v "レンダーレイヤ テキスト 書き出し" zm_ZIN_S.miER;
+	displayString -r -v "backburner リスト" zm_ZIN_S.miOBBBackburnaerList;
+	displayString -r -v "連番レンダーイメージ保存" zm_ZIN_S.miSR;
+displayString -r -v "セットアップ" zm_ZIN_S.miSetup;
+	displayString -r -v "アトリビュート編集" zm_ZIN_S.miEA;
+	displayString -r -v "fileノード フィルタタイプのオフ" zm_ZIN_S.miFO;
+	displayString -r -v "fileノード ファイルパスの書き換え" zm_ZIN_S.miRFP;
+	displayString -r -v "fileノードの連番パスをドット仕様に変換" zm_ZIN_S.miCSFP;
+	displayString -r -v "materialInfoノード 編集" zm_ZIN_S.miEMI;
+	displayString -r -v "ソースの共有化" zm_ZIN_S.miSS;
+	displayString -r -v "ラインオブジェクトを作成" zm_ZIN_S.miLO;
+	displayString -r -v "コンストレイントツール" zm_ZIN_S.miCT;
+	displayString -r -v "頂点レベルのクラスター" zm_ZIN_S.miFC_forCluster;
+	displayString -r -v "頂点レベルのクラスター（ヌル付き）" zm_ZIN_S.miFC_forClusterAndNull;
+	displayString -r -v "重複オブジェクト名の調査" zm_ZIN_S.miSDO;
+	displayString -r -v "エッジ中心にロケータを作成" zm_ZIN_S.miECL;
+	displayString -r -v "ペアレントヌル" zm_ZIN_S.miPN;
+	displayString -r -v "ポイント オン サーフェス ノード作成" zm_ZIN_S.miCreateNodePointOnSurfaceInfo;
+displayString -r -v "シーン設定" zm_ZIN_S.miSceneSetting;
+	displayString -r -v "シーンのロード" zm_ZIN_S.miLS;
+	displayString -r -v "モデル ローダ" zm_ZIN_S.miML;
+	displayString -r -v "プロジェクト編集" zm_ZIN_S.miCP;
+	displayString -r -v "ロードプラグイン" zm_ZIN_S.miLP;
+displayString -r -v "その他" zm_ZIN_S.miOther;
+	displayString -r -v "リネーマ" zm_ZIN_S.miRW;
+	displayString -r -v "ストア ツール" zm_ZIN_S.miST;
+	displayString -r -v "Turtleノード削除" zm_ZIN_S.miDT;
+	displayString -r -v "サムネイルの更新" zm_ZIN_S.miRTU;
+	displayString -r -v "チャンネルボックスからレイヤーオーバーライド" zm_ZIN_S.miCO;
+	displayString -r -v "オブジェクトをパーティクル上に配置" zm_ZIN_S.miAOOP;
+	displayString -r -v "ランダムツール" zm_ZIN_S.miRT;
+	displayString -r -v "ウインドウの最小化" zm_ZIN_S.miWM;
+	displayString -r -v "セット編集" zm_ZIN_S.miES;
+	displayString -r -v "ウインドウ編集" zm_ZIN_S.miEW;
+	displayString -r -v "melテンプレート" zm_ZIN_S.miMT;
+	displayString -r -v "オールアーカイブ" zm_ZIN_S.miAA;
+	displayString -r -v "アウトライナ追加" zm_ZIN_S.miAO;
+	displayString -r -v "maxセレクトツール" zm_ZIN_S.miSH;
+displayString -r -v "ペダル専用ツール" zm_ZIN_S.miPedal;
+	displayString -r -v "切り替えツール" zm_ZIN_S.miPCT;
+	displayString -r -v "セットアップ ツール" zm_ZIN_S.miPST;
+	displayString -r -v "顔プレーン貼り込み" zm_ZIN_S.miFP;
+displayString -r -v "ブレイブビーツ専用ツール" zm_ZIN_S.miBB;
+	displayString -r -v "BB ツール セット" zm_ZIN_S.miBB_TS;
+	displayString -r -v "BB モデル ローダ" zm_ZIN_S.miBB_ML;
+	displayString -r -v "BB カメラ作成" zm_ZIN_S.miBB_CW;
+	displayString -r -v "BB HIKリターゲット" zm_ZIN_S.miBB_HR;
+	displayString -r -v "BB 不用なHIK削除" zm_ZIN_S.miBB_DH;
+	displayString -r -v "BB レンダリング準備" zm_ZIN_S.miBB_RR;
+	displayString -r -v "BB アウトライン モード設定" zm_ZIN_S.miBB_OS;
+	displayString -r -v "BB レイヤ作成" zm_ZIN_S.miBB_CL;
+	displayString -r -v "BB テクスチャ 解像度切り替え" zm_ZIN_S.miBB_TC;
+	displayString -r -v "BB キャラセットキー" zm_ZIN_S.miBB_CS;
+	displayString -r -v "BB ジョイント スケール" zm_ZIN_S.miBB_JS;
+	displayString -r -v "BB 線の太さ調整" zm_ZIN_S.miBB_WL;
+	displayString -r -v "BB アニメーションをコピー" zm_ZIN_S.miBB_CA;
+	displayString -r -v "BB テクスチャ切り替え" zm_ZIN_S.miBB_CT;
+	displayString -r -v "BB プレイブラスト出力" zm_ZIN_S.miBB_P;
+	displayString -r -v "BB shotタイムスライダ" zm_ZIN_S.miBB_STS;
+	displayString -r -v "BB shotカメラ" zm_ZIN_S.miBB_SCL;
+	displayString -r -v "BB shotレンダ範囲" zm_ZIN_S.miBB_SFR;
+	displayString -r -v "BB ラインレイヤ オーバーライド" zm_ZIN_S.miBB_LO;
+	displayString -r -v "BB モデル チェック" zm_ZIN_S.miBB_MC;
+	displayString -r -v "BB ＡＥへ情報出力" zm_ZIN_S.miBB_ETA;
+displayString -r -v "DL" zm_ZIN_S.miDL;
+	displayString -r -v "イーズ曲線" zm_ZIN_S.miDoraTimeRemap;
+	displayString -r -v "カメラスライダー作成" zm_ZIN_S.miTN_CreateCameraSlider;
+	displayString -r -v "コリジョン デフォーマ" zm_ZIN_S.miJlCollisionDeformer;
+	displayString -r -v "ノイズ デフォーマ" zm_ZIN_S.miNoiseDeformer;
+	displayString -r -v "hotOcean" zm_ZIN_S.miHotOceanDeformer;
+	displayString -r -v "setSkinWeightMaxInfluences" zm_ZIN_S.miSetSkinWeightMaxInfluences;
+	displayString -r -v "MaterialLister" zm_ZIN_S.miMaterialLister;
+	displayString -r -v "ヘルパー" zm_ZIN_S.miRig101wireControllers;
+	displayString -r -v "SOuP" zm_ZIN_S.miSOuP;
+	displayString -r -v "メタボール" zm_ZIN_S.miNSmetaball;
+	displayString -r -v "直線UVの比率を合わせる" zm_ZIN_S.miAriUVFromVertexRatio;
+	displayString -r -v "UVを格子状に整列させる" zm_ZIN_S.miAriUVGridding;
+	displayString -r -v "UVスケール　チェッカー" zm_ZIN_S.miAriUVScaleChecker;
+	displayString -r -v "ジョイント オリエント" zm_ZIN_S.miJointOrient;
+	displayString -r -v "球体作成" zm_ZIN_S.miGeoSpheres;
+	displayString -r -v "表面にオブジェクトを配置" zm_ZIN_S.miIcPolyScatter;
+	displayString -r -v "プロット カーブ" zm_ZIN_S.miPlotCurve;
+	displayString -r -v "LWOファイルの読み込み" zm_ZIN_S.miLoadLWO;
+displayString -r -v "設定" zm_ZIN_S.miZC;
+displayString -r -v "仕事情報" zm_ZIN_S.miWI;
+displayString -r -v "web" zm_ZIN_S.miWeb;
+displayString -r -v "旭 mayaページ" zm_ZIN_S.miWebAsahi;
+	displayString -r -v "Digital Matrix" zm_ZIN_S.miWebDigitalMatrix;
+	displayString -r -v "Creative Crash" zm_ZIN_S.miWebCreativeCrash;
+	displayString -r -v "maya blog: 3D CG labo" zm_ZIN_S.miWebMayaBlog;
+displayString -r -v "仁 について" zm_ZIN_S.miAboutZIN;
+	displayString -r -v "ヘルプ" zm_ZIN_S.miHelpZIN;
+	displayString -r -v "バージョン" zm_ZIN_S.miVersionZIN;
+
+
+
+
+
+

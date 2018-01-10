@@ -1,0 +1,75 @@
+//////////////////////////////////////////////////////////////////////////////////////////////
+//	YP_RAW_renameAttrWeight    //      XYZ
+//////////////////////////////////////////////////////////////////////////////////////////////
+//
+//	AUTHOR: 		goto kazufumi
+//
+//	CREATION DATE: 	2016_04_09
+//	UPDATED DATE:	2016_04_09
+//
+//	VERSION:		1.0
+//
+//	HOW TO USE:		run "YP_RAW_renameAttrWeight()"
+//
+//////////////////////////////////////////////////////////////////////////////////////////////
+
+/*=====================================================
+
+	弱虫ペダル用のコンストレイントのウェイト名修正プロシージャ
+
+=====================================================*/
+
+/*------------------------------------------------------------------------------------------------
+
+	更新：
+	
+------------------------------------------------------------------------------------------------*/
+
+
+/*------------------------------------------------------------------------------------------------
+
+	YP_RAW_renameAttrWeight
+	
+	コンストレイントのウェイト名を修正します
+	
+------------------------------------------------------------------------------------------------*/
+
+global proc YP_RAW_renameAttrWeight(){
+	string $cord = ` textField -q -text PST_tfCordName `;
+	string $const[] = `ls -type "constraint"`;
+	string $constOne;
+	string $weight;
+	if( size($const) != 0 ){
+		for( $constOne in $const ){
+			string $word[];
+			tokenize $constOne "_" $word;
+			if( $word[0] == $cord ){
+				string $attr[] = `listAttr -keyable -leaf $constOne`;
+				int $size = `size $attr`;
+				$weightName = $attr[$size-1];
+				
+				string $longNameSource[] = ` listConnections ( $constOne + ".target[0].targetParentMatrix" ) `;
+				string $parts[];
+				int $token = `tokenize $longNameSource[0] "|" $parts`;
+				int $size = `size $parts`;
+				string $shortNameSource = $parts[$size-1];
+				int $token = `tokenize $shortNameSource "_" $parts`;
+				string $newWeightName = "";
+				for( $i=0; $i<$token; $i++ ){
+					if( $i==0 ){
+						if( $parts[0] != $cord ){
+							$newWeightName = $parts[0];
+						}
+					}else{
+						$newWeightName = $newWeightName + "_" + $parts[$i];
+					}
+				}
+				$newWeightName = $newWeightName + "W0";
+				
+				if( $weightName != $newWeightName ){
+					renameAttr ( $constOne + "." + $weightName  ) $newWeightName;
+				}
+			}
+		}
+	}
+}

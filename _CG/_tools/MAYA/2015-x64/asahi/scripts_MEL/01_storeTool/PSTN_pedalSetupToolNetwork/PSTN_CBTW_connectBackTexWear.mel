@@ -1,0 +1,35 @@
+///////////////////////////////////////////////////////////////////////////////
+//	PSTN_CBTW_connectBackTexWear            //		BackTexWearÇ∆ÉtÉåÅ[ÉÄägí£éqÇÃê⁄ë±
+///////////////////////////////////////////////////////////////////////////////
+//
+//	AUTHOR: 		goto kazufumi
+//
+//	CREATION DATE:	2013_10_07
+//	UPDATED DATE:	2013_10_07
+//
+//	VERSION:			1.1
+//
+//	HOW TO USE:		run "PSTN_CBTW_connectBackTexWear();"
+//
+//////////////////////////////////////////////////////////////////
+
+global proc PSTN_CBTW_connectBackTexWear(){
+
+	string $cord = `textField -q -text PST_tfCordName`;
+	int $size = `size $cord`;
+	string $last = `substring $cord $size $size`;
+	if( $last != "_" ){
+		$cord += "_";
+	}
+
+	string $ik[] = ` ls -sl -type "file"`;
+	for( $ikOne in $ik ){
+		int $result = ` isConnected -iuc ( $cord + "CTRL_crv.backTexWear_atr" )   ( $ikOne + ".frameExtension" ) `;
+		if( !$result ){
+			connectAttr -f ( $cord + "CTRL_crv.backTexWear_atr" )   ( $ikOne + ".frameExtension" );
+		}
+	}
+	
+}
+
+

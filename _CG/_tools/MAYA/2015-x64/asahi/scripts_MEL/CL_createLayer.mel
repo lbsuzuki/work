@@ -1,0 +1,595 @@
+//////////////////////////////////////////////////////////////////
+//	CL_createLayer          //         レイヤ作成　　　　  
+//////////////////////////////////////////////////////////////////
+//
+//	AUTHOR: 		goto kazufumi
+//
+//	CREATION DATE: 		2015_04_05
+//	UPDATED DATE:		2016_07_06
+//
+//	VERSION:		2.0
+//
+//	HOW TO USE:		run "CL_createLayer();"
+//
+//////////////////////////////////////////////////////////////////
+
+/*==========================================================================
+
+	ブレイブビーツ専用ツール
+	レイヤの作成を行います
+
+==========================================================================*/
+
+/*==========================================================================
+■更新内容
+
+	2.0		【color】【line】【shadow】　ボタンのみ残しました
+				GUIを一新しました
+	1.9		【breakin Line】ボタンを追加
+	1.81		【Base_Visor】で髪と眉と瞳のテクスチャ切り替えが失敗しているのを解消
+	1.8		【airBeat Layer】ボタンを追加
+	1.71		2014仕様に合わせてシャドウオブジェクトフォルダまでのパスの最後に"/"を足すようにしました
+				シャドウオブジェクトが日本語版、英語版どちらでも動作するようにしました
+	1.7		【shadowObj】にウインクビート仕様のコマンド追加
+	1.61		レイヤに追加するオブジェクトは【GeoGrp】内のオブジェクトのみ入れるようにしました
+	1.6		【mask】にウインクビート仕様のコマンドを追加
+	1.5		【shadowObj】を起動するときHIKのソースがStanceになっていなくても正常に作動するようにしました
+	1.4		【shadowObj】の機能を追加
+	1.3		【maskElbow】の設定時、rampノードとlayeredTextureノードにも影響するようにしました。
+	1.2		肘のマスク【maskElbow】レイヤが設定できるようにしました。
+	1.1		ＨＩＫ関係のネームスペースだけがリストされていましたが
+			シーンの中にある全てのネームスペースを表示するようにしました。
+	
+==========================================================================*/
+
+/*---------------------------------------------------------------
+
+	CL_createLayer
+
+	レイヤ作成ウインドウを表示
+
+---------------------------------------------------------------*/
+
+global proc CL_createLayer(){
+
+	string $tool = "レイヤ作成";
+	string $version = "(v2.0)";
+	
+	//UIテンプレート定義
+	if (!`uiTemplate -exists CL_UItemp`) {
+		uiTemplate CL_UItemp;
+	}
+	button -dt CL_UItemp -h 25;
+	text -dt CL_UItemp -h 25;
+	textField -dt CL_UItemp -h 25;
+	textScrollList -dt CL_UItemp -h 100;
+	
+	if(`window -exists CL_window`){
+		deleteUI CL_window;
+	}
+
+	window -title ($tool + $version) -menuBar 1 CL_window;
+		menu -l "ヘルプ" CL_mHelp;
+			menuItem -l "melファイルを編集" -c "ZIN_OM_openMel( ` whatIs CL_createLayer ` )" CL_miOpenMel;
+			menuItem -l "ツールフォルダを開く" -c "ZIN_OMF_openMelFolder( ` whatIs CL_createLayer ` )" CL_miOpenMelFolder;
+		setUITemplate -pst CL_UItemp;
+		frameLayout -lv 0 -bs etchedOut CL_flMain;
+			formLayout CL_folMain;
+				text -l "　レイヤ名を指定" CL_tLayerName;
+				text -l "空白時" -al left CL_tLayerNameExp1;
+				text -l "選択オブジェクトのネームスペースが1種類の場合、ネームスペースを採用" -al left CL_tLayerNameExp2;
+				text -l "選択オブジェクトのネームスペースが複数、\nもしくはネームスペースのないオブジェクトが混じっているなどの場合、空白を採用" -al left CL_tLayerNameExp3;
+				textField CL_tfLayerName;
+				separator -style "in" CL_sep1;
+				button -l "更新" -c "CL_createLayer()" CL_btnReload;
+				separator -style "in" CL_sep2;
+				
+				paneLayout -cn "vertical3" -paneSize 1 40 100 -paneSize 2 30 100 -paneSize 3 30 100 CL_plList;
+				
+					formLayout CL_folOutliner;
+					setParent..;
+
+					formLayout CL_folListLight;
+						text -l "ライト" CL_tLight;
+						textScrollList -ams 1 CL_tslListLight;
+							popupMenu	-parent CL_tslListLight -button 3 CL_pmListLight;
+								menuItem -l "選択" -c "CL_selectFromList(\"CL_tslListLight\")" CL_miSelectLight;
+								menuItem -l "追加選択" -c "CL_selectAddFromList(\"CL_tslListLight\")" CL_miSelectAddLight;
+								
+						formLayout -e
+							-af	CL_tLight			"top"			0
+							-af	CL_tLight			"left"			0
+							-af	CL_tLight			"right"		0
+							-ac	CL_tslListLight	"top"			0	CL_tLight
+							-af	CL_tslListLight	"left"			0
+							-af	CL_tslListLight	"right"		0
+							-af	CL_tslListLight	"bottom"	17
+							CL_folListLight;						
+					setParent..;
+					
+					formLayout CL_folListCamera;
+						text -l "レンダリングカメラ" CL_tCamera;
+						textScrollList -ams 1 CL_tslListCamera;
+							popupMenu	-parent CL_tslListCamera -button 3 CL_pmListCamera;
+								menuItem -l "選択" -c "CL_selectFromList(\"CL_tslListCamera\")" CL_miSelectCamera;
+								menuItem -l "追加選択" -c "CL_selectAddFromList(\"CL_tslListCamera\")" CL_miSelectAddCamera;
+						checkBox -l "カメラ レイヤオーバーライド" -v 1 CL_cbCameraOverride;
+								
+						formLayout -e
+							-af	CL_tCamera					"top"			0
+							-af	CL_tCamera					"left"			0
+							-af	CL_tCamera					"right"		0
+							-ac	CL_tslListCamera			"top"			0	CL_tCamera
+							-af	CL_tslListCamera			"left"			0
+							-af	CL_tslListCamera			"right"		0
+							-ac	CL_tslListCamera			"bottom"	0	CL_cbCameraOverride
+							-af	CL_cbCameraOverride	"left"			0
+							-af	CL_cbCameraOverride	"right"		0
+							-af	CL_cbCameraOverride	"bottom"	0
+							CL_folListCamera;
+					setParent..;
+				setParent..;
+				
+				button -l "color" -c "CL_run(\"color\")" CL_btnColor;
+				button -l "line" -c "CL_run(\"line\")" TRL_CL_btnLine;
+				button -l "shadow" -c "CL_run(\"shadow\")" TRL_CL_btnShadow;
+			setParent..;
+		setParent..;
+	showWindow;
+
+	formLayout -e
+
+		-af	CL_tLayerName		"top"		5
+		-af	CL_tLayerName		"left"		0
+
+		-af	CL_tfLayerName		"top"		5
+		-ac	CL_tfLayerName		"left"		0	CL_tLayerName
+		-ap	CL_tfLayerName		"right"		0	90
+		
+		-ac	CL_tLayerNameExp1	"top"		3	CL_tfLayerName
+		-ac	CL_tLayerNameExp1	"left"		0	CL_tLayerName
+		
+		-ac	CL_tLayerNameExp2	"top"		3	CL_tfLayerName
+		-ac	CL_tLayerNameExp2	"left"		5	CL_tLayerNameExp1
+		
+		-ac	CL_tLayerNameExp3	"top"		0	CL_tLayerNameExp2
+		-ac	CL_tLayerNameExp3	"left"		5	CL_tLayerNameExp1
+		
+		-ac	CL_sep1					"top"		5	CL_tLayerNameExp3
+		-af	CL_sep1					"left"		0
+		-af	CL_sep1					"right"		0
+		
+		-ac	CL_btnReload			"top"		0	CL_sep1
+		-af	CL_btnReload			"left"		0
+		-af	CL_btnReload			"right"		0
+		
+		-ac	CL_sep2					"top"		0	CL_btnReload
+		-af	CL_sep2					"left"		0
+		-af	CL_sep2					"right"		0
+	
+		-ac	CL_plList					"top"			0	CL_sep2
+		-af	CL_plList					"left"			0
+		-af	CL_plList					"right"		0
+		-ac	CL_plList					"bottom"	0	CL_btnColor
+		
+		-af	CL_btnColor			"left"		0
+		-ap	CL_btnColor			"right"		0	25
+		-af	CL_btnColor			"bottom"	0
+		
+		-ap	TRL_CL_btnLine			"left"		0	25
+		-ap	TRL_CL_btnLine			"right"		0	50
+		-af	TRL_CL_btnLine			"bottom"	0
+		
+		-ap	TRL_CL_btnShadow		"left"		0	50
+		-ap	TRL_CL_btnShadow		"right"		0	75
+		-af	TRL_CL_btnShadow		"bottom"	0
+
+		
+		CL_folMain;
+		
+	string $allns[] = ` namespaceInfo -listOnlyNamespaces `;
+
+	string $ns[];
+	for( $one in $allns ){
+		if( $one != "UI"  &&  $one != "shared" ){
+			int $result = stringArrayContains( $one , $ns );
+			if( $result == 0 ){
+				$ns[size($ns)] = $one;
+			}
+		}
+	}
+	
+
+	string $light[] = ` ls -type "light" `;
+	for( $one in $light ){
+		textScrollList -e -append $one CL_tslListLight;
+	}
+	
+	string $camera[] = ` ls -type "camera" `;
+	for( $one in $camera ){
+		textScrollList -e -append $one CL_tslListCamera;
+	}
+
+	if( ` outlinerPanel -exists CL_opOutliner ` ){
+		deleteUI -panel CL_opOutliner;
+	}
+	outlinerPanel -parent CL_folOutliner CL_opOutliner;
+	outlinerEditor		-e
+							-mainListConnection "worldList"
+							-selectionConnection "modelList"
+							-showShapes 0
+							-showReferenceNodes 0
+							-showReferenceMembers 0
+							-showAttributes 0
+							-showConnected 0
+							-showAnimCurvesOnly 0
+							-autoExpand 0
+							-showDagOnly 1
+							-ignoreDagHierarchy 0
+							-expandConnections 0
+							-showCompounds 1
+							-showNumericAttrsOnly 0
+							-highlightActive 1
+							-autoSelectNewObjects 0
+							-doNotSelectNewObjects 0
+							-transmitFilters 0
+							-showSetMembers 1
+							-setFilter defaultSetFilter
+							-ignoreHiddenAttribute 0
+							CL_opOutliner;
+	formLayout -e
+		-af	CL_opOutliner	"top"			0
+		-af	CL_opOutliner	"left"			0
+		-af	CL_opOutliner	"right"			0
+		-af	CL_opOutliner	"bottom"		17
+		CL_folOutliner;
+
+
+}
+
+
+/*---------------------------------------------------------------
+
+	CL_selectFromList( string リスト )
+	
+	リストで選択したオブジェクトを選択
+
+---------------------------------------------------------------*/
+global proc CL_selectFromList( string $list ){
+
+	string $sl[] = ` textScrollList -q -si $list `;
+	select -r $sl;
+
+}	
+		
+
+/*---------------------------------------------------------------
+
+	CL_selectAddFromList( string リスト )
+
+	リストで選択したオブジェクトを追加選択
+	
+---------------------------------------------------------------*/
+global proc CL_selectAddFromList( string $list ){
+
+	string $sl[] = ` textScrollList -q -si $list `;
+	select -add $sl;
+
+}	
+		
+
+/*---------------------------------------------------------------
+
+	CL_getNamespace( string オブジェクト名	)
+	
+	戻り値：string
+
+	引数のオブジェクト名からネームスペースを取得し、返します。
+
+---------------------------------------------------------------*/
+global proc string CL_getNamespace( string $obj ){
+
+	string $parts[];
+	int $size = `tokenize $obj ":" $parts`;
+
+	if( $size <= 1 ){
+		return "";
+	}else{
+		string $namespace;
+		for( $i=0; $i<($size-1); $i++ ){
+			if( $i == 0 ){
+				$namespace = $parts[0];
+			}else{
+				$namespace = $namespace + ":" + $parts[$i];
+			}
+		}
+		return $namespace;
+	}
+}	
+		
+		
+		
+	
+/*---------------------------------------------------------------
+
+	CL_run( string ボタン名 )
+	
+	ネームスペースリストとライトリストを元にレンダーレイヤを作成します
+
+---------------------------------------------------------------*/
+	
+global proc CL_run( string $btn ){
+
+	string $sl[] = ` ls -sl `;
+
+	//ライトをリストから取得
+	string $lightShape[] = `textScrollList -q -selectItem CL_tslListLight`;
+	string $light[];
+	if( size($lightShape) != 0 ){
+		for( $one in $lightShape ){
+			string $parent[] = ` listRelatives -parent -f $one `;
+			$light[size($light)] = $parent[0];
+		}
+	}
+	//カメラをリストから取得
+	string $camShape[] = `textScrollList -q -selectItem CL_tslListCamera`;
+	string $cam[];
+	if( size($camShape) != 0 ){
+		for( $one in $camShape ){
+			string $parent[] = ` listRelatives -parent -f $one `;
+			$cam[size($cam)] = $parent[0];
+		}
+	}
+	//任意のレイヤ名
+	string $input = `textField -q -tx CL_tfLayerName`;
+
+	string $node[];
+	string $mesh[];
+	string $crv[];
+	string $hikEff[];
+	string $code;
+	
+	//対象オブジェクトを現在選択しているオブジェクトにするとき
+	$node = ` ls -l -sl `;
+	if( size($node) == 0 ){
+		error "オブジェクトを1つ以上選択してください。\n";
+	}
+
+	//$nodeからmeshとnurbsCurveのノードを見つけ、親であるtransformノードを取得
+	if( size($node) != 0 ){
+		for( $one in $node ){
+			if( ` objectType $one ` == "transform"  ){
+				string $shape[] = ` listRelatives -shapes -f $one `;
+				if( size($shape) != 0  ){
+					if( ` objectType $shape[0] ` == "mesh" ){
+						if( stringArrayContains($one,$mesh) == 0 ){
+							$mesh[size($mesh)] = $one;
+						}
+					}else if( ` objectType $shape[0] ` == "nurbsCurve" ){
+						if( stringArrayContains($one,$crv) == 0 ){
+							$crv[size($crv)] = $one;
+						}
+					}
+				}
+			}
+		}
+	}
+
+	for( $one in $node ){
+		if( ` objectType $one ` == "hikIKEffector" ){
+			$hikEff[size($hikEff)] = $one;
+		}
+		string $oneLong = ` longNameOf $one `;
+		string $parts[];
+		tokenize $oneLong "|" $parts;
+		string $partsLong = ` longNameOf $parts[0] `;
+		if( stringArrayContains($partsLong,$hikEff) == 0 ){
+			$hikEff[size($hikEff)] = $partsLong;
+		}
+	}
+	
+	//$code
+	if( size($input) == 0 ){
+		string $nsAll[];
+		for( $one in $sl ){
+			string $ns = CL_getNamespace($one);
+			if( stringArrayContains($ns,$nsAll) != 1 ){
+				$nsAll[size($nsAll)] = $ns;
+			}
+			if( size($nsAll) == 1 ){
+				$code = $nsAll[0] + "_";
+			}else{
+				$code = "";
+			}
+		}
+		
+	}else{
+		$code = $input + "_";
+	}
+	
+	//$addに$mesh,$light,$crv,$hikEffをまとめる
+	string $add[];
+	$add = stringArrayCatenate( $light , $node );
+	$add = stringArrayCatenate( $add , $cam );
+
+	if( $btn == "color" ){ //---------------------------color---------------------------------------------------------------------------------------
+
+		//レイヤ作成
+		string $layer = `createRenderLayer -name ( $code + $btn ) -makeCurrent -noRecurse $add`;
+		
+		//mentalrayに切り替え
+		setCurrentRenderer mentalRay;
+		
+		//精度設定
+		setAttr "miDefaultOptions.miRenderUsing" 0;
+		setAttr "miDefaultOptions.miRenderUsing" 2;
+		setAttr "miDefaultOptions.maxSamples" 3;
+		setAttr "miDefaultOptions.rayTracing" 0;
+	
+		//レイトレースシャドウを設定
+		for( $one in $light ){
+		
+			editRenderLayerAdjustment ( $one + ".useRayTraceShadows" );
+			setAttr ( $one + ".useRayTraceShadows" ) 0;
+		
+		}
+		
+		//Contoursを設定
+		setAttr "miDefaultFramebuffer.contourClearImage" 0;
+		setAttr "miDefaultFramebuffer.contourEnable" 0;
+		
+		//カメラ設定
+		CL_cameraSetting();
+	
+	}else if( $btn == "line" ){ //---------------------------line---------------------------------------------------------------------------------------
+
+		//レイヤ作成
+		string $layer = `createRenderLayer -name ( $code + $btn ) -makeCurrent -noRecurse $add`;
+		
+		//mentalrayに切り替え
+		setCurrentRenderer mentalRay;
+		
+		//精度設定
+		setAttr "miDefaultOptions.miRenderUsing" 0;
+		setAttr "miDefaultOptions.miRenderUsing" 2;
+		setAttr "miDefaultOptions.maxSamples" 3;
+		setAttr "miDefaultOptions.rayTracing" 0;
+		
+		//Contoursを設定
+		editRenderLayerAdjustment "miDefaultFramebuffer.contourEnable";
+		setAttr "miDefaultFramebuffer.contourEnable" 1;
+		editRenderLayerAdjustment "miDefaultFramebuffer.contourClearImage";
+		setAttr "miDefaultFramebuffer.contourClearImage" 1;
+		setAttr "miDefaultFramebuffer.contourClearColor" -type double3 0 0 0 ;
+		setAttr "miDefaultFramebuffer.contourSamples" 3;
+		setAttr "miDefaultFramebuffer.contourFilter" 2;
+		setAttr "miDefaultFramebuffer.contourFilterSupport" 2;
+		
+		//カメラ設定
+		CL_cameraSetting();
+	
+	}else if( $btn == "shadow" ){ //---------------------------shadow---------------------------------------------------------------------------------------
+
+		//レイヤ作成
+		string $layer = `createRenderLayer -name ( $code + $btn ) -makeCurrent -noRecurse $add`;
+	
+		//一次可視性を設定
+		for( $one in $mesh ){
+			setAttr ( $one + ".primaryVisibility" ) 0;
+		}
+	
+		//レイトレースシャドウを設定
+		if( size($light) != 0 ){
+			for( $one in $light ){
+			
+				editRenderLayerAdjustment ( $one + ".useRayTraceShadows" );
+				setAttr ( $one + ".useRayTraceShadows" ) 1;
+		
+			}
+		}
+	
+		//レンダー設定
+		editRenderLayerAdjustment "defaultRenderGlobals.currentRenderer";
+		setCurrentRenderer mayaSoftware;
+		setAttr "defaultRenderQuality.edgeAntiAliasing" 0;
+		setAttr "defaultRenderQuality.shadingSamples" 5;
+		setAttr "defaultRenderQuality.maxShadingSamples" 10;
+		editRenderLayerAdjustment "defaultRenderQuality.enableRaytracing";
+		setAttr "defaultRenderQuality.enableRaytracing" 1;
+		setAttr "defaultRenderQuality.reflections" 0;
+		setAttr "defaultRenderQuality.refractions" 0;
+		
+		//シャドウプレーンを作成
+		if( !`objExists "shadowPlane_mesh"` ){
+			polyPlane -w 1000 -h 1000 -sx 10 -sy 10 -ax 0 1 0 -cuv 2 -ch 1 -name "shadowPlane_mesh";
+		}
+		
+		//useBackgroundを作成
+		if( !`objExists "shadow_useBackground"` ){
+			shadingNode -asShader useBackground -name "shadow_useBackground";
+		}
+		
+		setAttr "shadow_useBackground.reflectivity" 0;
+		setAttr "shadow_useBackground.reflectionLimit" 0;
+		
+		//シャドウプレーンにuseBackgroundを適用
+		select -r "shadowPlane_mesh";
+		hyperShade -assign "shadow_useBackground";
+		
+		//シャドウプレーンをshadowレイヤに追加
+		editRenderLayerMembers -noRecurse $layer "shadowPlane_mesh";
+		
+		//カメラ設定
+		CL_cameraSetting();
+		
+	}
+	
+	select -r $node;
+	
+}
+/*---------------------------------------------------------------
+
+	CL_cameraSetting
+
+	カメラを設定します
+
+---------------------------------------------------------------*/
+
+
+global proc CL_cameraSetting(){
+
+
+	string $camera[] = `textScrollList -q -selectItem CL_tslListCamera`;
+
+	//カメラ設定
+	if( size($camera) != 0 ){
+		string $cameraList[] = `listCameras -orthographic -perspective`;
+		int $cameraSize = `size $cameraList`;
+		for($i=0; $i<$cameraSize; $i++)
+		{
+			setAttr ($cameraList[$i] + ".renderable") 0;
+		}
+		
+		int $cameraOverride = `checkBox -q -v CL_cbCameraOverride`;
+		for( $one in $camera ){
+			if( $cameraOverride == 1 ){
+				editRenderLayerAdjustment ($one + ".renderable");
+			}
+			setAttr ($one + ".renderable") 1;
+		}
+	}
+
+}
+	
+/*---------------------------------------------------------------
+
+	CL_getNamespace(string オブジェクト名)
+
+	戻り値：string
+	
+	ネームスペースを返します
+
+---------------------------------------------------------------*/
+global proc string CL_getNamespace( string $obj ){
+
+	string $parts[];
+	int $size = `tokenize $obj ":" $parts`;
+
+	if( $size <= 1 ){
+		return "";
+	}else{
+		string $namespace;
+		for( $i=0; $i<($size-1); $i++ ){
+			if( $i == 0 ){
+				$namespace = $parts[0];
+			}else{
+				$namespace = $namespace + ":" + $parts[$i];
+			}
+		}
+		return $namespace;
+	}
+}
+
+	
+	
+	

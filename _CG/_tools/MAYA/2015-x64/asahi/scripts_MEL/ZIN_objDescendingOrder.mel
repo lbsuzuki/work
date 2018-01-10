@@ -1,0 +1,291 @@
+//////////////////////////////////////////////////////////////////////////////////////////////
+//	ZIN_objDescendingOrder  //      オブジェクト配列を降順に並び替え
+//////////////////////////////////////////////////////////////////////////////////////////////
+//
+//	AUTHOR: 		goto kazufumi
+//
+//	CREATION DATE: 	2012_03_12
+//	UPDATED DATE:	2012_03_12
+//
+//	VERSION:		1.0
+//
+//	HOW TO USE:		run "ZIN_objDescendingOrder( `ls -sl` )"
+//
+//////////////////////////////////////////////////////////////////////////////////////////////
+
+/*===============================================
+
+	オブジェクト配列を降順に並び替えます。
+	下の例ではオブジェクトの名前がフルパスになっていますが、
+	フルパスである必要はありません。
+	
+	例：
+	
+		string $a[] = {"|A", "|A|B|C", "|A|B|C|D", "|A|B"};
+		print $a;
+		
+			//結果---------------------------------------------------
+			
+				|A
+				|A|B|C
+				|A|B|C|D
+				|A|B
+				
+			----------------------------------------------------------
+			
+			
+		
+		string $b[] = ZIN_objDescendingOrder($a);
+		print $b;
+
+			//結果---------------------------------------------------
+			
+				|A|B|C|D
+				|A|B|C
+				|A|B
+				|A
+			
+			---------------------------------------------------------
+
+===============================================*/
+
+
+/*----------------------------------------------------------------------
+
+	ZIN_intArrayCatenate( int[], int, int[] )
+	
+	int型の足し算を行います。
+	int型（配列） + int型 + int型（配列）
+	
+	戻り値：	int[]
+	
+----------------------------------------------------------------------*/
+
+global proc int[] ZIN_intArrayCatenate( int $first[], int $insert, int $second[] ){
+
+	//結果変数宣言
+	int $result[];
+
+	//$resultに$firstを全て代入
+	int $count1 = 0;
+	int $firstOne;
+	for( $firstOne in $first ){
+		$result[$count1] = $firstOne;
+		$count1 += 1;
+	}
+	
+	//$resultに$insertを代入
+	$result[$count1] = $insert;
+	
+	//$resultに$secondを代入
+	int $count2 = $count1+1;
+	int $secondOne;
+	for( $secondOne in $second ){
+		$result[$count2] = $secondOne;
+		$count2 += 1;
+	}
+	
+	//戻り値
+	return $result;
+
+}
+
+
+
+/*----------------------------------------------------------------------
+
+	ZIN_intFirstHalf( int[] , int $num )
+	
+	int型（配列）を$numの場所で分割し、前半部分を返します。
+	
+	戻り値：	int[]
+
+----------------------------------------------------------------------*/
+
+global proc int[] ZIN_intFirstHalf( int $array[], int $num ){
+
+	//結果変数宣言
+	int $firstHalf[];
+	
+	//$array[$num-1]までの値を$firstHalfに代入
+	for( $i=0; $i<$num; $i++ ){
+		$firstHalf[$i] = $array[$i];
+	}
+	
+	//戻り値
+	return $firstHalf;
+
+}
+
+
+
+/*----------------------------------------------------------------------
+
+	ZIN_intSecondHalf( int[] , int $num )
+	
+	int型（配列）を$numの場所で分割し、後半部分を返します。
+	
+	戻り値：	int[]
+
+----------------------------------------------------------------------*/
+
+global proc int[] ZIN_intSecondHalf( int $array[], int $num ){
+
+	//結果変数宣言
+	int $secondHalf[];
+	
+	//$arrayの数を取得
+	int $size = `size $array`;
+	
+	//$array[$num]から最後までの値を$secondHalfに代入
+	for( $i=$num; $i<$size; $i++ ){
+		int $count = $i-$num;
+		$secondHalf[$count] = $array[$i];
+	}
+
+	//戻り値
+	return $secondHalf;
+	
+}
+
+
+
+/*----------------------------------------------------------------------
+
+	ZIN_objDescendingOrder( strirng $obj[] )
+	
+	$obj[]内のオブジェクトを階層の降順（階層が低い順）に並び替えます。
+
+----------------------------------------------------------------------*/
+
+
+global proc string[] ZIN_objDescendingOrder( string $obj[] ){
+
+	
+	//$objが空配列でないかを確認
+	if( size($obj) == 0 ){
+	
+		error "オブジェクトを選択してください。";
+	
+	}else{
+
+		//$objのフルパスを取得し、$nameに代入
+		string $objOne;
+		int $count = 0;
+		string $name[];
+		for( $objOne in $obj ){
+			 string $long[] = `ls -long $objOne`;
+			 $name[$count] = $long[0];
+			$count += 1;
+		}
+		
+		//tokenize使用の際、分割された文字列を保管する変数
+		string $nameParts[];
+		
+		//縦棒の数の値を取得する変数
+		int $verticalBarInt[];
+		
+		//オブジェクトの階層降順を取得する変数（戻り値）
+		string $verticalBarStr[];
+		
+		//オブジェクトの数を保管する変数
+		int $nameSize = `size $name`;
+		
+	
+
+		//オブジェクトの数ぶん繰り返します。
+		for( $i=0; $i<$nameSize; $i++ ){
+		
+
+			//縦棒部分でオブジェクトを分割し、$partsSizeに分割数（=縦棒数）を取得
+			int $partsSize = `tokenize $name[$i] "|" $nameParts`;
+			
+			//while文の継続判断を担う変数。　0のとき継続
+			int $state = 0;
+			
+			//確認した配列の数（whileを繰り返した数）を取得
+			int $countWhile = 0;
+			
+			
+			/******************************************************
+			
+				$verticalBarIntの配列と$partsSizeの分割数を照合
+				$partsSizeの数字のほうが大きいとき、照合した場所に
+				$partsSizeを$verticalBarIntに割り込み代入。
+				$verticalBarStrも同様の場所にオブジェクト（$name[$i]）を
+				割り込み代入。
+				
+			******************************************************/
+			
+			//$stateの値が0のとき継続
+			while( $state == 0 ){
+			
+				//照合し終わったオブジェクト数を取得。
+				int $barSize = `size $verticalBarInt`;
+			
+				
+				if( $barSize == 0 ){
+			
+					//もし照合し終わったオブジェクトが0のとき
+					
+					//$verticalBarInt[0]に$partsSize（縦棒数）を代入
+					$verticalBarInt[0] = $partsSize;
+					
+					//$verticalBarStr[0]に$name[0]（オブジェクト名）を代入
+					$verticalBarStr[0] = $name[0];
+					
+					$countWhile += 1;
+					$state = 1;
+					
+				
+				}else if( $barSize == $nameSize ){
+				
+					//もしこれが最後の照合のとき
+				
+					//$verticalBarIntの最後の配列に$partsSize（縦棒数）を代入
+					$verticalBarInt[$countWhile] = $partsSize;
+					
+					//$verticalBarStrの最後の配列に$name（オブジェクト名）を代入
+					$verticalBarStr[$countWhile] = $name[$i]; 
+					
+					$state = 1;
+					
+				}else if( $verticalBarInt[$countWhile] < $partsSize ){
+				
+					//もし照合した結果、$partsSizeのほうが大きいとき
+				
+				
+					//$verticalBarIntへの割り込み代入
+					
+					//割り込み代入する配列よりも前半部分の配列を$firstHalfに取得
+					int $firstHalf[] = ZIN_intFirstHalf( $verticalBarInt, $countWhile );
+					
+					//割り込み代入する配列よりも後半部分の配列を$secondHalfに取得
+					int $secondHalf[] = ZIN_intSecondHalf( $verticalBarInt, $countWhile );
+
+					//$firstHalf + $partsSize + $secondHalf　を行う（割り込み代入）
+					$verticalBarInt = ZIN_intArrayCatenate( $firstHalf, $partsSize, $secondHalf );
+					
+					
+					//$verticalBarStrへの割り込み代入
+					stringArrayInsertAtIndex( $countWhile, $verticalBarStr, $name[$i] );
+					
+					$countWhile += 1;
+					$state = 1;
+				
+				}else if( $verticalBarInt[$countWhile] >= $partsSize ){
+				
+					//もし照合した結果、$partsSizeのほうが小さいとき
+				
+					$countWhile += 1;
+				
+				}
+			}
+
+		}
+		
+		//戻り値
+		return $verticalBarStr;
+		
+	}
+}

@@ -1,0 +1,1562 @@
+//////////////////////////////////////////////////////////////////
+//	LS_loadScene          //         シーンのロード　　　　  
+//////////////////////////////////////////////////////////////////
+//
+//	AUTHOR: 		goto kazufumi
+//
+//	CREATION DATE: 	2011_09_05
+//	UPDATED DATE:		2013_12_10
+//
+//	VERSION:		1.41
+//
+//	HOW TO USE:		run "LS_loadScene();"
+//
+//////////////////////////////////////////////////////////////////
+
+/*==========================================================================
+
+	シーンをロードします
+
+==========================================================================*/
+
+/*==========================================================================
+■更新内容
+
+	v1.41	履歴を20に増やしました
+	v1.4	・言語切り替えが可能になりました。
+			・MainUIのframeLayoutとformLayoutのそれぞれの名前を次のように変更しました。
+				
+					LS_flMainFrame				→	LS_flMain
+					LS_folMainForm				→	LS_folMain
+					LS_flDirectoryFrame		→	LS_folDirectory
+					LS_folDirectoryForm		→	LS_folDirectory
+					LS_flLeftFrame				→	LS_flTitle
+					LS_folLeftForm				→	LS_folTitle
+					LS_flRightFrame			→	LS_flHierarchy
+					LS_flRightFrame			→	LS_flHierarchy
+					
+			・『LS_loadSceneRun』プロシージャの文章を変更しました。
+			・『LS_addNewTitle』プロシージャの文章を変更しました。
+				
+	v1.31	タイトルリストをソートするようにしました。
+				「設定」に「履歴を全削除」を追加しました。
+				
+	v1.3	現在見ているフォルダの中にある一番長い名前を持つファイル名もしくはフォルダ名に合わせて
+			テキストフィールドの幅を自動調整するようにしました。
+			多少、結果に誤差がありますが許容範囲としています。
+
+	v1.21	絶対パスをZIN_commonAbsolutePathで取得するようにしました。
+
+	v1.2	・ディレクトリフィールドを追加しました。
+	
+			・履歴機能を追加しました。
+				
+			・maファイルを開けるようにしました。
+
+	v1.1	・ファイルを開くときタイムラインの尺が開いたファイルの設定に変更されないバグを解消しました。
+				詳細：executeScriptNodesフラグが邪魔していたようなので消しました。
+				file -force -options "v=0" -executeScriptNodes false -ignoreVersion -type "mayaBinary" -open $filePath;
+					↓次のように変えました。
+				file -force -options "v=0"-ignoreVersion -type "mayaBinary" -open $filePath;
+					
+			・新たなディレクトリリストが作成されるとき、表示されるフォルダやmbファイルの数が、テキストスクロールリストが表示できる数を超えると
+			スクロールがウインドウ外に表示されてしまうバグを解消しました。
+				詳細：LS_tslSelectCommand(テキストスクロールフィールドＩＤ)の最後にウインドウのサイズを変更する文章を追加しました。
+
+		
+==========================================================================*/
+
+/*---------------------------------------------------------------
+
+	LS_loadScene
+
+	「シーンのロード」ウインドウを表示する。
+
+---------------------------------------------------------------*/
+
+global proc LS_loadScene(){
+
+	string $tool = uiRes("zm_LS.windowTitle");
+	string $version = "(v1.41)";
+
+	global string $LS_configFolder;
+	$LS_configFolder = ZIN_commonAbsolutePath("LS_loadSceneConfig");
+	$LS_configFolder += "/";
+	global string $LS_localConfigFile;
+	$LS_localConfigFile = ZIN_commonAbsolutePath("localMELConfig");
+	$LS_localConfigFile += "/LS_config.txt";
+
+	if(`window -exists LS_window`){
+		deleteUI LS_window;
+	}
+
+	string $windowName = `window -title ($tool + $version) -menuBar true LS_window`;
+		menu -label (uiRes("zm_LS.mConfig")) LS_mConfig;
+			menuItem -label (uiRes("zm_LS.miAddTitle")) -command "LS_createAddTitleWindow()" LS_miAddTitle;
+			menuItem -label (uiRes("zm_LS.miEditTitle")) -command "LS_createEditTitleWindow()" LS_miEditTitle;
+			menuItem -label (uiRes("zm_LS.miDeleteTitle")) -command "LS_createDeleteTitleWindow()" LS_miDeleteTitle;
+			menuItem -divider 1;
+			menuItem -label (uiRes("zm_LS.miAutoSetProject")) -checkBox 1 -command "LS_writeConfig()" LS_miAutoSetProject;
+			menuItem -divider 1;
+			menuItem -label (uiRes("zm_LS.miDeleteAllHistory")) -command "LS_deleteAllHistory()" LS_miDeleteAllHistory;
+			
+
+	frameLayout -labelVisible false -borderStyle "etchedOut" LS_flMain;
+		formLayout LS_folMain;
+			formLayout LS_folGetTslWidth;
+				text -label "" LS_tGetTslWidth;
+			setParent..;
+			frameLayout -labelVisible false LS_folDirectory;
+				formLayout LS_folDirectory;
+					text	-label (uiRes("zm_LS.tDirectory"))
+							LS_tDirectory;
+					textField	-text ""
+									LS_tfDirectory;
+						popupMenu	-parent LS_tfDirectory
+											-button 3
+											LS_pmDirectory;
+				setParent..;
+			setParent..;
+			frameLayout -label (uiRes("zm_LS.flTitle")) LS_flTitle;
+				formLayout LS_folTitle;
+					textScrollList -width 100 -selectCommand "LS_titleSelectCommand()"  LS_tslLeftTitleList;
+				setParent..;
+			setParent..;
+			frameLayout -label (uiRes("zm_LS.flHierarchy")) LS_flHierarchy;
+				formLayout LS_folHierarchy;
+				setParent..;
+			setParent..;
+
+			button -label (uiRes("zm_LS.btnLoadButton")) -height 35 -backgroundColor 1.0 0.55 0.55 -command "LS_loadSceneRun()" LS_btnLoadButton;
+		setParent..;
+	setParent..;
+	showWindow;
+
+	//------------------------------------------------------------------------------------------------
+
+	string $getFileList[] = `getFileList -folder $LS_configFolder -filespec "*.txt"`;
+	for($i=0; $i<size($getFileList); $i++){
+		$getFileList[$i] = basenameEx($getFileList[$i]);
+	}
+	
+	$getFileList = `sort $getFileList`;
+	
+	for($i=0; $i<size($getFileList); $i++){
+		textScrollList -e -append $getFileList[$i] LS_tslLeftTitleList;
+	}
+
+	textScrollList -e -selectIndexedItem 1 LS_tslLeftTitleList;
+
+	
+	//------------------------------------------------------------------------------------------------
+
+
+
+	string $selectTitle[] = `textScrollList -q -selectItem LS_tslLeftTitleList`;
+	string $path = $LS_configFolder + $selectTitle[0] + ".txt";
+	int $fileID = `fopen $path "r"`;
+	string $workPath = `fgetline $fileID`;
+	fclose $fileID;
+
+	int $tslID = `formLayout -q -numberOfChildren LS_folHierarchy`;
+	$tslID +=1;
+
+	string $tslForm[];
+	clear $tslForm;
+	string $tsl[];
+	clear $tsl;
+
+	$tslHierarchy[$tslID] = `textScrollList -parent LS_folHierarchy -selectCommand ("LS_tslSelectCommand(" + $tslID + ")") ("LS_tslHierarchy" + $tslID)`;
+
+	formLayout -e
+		-af $tslHierarchy[$tslID] "top" 0
+		-af $tslHierarchy[$tslID] "left" (0 + ($tslID-1)*100)
+		-af $tslHierarchy[$tslID] "bottom" 0
+
+	LS_folHierarchy;
+
+	int $tslTitleWidth = `textScrollList -q -width LS_tslLeftTitleList`;
+	
+	text -e -visible 1 LS_tGetTslWidth;
+	LS_inputList($workPath,$tslID);
+	int $tslWidth = LS_inputList($workPath,$tslID);
+	text -e -visible 0 LS_tGetTslWidth;
+	
+	
+	formLayout -e
+	
+		-af	LS_folGetTslWidth		"top"		0
+		-af	LS_folGetTslWidth		"left"		0
+	
+		-af	LS_folDirectory	"top"		0
+		-af	LS_folDirectory	"left"		0
+		-af	LS_folDirectory	"right"		0
+		-ac	LS_folDirectory	"bottom"	0	LS_flTitle
+
+		-af	LS_flTitle 			"top" 		20
+		-af	LS_flTitle 			"left" 		0
+		-ac	LS_flTitle 			"bottom" 	0	LS_btnLoadButton
+
+		-af	LS_flHierarchy 			"top" 		20
+		-af	LS_flHierarchy 			"right" 		0
+		-ac	LS_flHierarchy			"left" 		0	LS_flTitle
+		-ac	LS_flHierarchy 			"bottom"	0	LS_btnLoadButton
+
+		-af	LS_btnLoadButton 		"right" 		0
+		-af	LS_btnLoadButton 		"left" 		0
+		-af	LS_btnLoadButton 		"bottom"	0
+	
+		LS_folMain;
+		
+	formLayout -e
+	
+		-af	LS_tDirectory				"top"		0
+		-af	LS_tDirectory				"left"		0
+		-ac	LS_tDirectory				"right"		0	LS_tfDirectory
+		-af	LS_tDirectory				"bottom"	0
+		
+		-af	LS_tfDirectory				"top"		0
+		-af	LS_tfDirectory				"left"		100
+		-af	LS_tfDirectory				"right"		0
+		-af	LS_tfDirectory				"bottom"	0
+		
+		LS_folDirectory;
+
+
+
+	formLayout -e
+		-af	LS_tslLeftTitleList 		"top"		0
+		-af	LS_tslLeftTitleList 		"right"		0
+		-af	LS_tslLeftTitleList 		"left" 		0
+		-af	LS_tslLeftTitleList 		"bottom" 	0
+
+		LS_folTitle;
+
+	
+	int $windowWidth = ($tslWidth + $tslTitleWidth);
+	if( $windowWidth < 400 ){
+		$windowWidth = 400;
+	}
+	window -e -width $windowWidth -height 500 LS_window;
+
+	//ディレクトリに現在のフルパスを入力
+	string $hierarchy = LS_hierarchy();
+	textField -e -text $hierarchy LS_tfDirectory;
+	
+	//履歴の読込
+	LS_readHistory();	
+
+	//設定の読込
+	LS_readConfig();
+	
+
+
+}
+
+
+
+/*---------------------------------------------------------------
+
+	LS_readConfig
+
+	コンフィグファイルを読み込み、実行する。
+
+---------------------------------------------------------------*/
+
+global proc LS_readConfig(){
+
+	ZIN_existLocalMELConfig();
+	ZIN_existConfigFile("LS_config.txt");
+
+	global string $LS_localConfigFile;
+	
+	int $fileID = `fopen $LS_localConfigFile "r"`;
+	while(!`feof $fileID`){
+		string $line = `fgetline $fileID`;
+		eval($line);
+	}
+	fclose $fileID;
+}
+
+
+
+/*---------------------------------------------------------------
+
+	LS_readHistory
+	
+	ディレクトリの履歴を
+	LS_history.txt
+	から読み込み、以下のことを実行します。
+	・履歴の一番最後にmayaファイルを開いたディレクトリまで飛びます。
+	・そのディレクトリをディレクトリフィールドに表示します。
+	・その他の履歴をディレクトリフィールドのポップアップメニューとして追加します。
+
+---------------------------------------------------------------*/
+
+global proc LS_readHistory(){
+
+
+	ZIN_existLocalMELConfig();
+	int $exists = ZIN_existConfigFile("LS_history.txt");
+
+	if( $exists ){
+	
+		string $miList[] = `popupMenu -q -itemArray LS_pmDirectory`;
+		string $mi;
+		for( $mi in $miList ){
+			deleteUI $mi;
+		}
+	
+		string $filePath = ZIN_commonAbsolutePath("localMELConfig");
+		$filePath += "/LS_history.txt";
+		int $fileID = `fopen $filePath "r"`;
+		int $count = 0;
+		string $line[];
+		while( !`feof $fileID` ){
+			$line[$count] = `fgetline $fileID`;
+			$count += 1;
+		}
+		fclose $fileID;
+		
+		if( $count != 0 ){
+			string $parts[];
+			tokenize $line[0] ">>" $parts;
+			string $title = $parts[0];
+			string $history = $parts[1];
+			int $size = `size $history`;
+			string $history;
+			if( $size != 0 ){
+				$history = `substring $history 1 ($size-1)`;
+			}else{
+				$history = "";
+			}
+			
+			for( $i=0; $i<size($line); $i++ ){
+		
+				int $size = size($line[$i]);
+				if( $size > 3 ){
+					$line[$i] = `substring $line[$i] 1 ($size-1)`;
+					int $size = size($line[$i]);
+					if( $size != 0 ){
+						menuItem -parent LS_pmDirectory 
+										-label $line[$i]
+										-command ("LS_changeHistory(" + $i + ")")
+										("LS_miHistory" + string($i));
+					}
+				}
+			}
+			
+			if( $size != 0 ){
+				LS_gotoDirectory($title,$history);
+				textField -e -text $history LS_tfDirectory;
+			}
+		}
+	}
+	
+}
+
+
+
+/*---------------------------------------------------------------
+
+	LS_gotoDirectory( string タイトル , string フルパス )
+
+	引数のタイトルとフルパスをもとに、	そのディレクトリまで飛びます。
+
+---------------------------------------------------------------*/
+
+
+global proc LS_gotoDirectory( string $title , string $fullHierarchy ){
+
+	string $titleList[] = `textScrollList -q -allItems LS_tslLeftTitleList`;
+	int $contain = stringArrayContains($title,$titleList);
+	
+	if( size($title) > 3 ){
+	
+			if( !$contain ){
+				error ( $title + uiRes("zm_LS_gotoDiretory.eThereIsNo"));		//$title + " が見つかりません。\n"
+			}
+			
+		textScrollList -e -selectItem $title LS_tslLeftTitleList;
+		string $titlePath = LS_titlePath();
+		
+		string $hierarchy = substituteAllString( $fullHierarchy , $titlePath , "" );
+		string $hierarchy = substituteAllString( $hierarchy , "\n" , "" );
+		
+		string $folders[];
+		int $token = `tokenize $hierarchy "/" $folders`;	
+		
+		LS_titleSelectCommand();
+		string $folder;
+		int $count = 1;
+		for( $folder in $folders ){
+			string $allItem[] = `textScrollList -q -allItems ("LS_tslHierarchy" + $count)`;
+			int $contain = stringArrayContains($folder,$allItem);
+			if( $contain ){
+				textScrollList -e -selectItem $folder ("LS_tslHierarchy" + $count);
+				LS_tslSelectCommand($count);
+			}else if( !$contain ){
+				break;
+			}
+			$count += 1;
+		}
+	}
+}
+
+
+
+/*---------------------------------------------------------------
+
+	LS_changeHistory( int メニューアイテムID )
+	
+	ディレクトリフィールドのポップアップメニューのメニューアイテムＩＤを引数として
+	受け取り、そのメニューアイテムＩＤを持つラベルのフルパスのディレクトリに
+	飛びます。
+
+---------------------------------------------------------------*/
+
+global proc LS_changeHistory( int $miID ){
+
+	string $history = `menuItem -q -label ("LS_miHistory" + $miID)`;
+	
+	string $parts[];
+	tokenize $history ">>" $parts;
+	string $title = $parts[0];
+	string $directory = $parts[1];
+	
+	textField -e -text $directory LS_tfDirectory;
+	LS_gotoDirectory($title,$directory);
+	
+}
+
+
+
+/*---------------------------------------------------------------
+
+	LS_saveHistory
+
+	現在、開いているディレクトリのフルパスを
+	ローカル設定ファイル LS_history.txt
+	に履歴として追加します。
+	すでに履歴が記されている場合、
+	一行目に最新を記録します。
+
+---------------------------------------------------------------*/
+
+global proc LS_saveHistory(){
+
+	ZIN_existLocalMELConfig();
+	ZIN_existConfigFile("LS_history.txt");
+	string $localMELConfig = ZIN_commonAbsolutePath("localMELConfig");
+	string $filePath = $localMELConfig + "/LS_history.txt";
+	string $titles[] = `textScrollList -q -selectItem LS_tslLeftTitleList`;
+	string $title = $titles[0];
+	string $hierarchy = LS_hierarchy();
+	int $size = `size $hierarchy`;
+	string $lastWord = `substring $hierarchy $size $size`;
+	if( $lastWord == "/" ){
+		string $hierarchy = `substring $hierarchy 1 ($size-1)`;
+	}
+	
+	int $fileID = `fopen $filePath "r"`;
+	string $readPaths[];
+	int $count = 0;
+	while( !`feof $fileID` ){
+		string $line = `fgetline $fileID`;
+		if( $line != "\n" ){
+			$readPaths[$count] = $line;
+		}
+		$count += 1;
+	}
+	fclose $fileID;
+	
+	int $size = size($readPaths);
+	if( $size >= 20 ){
+		$size = 19;
+	}else if( $size == 1 ){
+		$size = 2;
+	}
+	
+	string $writePaths[];
+	$writePaths[0] = $title + ">>" + $hierarchy + "\n";
+	
+	for( $i=0; $i<$size; $i++ ){
+		$writePaths[$i+1] = $readPaths[$i];
+	}
+	
+	int $fileID = `fopen $filePath "w"`;
+	string $writePath;
+	for( $i=0; $i<size($writePaths); $i++ ){
+		if( $i == 0 ){
+			fprint $fileID $writePaths[$i];
+		}else{
+			if( $writePaths[$i] != $writePaths[0] ){
+				fprint $fileID $writePaths[$i];
+			}
+		}
+	}
+	fclose $fileID;
+	
+	LS_readHistory();
+	
+}
+
+/*---------------------------------------------------------------
+
+	LS_writeConfig
+
+	コンフィグファイルに現在の設定を保存する。
+	保存する項目：　自動プロジェクト設定
+
+---------------------------------------------------------------*/
+
+global proc LS_writeConfig(){
+
+	ZIN_existLocalMELConfig();
+	ZIN_existConfigFile("LS_config.txt");
+
+	global string $LS_localConfigFile;
+	int $miAutoSetProjectState = `menuItem -q -checkBox LS_miAutoSetProject`;
+
+	int $fileID = `fopen $LS_localConfigFile "w"`;
+	fprint $fileID ("menuItem -e -checkBox " + $miAutoSetProjectState + " LS_miAutoSetProject;\n");
+	fclose $fileID;
+
+}
+
+
+
+/*---------------------------------------------------------------
+
+	LS_inputList(リスト化するディレクトリパス、リストを表示するテキストスクロールリストのＩＤ)
+
+	現在、開いている階層のリストをテキストスクロールフィールドに
+	入力表示する。
+
+---------------------------------------------------------------*/
+
+global proc LS_inputList(string $path,int $tslID){
+
+	string $allList[] = `getFileList -folder $path`;
+	string $folderList[];
+	string $mbList[];
+	string $maList[];
+	for($i=0; $i<size($allList); $i++){
+		if(`filetest -d ($path + $allList[$i])`==1){
+			int $size = size($folderList);
+			$folderList[$size] = $allList[$i];
+		}else if(`fileExtension($allList[$i])` == "mb"){
+			int $size = size($mbList);
+			$mbList[$size] = $allList[$i];
+		}else if(`fileExtension($allList[$i])` == "ma"){
+			int $size = size($maList);
+			$maList[$size] = $allList[$i];
+		}
+	}
+
+	$folderList = sort($folderList);
+	$mbList = sort($mbList);
+	$maList = sort($maList);
+	string $list[] = stringArrayCatenate($folderList,$mbList);
+	$list = stringArrayCatenate($list,$maList);
+	string $listOne;
+	for($listOne in $list){
+		textScrollList -e -append $listOne ("LS_tslHierarchy" + $tslID);
+	}
+	
+	int $longSize = 0;
+	string $longName = "";
+	string $listOne;
+	for( $listOne in $list ){
+		int $size = size( $listOne );
+		if( $longSize < $size ){
+			$longSize = $size;
+			$longName = $listOne;
+		}
+	}
+	
+	text -e -label $longName LS_tGetTslWidth;
+
+	
+}
+
+
+/*---------------------------------------------------------------
+
+	LS_deleteAllHistory
+
+	履歴をすべて削除します。
+
+---------------------------------------------------------------*/
+
+global proc LS_deleteAllHistory(){
+
+	ZIN_existLocalMELConfig();
+	ZIN_existConfigFile("LS_history.txt");
+
+	string $filePath = ZIN_commonAbsolutePath("localMELConfig");
+	$filePath += "/LS_history.txt";
+	
+	int $fileID = `fopen $filePath "w"`;
+	fclose $fileID;	
+	
+	LS_readHistory();
+	
+}
+
+
+
+/*---------------------------------------------------------------
+
+	LS_getTslWidth
+	
+	戻り値：	int "LS_tGetTslWidth"の幅
+
+	LS_tGetTslWidthの幅を調査し、
+	値が100未満のとき、100を戻り値として返します。
+	値が100以上のとき、その値を戻り値として返します。	
+
+---------------------------------------------------------------*/
+
+global proc int LS_getTslWidth(){
+
+	int $textWidth = ` text -q -width LS_tGetTslWidth `;
+	$textWidth = $textWidth + 6;
+	
+	int $return;
+	if( $textWidth < 100 ){
+		$return = 100;
+	}else{
+		$return = $textWidth;
+	}	
+
+	return $return;
+	
+}
+
+
+
+
+/*---------------------------------------------------------------
+
+	LS_titlePath
+
+	タイトル情報から作業場所のフルパスを取得する。
+	返り値：　string（作業場所フルパス）
+
+---------------------------------------------------------------*/
+
+global proc string LS_titlePath(){
+
+	global string $LS_configFolder;
+
+	string $title[] = `textScrollList -q -selectItem LS_tslLeftTitleList`;
+	
+	string $path = $LS_configFolder + $title[0] + ".txt";
+
+	int $fileID = `fopen $path "r"`;
+	string $workPath = `fgetline $fileID`;
+	fclose $fileID;
+
+	return $workPath;
+}
+
+
+
+/*---------------------------------------------------------------
+
+	LS_titleSelectCommand
+
+	タイトルリストからタイトルを選択したとき、ディレクトリに
+	テキストスクロールリストを追加し、フォルダリストを入力表示する。
+
+---------------------------------------------------------------*/
+
+global proc LS_titleSelectCommand(){
+
+	string $titlePath = LS_titlePath();
+
+	int $numberOfTsl = `formLayout -q -numberOfChildren LS_folHierarchy`;
+
+	for($i=1; $i<($numberOfTsl+1); $i++){
+		deleteUI ("LS_tslHierarchy" + $i);
+	}
+
+	textScrollList -parent LS_folHierarchy -selectCommand "LS_tslSelectCommand(1)" LS_tslHierarchy1;
+
+	formLayout -e
+		-af LS_tslHierarchy1 "top" 0
+		-af LS_tslHierarchy1 "left" 0
+		-af LS_tslHierarchy1 "bottom" 0
+
+	LS_folHierarchy;
+
+	text -e -visible 1 LS_tGetTslWidth;
+	LS_inputList($titlePath,1);
+	int $tslWidth = LS_getTslWidth();
+	textScrollList -e -width $tslWidth LS_tslHierarchy1;
+	text -e -visible 0 LS_tGetTslWidth;
+
+	int $tslTitleWidth = `textScrollList -q -width LS_tslLeftTitleList`;
+	int $windowWidth = $tslWidth + $tslTitleWidth;
+	if( $windowWidth < 400 ){
+		$windowWidth = 400;
+	}
+	window -e -width $windowWidth LS_window;
+
+	string $hierarchy = LS_hierarchy();
+	textField -e -text $hierarchy LS_tfDirectory;
+
+}
+
+
+
+/*---------------------------------------------------------------
+
+	LS_hierarchy
+
+	現在、表示されているディレクトリをフルパスにして返す。
+	フルパスの構成要素はディレクトリで選択されている項目となります。
+	最後の階層で何も選択されていない場合、「フルパス + "/" + 空白」と
+	返されます。
+	返り値：　string（現在表示されているディレクトリフルパス）
+
+---------------------------------------------------------------*/
+
+global proc string LS_hierarchy(){
+	
+	string $hierarchy = LS_titlePath();
+	int $numberOfTsl = `formLayout -q -numberOfChildren LS_folHierarchy`;
+
+	for($i=1; $i<($numberOfTsl+1); $i++){
+		string $item[] = `textScrollList -q -selectItem ("LS_tslHierarchy" + $i)`;
+		$hierarchy = $hierarchy + $item[0] + "/";
+	}
+	
+	int $size = `size $hierarchy`;
+	if( $size > 1 ){
+		string $lastTwo = `substring $hierarchy ($size-1) $size`;
+		if( $lastTwo == "//" ){
+			$hierarchy = `substring $hierarchy 1 ($size-1)`;
+		}
+	}
+
+	int $size = `size $hierarchy`;
+	if( $size > 1 ){
+		if( fileExtension($hierarchy) == "mb/"  ||  fileExtension($hierarchy) == "ma/" ){
+			$hierarchy = `substring $hierarchy 1 ($size-1)`;
+		}
+	}
+	
+	return $hierarchy;
+}
+
+
+
+/*---------------------------------------------------------------
+
+	LS_tslSelectCommand( int テキストスクロールフィールドＩＤ)
+
+	ディレクトリのテキストスクロールリスト内の項目を選択したとき、ＩＤをもとに
+	新たにテキストスクロールリストを追加し、下の階層のフォルダと階層を表示する。
+	表示する際、フォルダとmb,maファイルを選別、名前昇順の手順を踏んでいます。
+	
+	一番最後のディレクトリの項目を選択したとき：
+	新たにテキストスクロールリストを追加→リスト表示
+
+	最後以外のディレクトリの項目を選択したとき:
+	選択したディレクトリより下位のテキストスクロールリストを削除→新たにテキストスクロールリストを追加→リスト表示
+
+---------------------------------------------------------------*/
+
+global proc LS_tslSelectCommand(int $tslID){
+
+	int $numberOfTsl = `formLayout -q -numberOfChildren LS_folHierarchy`;
+	
+	
+	if($numberOfTsl == $tslID){
+
+		string $item[] = `textScrollList -q -selectItem ("LS_tslHierarchy" + $tslID)`;
+		string $extension = fileExtension($item[0]);
+		if( $extension != "mb"  &&  $extension != "ma" ){
+			$tslID += 1;
+			string $tslHierarchy[];
+			$tslHierarchy[$tslID] = `textScrollList -parent LS_folHierarchy -selectCommand ("LS_tslSelectCommand(" + $tslID + ")") ("LS_tslHierarchy" + $tslID)`;
+		
+			formLayout -e
+				-af $tslHierarchy[$tslID] "top" 0
+				-ac $tslHierarchy[$tslID] "left" 0 ("LS_tslHierarchy" + ($tslID-1))
+				-af $tslHierarchy[$tslID] "bottom" 0
+		
+			LS_folHierarchy;
+	
+			string $hierarchy = LS_hierarchy();
+			LS_inputList($hierarchy,$tslID);
+			text -e -visible 1 LS_tGetTslWidth;
+			int $tslWidth = LS_getTslWidth();
+			text -e -visible 0 LS_tGetTslWidth;
+			textScrollList -e -width $tslWidth ("LS_tslHierarchy" + $tslID);
+			
+			
+			$numberOfTsl = `formLayout -q -numberOfChildren LS_folHierarchy`;
+			for($i=1; $i<($numberOfTsl+1); $i++){
+				int $width = `textScrollList -q -width ("LS_tslHierarchy" + $i)`;
+				$tslWidth = $tslWidth + $width;
+			}
+			
+			if( $tslWidth < 400 ){
+				$tslWidth = 400;
+			}
+			
+			window -e -width $tslWidth LS_window;
+		}
+
+	}else if($numberOfTsl > $tslID){
+		$tslID += 1;
+		for($i=$numberOfTsl; $i>($tslID-1); $i--){
+			int $listWidth = `textScrollList -q -width ("LS_tslHierarchy" + $i)`;
+			deleteUI ("LS_tslHierarchy" + $i);
+			if($i!=$tslID){
+				int $windowWidth = `window -q -width LS_window`;
+				$windowWidth -= $listWidth;
+				window -e -width $windowWidth LS_window;
+			}
+		}
+
+		string $item[] = `textScrollList -q -selectItem ("LS_tslHierarchy" + ($tslID-1))`;
+		string $extension = fileExtension($item[0]);
+		if( $extension == "mb"  ||  $extension == "ma" ){
+			int $tslWidth = `textScrollList -q -width LS_tslLeftTitleList`;
+			$numberOfTsl = `formLayout -q -numberOfChildren LS_folHierarchy`;
+			for($i=1; $i<($numberOfTsl+1); $i++){
+				int $width = `textScrollList -q -width ("LS_tslHierarchy" + $i)`;
+				$tslWidth = $tslWidth + $width;
+			}
+			window -e -width $tslWidth LS_window;	
+		}else if( $extension != "mb"  &&  $extension != "ma" ){
+			string $tslHierarchy[];
+			$tslHierarchy[$tslID] = `textScrollList -parent LS_folHierarchy -selectCommand ("LS_tslSelectCommand(" + $tslID + ")") ("LS_tslHierarchy" + $tslID)`;
+		
+			formLayout -e
+				-af $tslHierarchy[$tslID] "top" 0
+				-ac $tslHierarchy[$tslID] "left" 0 ("LS_tslHierarchy" + ($tslID-1))
+				-af $tslHierarchy[$tslID] "bottom" 0
+		
+			LS_folHierarchy;
+	
+			string $hierarchy = LS_hierarchy();
+			LS_inputList($hierarchy,$tslID);
+			text -e -visible 1 LS_tGetTslWidth;
+			int $tslWidth = LS_getTslWidth();
+			text -e -visible 0 LS_tGetTslWidth;
+			textScrollList -e -width $tslWidth ("LS_tslHierarchy" + $tslID);
+	
+			$numberOfTsl = `formLayout -q -numberOfChildren LS_folHierarchy`;
+			for($i=1; $i<($numberOfTsl+1); $i++){
+				int $width = `textScrollList -q -width ("LS_tslHierarchy" + $i)`;
+				$tslWidth = $tslWidth + $width;
+			}
+			window -e -width $tslWidth LS_window;
+		}
+	}
+
+	int $ID = `formLayout -q -numberOfChildren LS_folHierarchy`;
+	int $windowWidth = `window -q -width LS_window`;
+
+	window -e -width $windowWidth LS_window;
+	
+	string $hierarchy = LS_hierarchy();
+	textField -e -text $hierarchy LS_tfDirectory;
+
+}
+
+
+
+/*---------------------------------------------------------------
+
+	LS_autoSetProject(mbファイルを含むフルパス)
+
+	mbファイルがある場所をカレントプロジェクトに設定する。
+
+---------------------------------------------------------------*/
+
+global proc LS_autoSetProject(string $path){
+
+	int $miAutoSetProjectState = `menuItem -q -checkBox LS_miAutoSetProject`;
+
+	if($miAutoSetProjectState == 1){
+		$path = dirname($path);
+		workspace -openWorkspace $path;
+	}
+}
+
+
+/*---------------------------------------------------------------
+
+	LS_loadSceneRun
+
+	ディレクトリを元にmbファイルのロードを実行します。
+
+---------------------------------------------------------------*/
+
+global proc LS_loadSceneRun(){
+
+	int $numberOfTsl = `formLayout -q -numberOfChildren LS_folHierarchy`;
+	string $item[] = `textScrollList -q -selectItem ("LS_tslHierarchy" + $numberOfTsl)`;
+	string $itemExtension = fileExtension($item[0]);
+
+	if(size($item[0]) == 0 ){
+		error (uiRes("zm_LS_loadSceneRun.eFileIsNotChosen"));			//maまたはmbファイルが選択されていません。選択してからＬＯＡＤを実行してください。"
+	}else if($itemExtension != "mb"  &&  $itemExtension != "ma"){
+		error (uiRes("zm_LS_loadSceneRun.eFileIsNotChosen"));			//maまたはmbファイルが選択されていません。選択してからＬＯＡＤを実行してください。"
+	}else{
+		string $filePath = LS_hierarchy();
+		int $size = `size($filePath)`;
+		string $lastWord = `substring $filePath $size $size`;
+		if( $lastWord == "/" ){
+			$filePath = `substring $filePath 1 ($size-1)`;
+		}
+
+		if(`file -q -anyModified` == 1){
+			
+			string $result = `confirmDialog -title (uiRes("zm_LS_loadSceneRun.confirmTitle"))
+						-message (uiRes("zm_LS_loadSceneRun.confirmExp"))
+						-button (uiRes("zm_LS_loadSceneRun.confirmSave"))
+						-button (uiRes("zm_LS_loadSceneRun.confirmNotSave"))
+						-button (uiRes("zm_LS_loadSceneRun.confirmCancel"))
+						-defaultButton (uiRes("zm_LS_loadSceneRun.confirmCancel"))
+						-cancelButton (uiRes("zm_LS_loadSceneRun.confirmCancel"))`;
+			
+
+			int $intResult;
+			if( $result == uiRes("zm_LS_loadSceneRun.confirmSave") ){
+				$intResult = 1;
+			}else if( $result == uiRes("zm_LS_loadSceneRun.confirmNotSave") ){
+				$intResult = 2;
+			}else if( $result == uiRes("zm_LS_loadSceneRun.confirmCancel") ){
+				$intResult = 3;
+			}
+			
+			switch($intResult){
+			
+				case 1:
+					LS_saveHistory();
+					string $scene = `file -q -shortName -sceneName`;
+					string $sceneExtension = fileExtension($scene);
+					if( $sceneExtension == "mb" ){
+						file -force -save -type "mayaBinary";
+					}else if( $sceneExtension == "ma" ){
+						file -force -save -type "mayaAscii";
+					}
+					if( $itemExtension == "mb" ){	
+						file -force -options "v=0" -ignoreVersion -type "mayaBinary" -open $filePath;
+					}else if( $itemExtension == "ma" ){
+						file -force -options "v=0" -ignoreVersion -type "mayaAscii" -open $filePath;
+					}
+					LS_autoSetProject($filePath);
+				break;
+			
+				case 2:
+					LS_saveHistory();
+					if( $itemExtension == "mb" ){
+						file -force -options "v=0" -ignoreVersion -type "mayaBinary" -open $filePath;
+					}else if( $itemExtension == "ma" ){
+						file -force -options "v=0" -ignoreVersion -type "mayaAscii" -open $filePath;
+					}
+					LS_autoSetProject($filePath);
+				break;
+			
+				case 3:
+				break;
+			}
+		}else{
+			LS_saveHistory();
+			if( $itemExtension == "mb" ){
+				file -force -options "v=0" -ignoreVersion -type "mayaBinary" -open $filePath;
+			}else if( $itemExtension == "ma" ){
+				file -force -options "v=0" -ignoreVersion -type "mayaAscii" -open $filePath;
+			}
+			LS_autoSetProject($filePath);
+			
+		}
+	}
+}
+
+
+
+
+
+
+
+/*//////////////////////////////////////////////////////////////////////////////////
+
+	タイトル追加
+
+//////////////////////////////////////////////////////////////////////////////////*/
+
+/*---------------------------------------------------------------
+
+	LS_createAddTitleWindow
+
+	「タイトル追加」ウインドウを表示します。
+
+---------------------------------------------------------------*/
+
+global proc LS_createAddTitleWindow(){
+
+	if(`window -q -exists LS_addTitleWindow`){
+		deleteUI LS_addTitleWindow;
+	}
+	
+	window -title (uiRes("zm_LS_addTitle.windowTitle")) LS_addTitleWindow;
+		frameLayout -labelVisible false -borderStyle "etchedOut";
+			columnLayout -adjustableColumn true;
+				columnLayout -adjustableColumn true -columnOffset "both" 5 -rowSpacing 5;
+					columnLayout -adjustableColumn true;
+						text -label (uiRes("zm_LS_addTitle.tCaption"))  LS_addTitleTextCaption;
+					setParent..;
+				setParent..;
+				separator;
+				columnLayout -adjustableColumn true -columnOffset "both" 5 -rowSpacing 5;
+					formLayout LS_addTitleNameForm;
+						text -label (uiRes("zm_LS_addTitle.tTitle")) LS_addTitleText;
+						textField LS_addTitleFieldTitle;
+					setParent..;
+					formLayout LS_addTitlePathForm;
+						text -label (uiRes("zm_LS_addTitle.tFullPath")) LS_addTitleTextPath;
+						textField LS_addTitleFieldPath;
+						button -label "..." -command "LS_addTitleFolderPathDialog()" LS_addTitleButtonDialog;
+					setParent..;
+					formLayout LS_addTitleButtonForm;
+						button -label (uiRes("zm_LS_addTitle.btnAdd")) -command "LS_addNewTitle()" LS_addTitleButtonOK;
+						button -label (uiRes("zm_LS_addTitle.btnCancel")) -command "deleteUI LS_addTitleWindow" LS_addTitleButtonCancel;
+					setParent..;
+				setParent..;
+			setParent..;
+		setParent..;
+	showWindow;
+	
+	formLayout -e
+		-af	LS_addTitleText			"top"				0
+		-ac	LS_addTitleText			"right"			0 LS_addTitleFieldTitle
+		-af	LS_addTitleText			"left"				0
+		-af	LS_addTitleText			"bottom"		0
+	
+		-af	LS_addTitleFieldTitle	"top"				0
+		-af	LS_addTitleFieldTitle	"right"			50
+		-af	LS_addTitleFieldTitle	"left"				50
+		-af	LS_addTitleFieldTitle	"bottom"		0
+	
+		LS_addTitleNameForm;
+	
+	
+	formLayout -e
+		-af	LS_addTitleTextPath			"top"			0
+		-ac	LS_addTitleTextPath			"right"		0 LS_addTitleFieldPath
+		-af	LS_addTitleTextPath			"left"			0
+		-af	LS_addTitleTextPath			"bottom"	0
+	
+		-af	LS_addTitleFieldPath			"top"			0
+		-af	LS_addTitleFieldPath			"right"		50
+		-af	LS_addTitleFieldPath			"left"			50
+		-af	LS_addTitleFieldPath			"bottom"	0
+	
+		-af	LS_addTitleButtonDialog	"top"			0
+		-af	LS_addTitleButtonDialog	"right"		0
+		-ac	LS_addTitleButtonDialog	"left"			0 LS_addTitleFieldPath
+		-af	LS_addTitleButtonDialog	"bottom"	0
+	
+		LS_addTitlePathForm;
+	
+
+	formLayout -e
+		-af	LS_addTitleButtonOK			"top"			0
+		-ap	LS_addTitleButtonOK			"right"		0 50
+		-af	LS_addTitleButtonOK			"left"			0
+		-af	LS_addTitleButtonOK			"bottom"	0
+	
+		-af	LS_addTitleButtonCancel	"top"			0
+		-af	LS_addTitleButtonCancel	"right"		0
+		-ap	LS_addTitleButtonCancel	"left"			0 50
+		-af	LS_addTitleButtonCancel	"bottom"	0
+	
+		LS_addTitleButtonForm;
+	
+	window -e -width 470 -height 105 LS_addTitleWindow;
+
+}
+
+
+/*---------------------------------------------------------------
+
+	LS_addTitleFolderPathDialog
+
+	新規タイトルのディレクトリパスを取得するための
+	ファイルブラウザを表示します。
+	
+---------------------------------------------------------------*/
+
+global proc LS_addTitleFolderPathDialog(){
+
+	string $path[] = `fileDialog2	-dialogStyle 1
+													-caption (uiRes("zm_LS_addTitleFolderPathDialog.caption"))
+													-okCaption (uiRes("zm_LS_addTitleFolderPathDialog.caption"))
+													-fileMode 3`;
+	
+	string $rewritePath = ZIN_rewritePath($path[0]);
+	textField -e -text $rewritePath LS_addTitleFieldPath;
+
+}
+
+
+
+/*---------------------------------------------------------------
+
+	LS_addNewTitle
+
+	新しいタイトルを追加します。
+	タイトル情報が保存されているフォルダに「タイトル名 + ".txt"」
+	として新たにファイルを作成し、指定されたディレクトリパスを保存します。
+
+---------------------------------------------------------------*/
+
+global proc LS_addNewTitle(){
+
+	global string $LS_configFolder;
+
+	string $newTitle = `textField -q -text LS_addTitleFieldTitle`;
+	string $workFolderPath = `textField -q -text LS_addTitleFieldPath`;
+
+	if(size($newTitle)==0 && size($workFolderPath)==0){
+
+	}else if(size($newTitle)==0){
+		error (uiRes("zm_LS_addNewTitle.ePleaseInputTitle"));				//タイトル名を入力してください。\n
+	}else if(size($workFolderPath)==0){
+		error (uiRes("zm_LS_addNewTitle.ePleaseInputFullPath"));		//workフォルダフルパスを入力してください。\n
+	}else{
+
+		string $newTxt = $newTitle + ".txt";
+	
+		string $txtList[] = `getFileList -folder $LS_configFolder -filespec "*.txt"`;
+	
+		int $result = stringArrayContains($newTxt,$txtList);
+		if($result==1){
+			error (uiRes("zm_LS_addNewTitle.eDuplicationTitle"));				//同じタイトル名を持つファイルが既に存在します。別名を入力するか、すでに存在するタイトルを削除してください。\n
+		}else if($result==0){
+			int $size = size($workFolderPath);
+			string $lastString = `substring $workFolderPath $size $size`;
+			if($lastString != "/"){
+				$workFolderPath = $workFolderPath + "/";
+			}
+			int $fileID = `fopen ($LS_configFolder + $newTxt) "w"`;
+			fprint $fileID $workFolderPath;
+			fclose $fileID;
+		
+			textField -e -text "" LS_addTitleFieldTitle;
+			textField -e -text "" LS_addTitleFieldPath;
+			
+			int $language = 1;
+			if( ` optionVar -exists ZC_omLanguage ` ){
+				$language = ` optionVar -q ZC_omLanguage `;
+			}
+
+			switch( $language ){	
+				case 1:
+					print ($newTxt + uiRes("zm_LS_addNewTitle.message01") + $LS_configFolder + uiRes("zm_LS_addNewTitle.message02"));				//$newTxt + "was added to " + $LS_configFolder + "\n"
+					break;
+				case 2:
+					print ($LS_configFolder + uiRes("zm_LS_addNewTitle.message01") + $newTxt + uiRes("zm_LS_addNewTitle.message02"));			//$LS_configFolder + "に" + $newTxt + "を追加しました。\n"
+					break;
+			}
+			LS_loadScene();
+		}
+	}
+}
+
+
+
+
+/*//////////////////////////////////////////////////////////////////////////////////
+
+	タイトル編集
+
+//////////////////////////////////////////////////////////////////////////////////*/
+
+/*---------------------------------------------------------------
+
+	LS_createEditTitleWindow
+
+	「タイトル編集」ウインドウを表示します。
+
+---------------------------------------------------------------*/
+
+global proc LS_createEditTitleWindow(){
+
+	if(`window -q -exists LS_editTitleWindow`){
+		deleteUI LS_editTitleWindow;
+	}
+
+	window -title (uiRes("zm_LS_editTitle.windowTitle")) LS_editTitleWindow;
+		frameLayout -labelVisible 0 -borderStyle "etchedOut" LS_flEditTitle;
+			columnLayout -adjustableColumn 1;
+				text -label (uiRes("zm_LS_editTitle.tTitleList")) -height 25;
+				textScrollList -height 200 -selectCommand "LS_editTitleListSelect()" LS_editTitleList;
+				button -label (uiRes("zm_LS_editTitle.btnReload")) -command "LS_editTitleListReload()";
+				separator;
+				text -label (uiRes("zm_LS_editTitle.tTitleName")) -height 25;
+				textField LS_editTitleFieldName;
+				separator;
+				text -label (uiRes("zm_LS_editTitle.tFullPath")) -height 25;
+				formLayout LS_editTitleFieldPathForm;
+					textField LS_editTitleFieldPath;
+					button -label "..." -command "LS_editTitleFolderPathDialog()" LS_editTitleFieldPathButton;
+				setParent..;
+				separator;
+				text -label (uiRes("zm_LS_editTitle.tExp")) -height 30;
+				separator;
+				formLayout LS_editTitleButtonForm;
+					button -label (uiRes("zm_LS_editTitle.btnEdit")) -command "LS_editTitle()" LS_editTitleButtonEdit;
+					button -label (uiRes("zm_LS_editTitle.btnCancel")) -command "deleteUI LS_editTitleWindow" LS_editTitleButtonCancel;
+				setParent..;
+			setParent..;
+		setParent..;
+	showWindow;
+	
+	formLayout -e
+		-af	LS_editTitleButtonEdit			"top"			0
+		-ap	LS_editTitleButtonEdit			"right"		0 50
+		-af	LS_editTitleButtonEdit			"left"			0
+		-af	LS_editTitleButtonEdit			"bottom"	0
+	
+		-af	LS_editTitleButtonCancel		"top"			0
+		-af	LS_editTitleButtonCancel		"right"		0
+		-ap	LS_editTitleButtonCancel		"left"			0 50
+		-af	LS_editTitleButtonCancel		"bottom"	0
+	
+		LS_editTitleButtonForm;
+
+	formLayout -e
+		-af	LS_editTitleFieldPath				"top"			0
+		-af	LS_editTitleFieldPath				"right"		30
+		-af	LS_editTitleFieldPath				"left"			0
+		-af	LS_editTitleFieldPath				"bottom"	0
+
+		-af	LS_editTitleFieldPathButton	"top"			0
+		-af	LS_editTitleFieldPathButton	"right"		0
+		-ac	LS_editTitleFieldPathButton	"left"			0 LS_editTitleFieldPath
+		-af	LS_editTitleFieldPathButton	"bottom"	0
+
+		LS_editTitleFieldPathForm;
+
+	window -e -width 400 -height 413 LS_editTitleWindow;
+
+	LS_editTitleListReload();
+}
+
+
+
+/*---------------------------------------------------------------
+
+	LS_editTitleFolderPathDialog
+
+	新しいディレクトリパスを取得するための
+	ファイルブラウザを表示します。
+
+---------------------------------------------------------------*/
+
+global proc LS_editTitleFolderPathDialog(){
+
+	string $startDir = ` textField -q -text LS_editTitleFieldPath `;
+
+	string $path[] = `fileDialog2	-dialogStyle 1
+												-startingDirectory $startDir
+												-caption (uiRes("zm_LS_editTitleFolderPathDialog.caption"))
+												-okCaption (uiRes("zm_LS_editTitleFolderPathDialog.caption"))
+												-fileMode 3`;
+													
+	string $rewritePath = ZIN_rewritePath($path[0]);
+	textField -e -text $rewritePath LS_editTitleFieldPath;
+
+}
+
+
+
+/*---------------------------------------------------------------
+
+	LS_editTitleListReload
+
+	「タイトル編集」ウインドウのリストを更新します。
+
+---------------------------------------------------------------*/
+
+global proc LS_editTitleListReload(){
+
+	global string $LS_configFolder;
+
+	textScrollList -e -removeAll LS_editTitleList;
+
+	string $titleList[] = `getFileList -folder $LS_configFolder -filespec "*.txt"`;
+	for($i=0; $i<size($titleList); $i++){
+		$titleList[$i] = basenameEx($titleList[$i]);
+	}
+
+	$titleList = `sort $titleList`;
+	
+	string $title;
+	for($title in $titleList){
+		textScrollList -e -append $title LS_editTitleList;
+	}
+
+	textScrollList -e -selectIndexedItem 1 LS_editTitleList;
+
+	LS_editTitleListSelect();
+}
+
+
+
+/*---------------------------------------------------------------
+
+	LS_editTitleListSelect
+
+	「タイトル編集」ウインドウのリストから項目を選択したとき、
+	下のテキストフィールドにタイトル名、記録されているディレクトリパスを
+	表示します。
+
+---------------------------------------------------------------*/
+
+global proc LS_editTitleListSelect(){
+
+	global string $LS_configFolder;
+
+	string $title[] = `textScrollList -q -selectItem LS_editTitleList`;
+	string $infoPath = $LS_configFolder + $title[0] + ".txt";
+
+	int $fileID = `fopen $infoPath "r"`;
+	string $workPath = `fgetline $fileID`;
+	fclose $fileID;
+
+	textField -e -text $title[0] LS_editTitleFieldName;
+	textField -e -text $workPath LS_editTitleFieldPath;
+}
+
+
+
+/*---------------------------------------------------------------
+
+	LS_editTitle
+
+	入力されたタイトル名とディレクトリパスをもとに編集を行います。
+
+---------------------------------------------------------------*/
+
+global proc LS_editTitle(){
+
+	global string $LS_configFolder;
+
+	string $seleteTitle[] = `textScrollList -q -selectItem LS_editTitleList`;
+	string $txtList[] = `getFileList -folder $LS_configFolder -filespec "*.txt"`;
+	for($i=0; $i<size($txtList); $i++){
+		$txtList[$i] = basenameEx($txtList[$i]);
+	}
+	int $result = stringArrayContains($seleteTitle[0],$txtList);
+
+	if($result == 0){
+		error (uiRes("zm_LS_editTitle.eTxtFileDoesNotExist"));				//リストで選択したファイル名を持つtxtファイルは存在しません。\n
+	}else if($result == 1){
+		string $newTitle = `textField -q -text LS_editTitleFieldName`;
+		string $newPath = `textField -q -text LS_editTitleFieldPath`;
+
+		if(size($newTitle)==0 && size($newPath)==0){
+			error (uiRes("zm_LS_editTitle.ePleaseInputTitleAndFullPath"));			//タイトル名を入力してください。\nworkフォルダフルパスを入力してください。\n
+		}else if(size($newTitle)==0){
+			error (uiRes("zm_LS_editTitle.ePleaseInputTitle"));			//タイトル名を入力してください。\n
+		}else if(size($newPath)==0){
+			error (uiRes("zm_LS_editTitle.ePleaseInputFullPath"));		//workフォルダフルパスを入力してください。\n
+		}else{
+			sysFile -delete ($LS_configFolder + $seleteTitle[0] + ".txt");
+	
+			int $size = size($newPath);
+			string $lastString = `substring $newPath $size $size`;
+			if($lastString != "/"){
+				$newPath = $newPath + "/";
+			}
+	
+			int $fileID = `fopen ($LS_configFolder + $newTitle + ".txt") "w"`;
+			fprint $fileID $newPath;
+			fclose $fileID;
+	
+			print (uiRes("zm_LS_editTitle.editingCompletion"));			//編集を完了しました。\n
+			LS_editTitleListReload();
+			LS_loadScene();
+		}
+	}
+}
+
+
+
+
+/*//////////////////////////////////////////////////////////////////////////////////
+
+	タイトル削除
+
+//////////////////////////////////////////////////////////////////////////////////*/
+
+/*---------------------------------------------------------------
+
+	LS_createDeleteTitleWindow
+
+	「タイトル削除」ウインドウを表示します。
+
+---------------------------------------------------------------*/
+
+global proc LS_createDeleteTitleWindow(){
+
+	if(`window -q -exists LS_deleteTitleWindow`){
+		deleteUI LS_deleteTitleWindow;
+	}
+
+	window -title (uiRes("zm_LS_deleteTitle.windowTitle")) LS_deleteTitleWindow;
+		frameLayout -labelVisible false -borderStyle "etchedOut";
+			columnLayout -adjustableColumn true;
+				text -label (uiRes("zm_LS_deleteTitle.tTitleList")) -height 30;
+				textScrollList -allowMultiSelection true -height 200 LS_deleteTitleList;
+				button -label (uiRes("zm_LS_deleteTitle.btnReload")) -command "LS_deleteTitleListReload()";
+				separator;
+				text -label (uiRes("zm_LS_deleteTitle.tExp")) -height 30;
+				separator;
+				formLayout LS_deleteTitleButtonForm;
+					button -label (uiRes("zm_LS_deleteTitle.btnDelete")) -command "LS_deleteTitleConfirmWindow()" LS_deleteTitleButtonDelete;
+					button -label (uiRes("zm_LS_deleteTitle.btnCancel")) -command "deleteUI LS_deleteTitleWindow" LS_deleteTitleButtonCancel;
+				setParent..;
+			setParent..;
+		setParent..;
+	showWindow;
+
+	formLayout -e
+		-af	LS_deleteTitleButtonDelete "top"			0
+		-ap	LS_deleteTitleButtonDelete "right"		0 50
+		-af	LS_deleteTitleButtonDelete "left"			0
+		-af	LS_deleteTitleButtonDelete "bottom"	0
+
+		-af	LS_deleteTitleButtonCancel "top"			0
+		-af	LS_deleteTitleButtonCancel "right"		0
+		-ap	LS_deleteTitleButtonCancel "left"			0 50
+		-af	LS_deleteTitleButtonCancel "bottom"	0
+
+		LS_deleteTitleButtonForm;
+
+	
+	window -e -width 400 -height 341 LS_deleteTitleWindow;
+
+	LS_deleteTitleListReload();
+
+}
+
+
+
+/*---------------------------------------------------------------
+
+	LS_deleteTitleListReload
+
+	「タイトル削除」ウインドウのリストを更新します。
+
+---------------------------------------------------------------*/
+
+global proc LS_deleteTitleListReload(){
+
+	global string $LS_configFolder;
+
+	textScrollList -e -removeAll LS_deleteTitleList;
+
+	string $titleList[] = `getFileList -folder $LS_configFolder -filespec "*.txt"`;
+	
+	$titleList = `sort $titleList`;
+	
+	string $title;
+	for($title in $titleList){
+		$title = basenameEx($title);
+		textScrollList -e -append $title LS_deleteTitleList;
+	}
+
+	textScrollList -e -selectIndexedItem 1 LS_deleteTitleList;
+}
+
+
+
+/*---------------------------------------------------------------
+
+	LS_deleteTitleConfirmWindow
+
+	タイトルの削除を行うかを確認するウインドウを表示します。
+
+---------------------------------------------------------------*/
+
+global proc LS_deleteTitleConfirmWindow(){
+
+	string $result = `confirmDialog	-title (uiRes("zm_LS_deleteTitle.confirmTitle"))
+												-message (uiRes("zm_LS_deleteTitle.confirmExp"))
+												-button (uiRes("zm_LS_deleteTitle.confirmDelete"))
+												-button (uiRes("zm_LS_deleteTitle.confirmNotDelete"))
+												-defaultButton (uiRes("zm_LS_deleteTitle.confirmNotDelete"))
+												-cancelButton (uiRes("zm_LS_deleteTitle.confirmNotDelete"))`;
+												
+												
+	if( $result == (uiRes("zm_LS_deleteTitle.confirmDelete")) ){
+		LS_deleteTitle();
+	}	
+}
+
+
+
+/*---------------------------------------------------------------
+
+	LS_deleteTitle
+
+	「タイトル削除」ウインドウのリストで選択したタイトルを削除します。
+
+---------------------------------------------------------------*/
+
+global proc LS_deleteTitle(){
+
+	global string $LS_configFolder;
+
+	string $selectTitle[] = `textScrollList -q -selectItem LS_deleteTitleList`;
+	if(size($selectTitle)==0){
+		error (uiRes("zm_LS_deleteTitle.ePleaseSelecctTitle"));				//リストから削除するタイトルを選択してください。
+	}else{
+		string $titleList[] = `getFileList -folder $LS_configFolder -filespec "*.txt"`;
+		string $title;
+		string $notFoundTitle = "";
+		for($title in $selectTitle){
+			int $result = stringArrayContains(($title+".txt"),$titleList);
+			if($result == 0){
+				if(size($notFoundTitle) == 0){
+					$notFoundTitle = $title + ".txt";
+				}else{
+					$notFoundTitle = $notFoundTitle + "," + $title + ".txt";
+				}
+			}else{
+				sysFile -delete ($LS_configFolder + $title + ".txt");
+			}
+		}
+
+		if(size($notFoundTitle) != 0){
+			error ($notFoundTitle + uiRes("zm_LS_deleteTitle.NotFoundFile"));				//$notFoundTitle + "と一致するファイルが見つかりません。"
+		}
+	}
+
+	LS_deleteTitleListReload();
+	LS_loadScene();
+}
+
+
+
+
+
+
+
+
+
+
+
+

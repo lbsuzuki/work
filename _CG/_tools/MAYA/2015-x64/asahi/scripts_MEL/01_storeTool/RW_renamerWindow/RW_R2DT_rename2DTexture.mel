@@ -1,0 +1,42 @@
+//2Dテクスチャを接続先の名前を元にリネームします
+global proc RW_R2DT_rename2DTexture(){
+	//変数を宣言
+	string $ignore2dTex[] ;
+	clear $ignore2dTex ;
+	string $warning = "" ;
+
+	//選択項目の中から2Dテクスチャを取得
+	string $select2dTex[] = `ls -sl -type "place2dTexture"` ;
+
+	for ( $slOne in $select2dTex ){
+		string $attrConncted[] = `connectionInfo -dfs ($slOne + ".outUV")` ;
+	   
+	   //接続先テクスチャの数をチェック
+		if ( `size $attrConncted` == 1 ){       
+			//接続先テクスチャのタイプを取得
+			string $texNode = plugNode ($attrConncted[0]) ;
+			string $nodeType = `nodeType $texNode` ;
+			//接続先テクスチャの名前を元に、2Dテクスチャをリネーム
+			string $nodeName = substituteAllString( $attrConncted[0], ".uvCoord", ("_" + $nodeType) ) ;
+			string $newNodeName = `substitute ("_" + $nodeType + ".*") $nodeName "_place2dTexture"` ;
+			rename $slOne $newNodeName;   
+			}
+
+		//複数の接続先テクスチャを持っていた場合、$ignore2dTex[]に加える
+		else {
+			string $addIgnore2dTex[] = { $slOne } ;
+			$ignore2dTex = stringArrayCatenate( $ignore2dTex , $addIgnore2dTex );
+			}        
+	}
+
+	//警告
+	$warning += "\n// 複数の接続先テクスチャを持っていたため、以下の2Dテクスチャは無視されました\n";
+	if( `size $ignore2dTex` != 0 ){
+		string $warned2dTex;
+		for( $warned2dTex in $ignore2dTex ){
+			$warning += $warned2dTex;
+			$warning += "\n";
+		}
+		warning $warning;
+	}
+}

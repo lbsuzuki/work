@@ -1,0 +1,40 @@
+///////////////////////////////////////////////////////////////////////////////
+//	PSTN_CSBHS_connectSubBackHairSine            //		サブ後ろ髪サインと髪リグを接続
+///////////////////////////////////////////////////////////////////////////////
+//
+//	AUTHOR: 		goto kazufumi
+//
+//	CREATION DATE:	2014_03_13
+//	UPDATED DATE:	2014_03_13
+//
+//	VERSION:			1.0
+//
+//	HOW TO USE:		run "PSTN_CSBHS_connectSubBackHairSine();"
+//
+//////////////////////////////////////////////////////////////////
+
+global proc PSTN_CSBHS_connectSubBackHairSine(){
+
+	string $cord = `textField -q -text PST_tfCordName`;
+	int $size = `size $cord`;
+	string $last = `substring $cord $size $size`;
+	if( $last != "_" ){
+		$cord += "_";
+	}
+
+	string $common = "SBHS";
+	
+	string $deforms[] = ` ls -sl -type "nonLinear"`;
+	for( $deformOne in $deforms ){
+		
+		int $result = ` isConnected -iuc ( $cord + "hairCTRL_crv.envelope_atr" )   ( $deformOne + ".envelope" ) `;
+		if( !$result ){
+			connectAttr -f ( $cord + "hairCTRL_crv.envelope_atr" ) ( $deformOne + ".envelope" );
+		}
+		connectAttr -f ( $cord + "hairCTRL_crv." + $common + "Amplitude_atr" )   ( $deformOne + ".amplitude" );
+		connectAttr -f ( $cord + "hairCTRL_crv." + $common + "Wavelength_atr" )   ( $deformOne + ".wavelength" );
+		connectAttr -f ( $cord + "hairCTRL_crv." + $common + "Offset_atr" )   ( $deformOne + ".offset" );
+
+	}
+
+}

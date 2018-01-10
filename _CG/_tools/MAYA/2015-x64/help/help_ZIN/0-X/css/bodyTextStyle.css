@@ -1,0 +1,223 @@
+	<style>
+
+* {
+ margin-top: 0em;
+ margin-right: 1em;
+ margin-bottom: 0em;
+ margin-left: 1em;
+}
+body {
+ margin-top: 2em;
+ margin-right: 3em;
+ margin-bottom: 2em;
+ margin-left: 2em;
+ color: black;
+ background: white;
+ font-family: "Meiryo", "ÉÅÉCÉäÉI";
+ font-style: normal;
+}
+article {
+ margin-top: 1em;
+ margin-right: 0em;
+ margin-bottom: 2em;
+ margin-left: 0em;
+}
+header {
+ margin-top: 2em;
+ margin-right: 0em;
+ margin-bottom: 2em;
+ margin-left: 0em;
+}
+footer {
+ margin-top: 2em;
+ margin-right: 0em;
+ margin-bottom: 2em;
+ margin-left: 0em;
+ text-align: center;
+}
+h1 {
+ margin-top: 1em;
+ margin-right: 0em;
+ margin-bottom: 0em;
+ margin-left: 0em;
+ padding: 0.3em 0.3em 0.3em 1.2em;
+}
+h2 {
+ margin-top: 1em;
+ margin-right: 0em;
+ margin-bottom: 1em;
+ margin-left: 0em;
+ padding: 0.3em 0.3em 0.3em 1.2em;
+ color: white;
+ background: #008080;
+}
+h3 {
+
+ border-left-style: solid;
+ border-left-color: #008080;
+ border-left-width: thick;
+ margin-top: 1em;
+ margin-right: 0em;
+ margin-bottom: 1em;
+ margin-left: 0em;
+ padding: 0em 0em 0em 1em;
+}
+h4 {
+ margin-top: 0em;
+ margin-right: 0em;
+ margin-bottom: 1em;
+ margin-left: 1em;
+}
+dl {
+ margin-top: 0em;
+ margin-right: 0em;
+ margin-bottom: 0em;
+ margin-left: 0em;
+}
+dt {
+ margin-top: 1em;
+ margin-right: 1em;
+ margin-bottom: 0em;
+ margin-left: 1em;
+}
+dd {
+ margin-top: 0em;
+ margin-right: 1em;
+ margin-bottom: 0em;
+ margin-left: 3em;
+}
+
+p {
+ margin-top: 0em;
+ margin-right: 1em;
+ margin-bottom: 1em;
+ margin-left: 2em;
+}
+ul {
+ margin-top: 0em;
+ margin-right: 1em;
+ margin-bottom: 0em;
+ margin-left: 2em;
+ list-style-type: none;
+
+}
+.tbox {
+ height: 10em;
+ margin-top: 0em;
+ margin-right: 2em;
+ margin-bottom: 0em;
+ margin-left: 3em;
+ border-left-style: solid;
+ border-left-color: #a0a0a0;
+ border-width: thin;
+ font-size: small;
+ overflow: auto;
+}
+li {
+ margin-top: 0em;
+ margin-right: 1em;
+ margin-bottom: 1em;
+ margin-left: 0em;
+ list-style-type: decimal;
+}
+dl {
+ margin-top: 0em;
+ margin-right: 1em;
+ margin-bottom: 0em;
+ margin-left: 4em;
+}
+
+.index{
+margin-top:2em;
+margin-left:2em;
+}
+
+    ul.dir li
+      {
+         font-size: 10.5px
+         padding-left: 20px;
+         list-style-type: none;
+         background-repeat: no-repeat;
+         background-position: 0px 2px;
+         text-indent: 18px;
+      }
+      li.folder
+      {
+         
+         background-image: url('../../icon/folder.png');
+      }
+      li.image
+      {
+         background-image: url('../../icon/image.png');
+      }
+      li.mov
+      {
+         background-image: url('../../icon/mov.png');
+      }
+      li.text
+      {
+         background-image: url('../../icon/text.png');
+      }
+      li.object
+      {
+         background-image: url('../../icon/object.png');
+      }
+      li.script
+      {
+         background-image: url('../../icon/script.png');
+      }
+      li.list
+      {
+         background-image: url('../../icon/list.png');
+      }
+      {
+      background-image: url('../../icon/sequence.png');
+      }
+      li.aep
+      {
+         background-image: url('../../icon/aep.png');
+      }
+      li.curve
+      {
+         background-image: url('../../icon/curve.png');
+      }
+      li.ar_br_000_L
+      {
+         background-image: url('../../icon/arrow-branch-000-left.png');
+      }
+      li.ar_cv_000_D
+      {
+         background-image: url('../../icon/arrow-curve-000-double.png');
+      }
+      li.ar_cv_000_L
+      {
+         background-image: url('../../icon/arrow-curve-000-left.png');
+      }
+      li.ar_cv_090_L
+      {
+         background-image: url('../../icon/arrow-curve-090-left.png');
+      }
+      li.ar_cv_180_L
+      {
+         background-image: url('../../icon/arrow-curve-180-left.png');
+      }
+      li.ar_cv_270_L
+      {
+         background-image: url('../../icon/arrow-curve-270-left.png');
+      }
+      li.ar_ma_000_L
+      {
+         background-image: url('../../icon/arrow-merge-000-left.png');
+      }
+      li.ar_rt_000_L
+      {
+         background-image: url('../../icon/arrow-return-000-left.png');
+      }
+
+
+
+
+
+</style>
+
+

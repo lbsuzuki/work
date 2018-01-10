@@ -1,0 +1,125 @@
+///////////////////////////////////////////////////////////////////////////////
+//	PSTRO_A_arrangeFacial            // 表情リグの位置調整
+///////////////////////////////////////////////////////////////////////////////
+//
+//	AUTHOR: 		goto kazufumi
+//
+//	CREATION DATE:	2016_04_11
+//	UPDATED DATE:	2016_04_11
+//
+//	VERSION:			1.0
+//
+//	HOW TO USE:		run "PSTRO_A_arrangeFacial();"
+//
+//////////////////////////////////////////////////////////////////
+
+global proc PSTRO_A_arrangeFacial(){
+
+	string $sl[] = ` ls -sl `;
+
+	string $code = `textField -q -text PST_tfCordName`;
+	int $size = `size $code`;
+	if( $size != 0 ){
+		string $last = `substring $code $size $size`;
+		if( $last != "_" ){
+			if( $last != ":" ){
+				$code += "_";
+			}
+		}
+	}
+		
+		
+	//コンストレイント--------------------------------------------------------------------------------------------------------
+	
+	string $meshlink[] = {		"L_eye_meshlink",
+								"R_eye_meshlink",
+								"mouth_meshlink"		};
+								
+	//コードネーム追加
+	for( $i=0; $i<size($meshlink); $i++ ){
+		$meshlink[$i] = $code + $meshlink[$i];
+	}
+	
+	//コンストレイント削除
+	for( $one in $meshlink ){
+		string $poC[] = ` listConnections -source 1 -destination 0 -type "pointConstraint" $meshlink `;
+		if( size($poC) != 0 ){
+			delete $poC[0];
+		}
+		
+		string $orC[] = ` listConnections -source 1 -destination 0 -type "orientConstraint" $meshlink `;
+		if( size($orC) != 0 ){
+			delete $orC[0];
+		}
+		
+		string $scC[] = ` listConnections -source 1 -destination 0 -type "scaleConstraint" $meshlink `;
+		if( size($scC) != 0 ){
+			delete $scC[0];
+		}
+	}
+	
+	
+	
+	//位置合わせ
+	//宣言
+	string $lct01[] = {		"L_eye_link_ALct",
+							"R_eye_link_ALct",
+							"mouth_link_ALct"		};
+							
+	string $rig01[] = {		"L_eye_link",
+							"R_eye_link",
+							"mouth_link"		};
+
+										
+										
+	string $lct02[] = {		"L_eye_crv_pivotALct",
+							"R_eye_crv_pivotALct",
+							"mouth_crv_pivotALct",
+							"mouth_crv_pivotALct"		};
+							
+
+	string $rig02[] = {		"L_eye_crv",
+							"R_eye_crv",
+							"mouth_crv",
+							"mouthMeshPos_crv"			};
+								
+
+	//コードネーム追加
+	for( $i=0; $i<size($lct01); $i++ ){
+		$lct01[$i] = $code + $lct01[$i];
+		$rig01[$i] = $code + $rig01[$i];
+	}
+	
+	for( $i=0; $i<size($lct02); $i++ ){
+		$lct02[$i] = $code + $lct02[$i];
+		$rig02[$i] = $code + $rig02[$i];
+	}
+
+	//位置合わせ
+	for( $i=0; $i<size($lct01); $i++ ){
+		float $pos[] = YP_RD_returnDefferenceXYZ( $lct01[$i] , $rig01[$i] );
+		move -r $pos[0] $pos[1] $pos[2] $rig01[$i];			
+	}
+	
+	for( $i=0; $i<size($lct02); $i++ ){
+		float $lpos[] = ` xform -q -ws -t $lct02[$i] `;
+		float $rpiv[] = ` xform -q -ws -rp $rig02[$i] `;
+		float $return[];
+		$return[0] = $lpos[0]-$rpiv[0];
+		$return[1] = $lpos[1]-$rpiv[1];
+		$return[2] = $lpos[2]-$rpiv[2];
+		xform -piv $return[0] $return[1] $return[2] $rig02[$i];
+	}
+	
+	//リグ再構築
+	for( $i=0; $i<size($meshlink); $i++ ){
+		select -r $rig02[$i] $meshlink[$i];
+		pointConstraint -mo -weight 1;
+		orientConstraint -mo -weight 1;
+		scaleConstraint -mo -weight 1;
+	}
+	
+	
+	select -r $sl;
+		
+}

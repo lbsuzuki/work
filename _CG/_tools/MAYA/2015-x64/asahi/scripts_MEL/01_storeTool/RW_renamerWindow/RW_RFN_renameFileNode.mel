@@ -1,0 +1,13 @@
+//ファイルノードをイメージのファイル名を元にリネームします
+global proc RW_RFN_renameFileNode(){
+	string $select[] = `ls -sl -type "file"` ;
+	
+	for ( $fileOne in $select ){
+		string $pathName = `getAttr ( $fileOne + ".fileTextureName" )` ;
+		string $tokenedName[];
+		clear $tokenedName;
+		int $sizeTokens = `tokenize $pathName "/" $tokenedName`;
+		string $imageName = `substitute "\\..*" $tokenedName[$sizeTokens - 1] ""` ;
+		rename $fileOne ($imageName + "_file");
+	}
+}

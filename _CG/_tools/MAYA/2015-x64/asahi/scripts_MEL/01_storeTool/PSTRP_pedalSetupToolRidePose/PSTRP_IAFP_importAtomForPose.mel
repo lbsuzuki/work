@@ -1,0 +1,65 @@
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+//	PSTRP_IAFP_importAtomForPose            //	Atom 読み込み（ポーズ専用）
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+//	AUTHOR: 		goto kazufumi
+//
+//	CREATION DATE:	2014_01_07
+//	UPDATED DATE:	2014_01_07
+//
+//	VERSION:			1.0
+//
+//	HOW TO USE:		run "PSTRP_IAFP_importAtomForPose();"
+//
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/*---------------------------------------------------------------------------------------------------------------------
+
+	PSTRP_IAFP_importAtomForPose
+	
+	Atomファイルを読み込み、選択したオブジェクトから下位に対してポーズの値を与えます。
+
+---------------------------------------------------------------------------------------------------------------------*/
+
+global proc PSTRP_IAFP_importAtomForPose(){
+
+	//絶対パスファイルから『pedalModels』パスを取得
+	string $modelsPath = ZIN_commonAbsolutePath("pedalModels");
+	//オプションバーに『PSTRP_AFP_lastPath』の値があれば取得
+	if( ` optionVar -exists PSTRP_AFP_lastPath ` ){
+		string $path = ` optionVar -q PSTRP_AFP_lastPath `;
+		//『PSTRP_AFP_lastPath』のサイズが0でなければ$modelsPathに取得
+		if( ` size $path ` != 0 ){
+			$modelsPath = $path;
+		}
+	}
+	
+	//Atomファイルパスをダイアログボックスを使用して取得
+	string $atom[] = `fileDialog2	-startingDirectory $modelsPath
+											-fileFilter "Atom (*.atom)"
+											-dialogStyle 1
+											-caption "Import Atom"
+											-okCaption "Import Atom"
+											-fileMode 1`;
+
+	//Atomファイルパスが0でないときAtomファイルを読み込み
+	if(` size $atom[0] ` != 0){
+	performExportAnim 1;
+	file	-import
+			-type "atomImport"
+			-ra true
+			-options ";;targetTime=3;option=replace;match=hierarchy;;selected=childrenToo;search=MANA03C;replace=MANA03C;prefix=;suffix=;mapFile=I:/work/pedaru/3DCG/lib/models/obj/ONO06C/tmp/data/;"
+			$atom[0];
+	}
+
+	
+	//オプションバーに記録するためのファイル名を除いたパスを取得
+	string $modelsPath = ` dirname $atom[0] `;
+	//ファイルパスのサイズが0のとき、絶対パスファイルから『pedalModels』パスを取得
+	if( size($modelsPath) == 0 ){
+		$modelsPath = ZIN_commonAbsolutePath("pedalModels");
+	}
+	//オプションバー『PSTRP_AFP_lastPath』に値を記録
+	optionVar -stringValue PSTRP_AFP_lastPath $modelsPath;
+	
+}

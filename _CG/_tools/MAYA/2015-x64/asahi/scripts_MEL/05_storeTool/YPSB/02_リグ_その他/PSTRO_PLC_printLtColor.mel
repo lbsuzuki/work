@@ -1,0 +1,85 @@
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//	PSTRO_PLC_printLtColor	//	
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+//	AUTHOR: 		goto kazufumi
+//
+//	CREATION DATE:	2014_04_02
+//	UPDATED DATE:	2014_04_02
+//
+//	VERSION:			1.0
+//
+//	HOW TO USE:		run "PSTRO_PLC_printLtColor();"
+//
+//////////////////////////////////////////////////////////////////
+
+/*================================================================
+
+
+
+================================================================*/
+
+
+/*================================================================
+
+	■更新内容：
+
+
+================================================================*/
+
+
+/*---------------------------------------------------------------------------------------------------
+
+	PSTRO_PLC_printLtColor
+	
+	選択したレイヤーテクスチャの各レイヤーの色をプリントします。
+	
+---------------------------------------------------------------------------------------------------*/
+
+global proc PSTRO_PLC_printLtColor(){
+
+	string $lt[] = ` ls -type "layeredTexture" -sl `;
+	string $color[];
+	clear $color;
+
+	for( $ltOne in $lt ){
+
+	   string $inputs[];
+	   clear $inputs;
+		string $list[] = ` listAttr -multi  ( $ltOne + ".inputs" ) `;
+		for( $one in $list ){
+			
+			string $parts[];
+			int $token = ` tokenize $one "." $parts ` ;
+			if( $token == 1 ){
+				int $size = ` size $inputs `;
+				$inputs[$size] = $ltOne + "." + $one;
+			}
+			
+		}
+
+
+		for( $one in $inputs ){
+			
+			float $floatRGB[] =  `getAttr ( $one + ".color" )`;
+			int $rgb[];
+			$rgb[0] = $floatRGB[0]*255+0.5;
+			$rgb[1] = $floatRGB[1]*255+0.5;
+			$rgb[2] = $floatRGB[2]*255+0.5;
+				
+		   int $size = ` size $color `;
+		   $color[$size] = $one + " " + string($rgb[0]) + " " + string($rgb[1]) + " " + string($rgb[2]);
+			
+		}
+		
+		int $size = ` size $color `;
+		$color[$size] = $color[$size] + "\n";
+		
+	}
+
+	print $color;
+	
+}
+
+
+

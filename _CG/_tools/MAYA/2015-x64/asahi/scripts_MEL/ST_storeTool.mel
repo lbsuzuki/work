@@ -1,0 +1,338 @@
+///////////////////////////////////////////////////////////////////////////////
+//	     ST_storeTool       //		ストアツール読み込み
+///////////////////////////////////////////////////////////////////////////////
+//
+//	AUTHOR: 		goto kazufumi
+//
+//	CREATION DATE:	2013_07_21
+//	UPDATED DATE:	2013_10_16
+//
+//	VERSION:			1.1
+//
+//	HOW TO USE:		run "ST_storeTool();"
+//
+//////////////////////////////////////////////////////////////////
+
+/*================================================================
+
+
+
+================================================================*/
+
+/*================================================================
+
+	■更新内容：
+	
+	v1.1	ボタンにラベルをつけました。
+	　　　nicename.txtファイルの書き方を「ツール名>>ナイスネーム>>R値 G値 B値」とすることで
+	　　　ラベルに色を指定できるようにしました。
+
+================================================================*/
+
+/*---------------------------------------------------------------------------------------------
+
+	ST_storeTool( string コードネーム , string フォルダ名 )
+
+---------------------------------------------------------------------------------------------*/
+
+global proc string ST_storeTool( string $cord , string $folder ){
+
+	string $source;
+	string $warning;
+
+	int $size = `size $cord`;
+	string $last = `substring $cord $size $size`;
+	if( $last != "_" ){
+		$cord += "_";
+	}
+	
+	//「ZIN_setup.mel」が保存されているディレクトリを取得
+	//「ZIN_setup.mel」を含むフルパスが取得されます。
+	string $setupPath = `whatIs ZIN_setup.mel`;
+	
+	int $size = size($setupPath);
+	$setupPath = `substring $setupPath 18 $size`;	
+	
+	//「ZIN_setup.mel」以外のフルパスを取得
+	string $scriptPath = `dirname $setupPath`;
+	
+	string $researchFolder = $scriptPath + "/01_storeTool/";
+	string $getFolder[] = `getFileList -folder $researchFolder`;
+	int $result = 0;
+	for( $getFolderOne in $getFolder ){
+		if( $folder == $getFolderOne ){
+			$result = 1;
+		}
+	}
+	
+	if( $result ){
+	
+		//スクリプトパス内の　/01_storeTool/PST_setupTool　フォルダまでのパスを取得
+		string $STFolder = $scriptPath + "/01_storeTool/" + $folder + "/";
+		
+		//PST_setupToolフォルダ内のmelファイルのリストを取得
+		string $mel[] = `getFileList -folder $STFolder -filespec "*.mel"`;
+		
+		if( size($mel) != 0 ){
+			$mel = ` sort $mel `;
+			
+			//ナイスネームを保存したPST_niceName.txtから文章を取得
+			string $niceNameFile = $STFolder + $cord + "niceName.txt";
+			int $exist = ` filetest -e $niceNameFile `;
+			string $line[];
+			if( $exist ){
+				int $ID = ` fopen $niceNameFile "r" `;
+				while( !`feof $ID` ){
+					string $add = ` fgetline $ID `;
+					int $size = ` size $line `;
+					$line[$size] = $add;
+				}
+				fclose $ID;
+			}
+			
+			string $tool[];
+			string $nice[];
+			string $RGB[];
+			if( size($line) != 0 ){
+				string $lineOne;
+				for( $lineOne in $line ){
+				
+					string $nonNewline[];
+					tokenize $lineOne "\n" $nonNewline;
+					string $parts[];
+					int $token = ` tokenize $nonNewline[0] ">>" $parts `;
+					
+					if( $token >= 2 ){
+					
+						int $size = ` size $tool `;
+						$tool[$size] = $parts[0];
+						
+						int $size = ` size $nice `;
+						$nice[$size] = $parts[1];
+
+						
+						int $size = ` size $RGB `;
+						$RGB[$size] = $parts[2];
+
+					
+					}else{
+					
+						string $nonSpace[];
+						tokenize $nonNewline[0] " " $nonSpace;
+					
+						if( size($nonSpace[0]) != 0 ){
+						
+							$warning += "warning (\"";
+							$warning += "ナイスネームの読み込みに失敗しました。  " ;
+							$warning += $niceNameFile;
+							$warning += "    ";
+							$warning += $nonNewline[0];
+							$warning += "\");\n";
+							
+						}
+					}
+				}
+			}
+
+
+			string $allButton[];
+
+			string $withNiceMel[];
+			string $toolOne;
+			for( $toolOne in $tool ){
+				string $melOne;
+				string $basenameMel;
+				for( $melOne in $mel ){
+					$basenameMel = ` basenameEx $melOne `;
+					if( $basenameMel == $toolOne ){
+						int $size = ` size $withNiceMel `;
+						$withNiceMel[$size] = $basenameMel;
+					}
+					
+				}
+
+			}
+
+			string $nonNiceMel[];
+			string $melOne;
+			for( $melOne in $mel ){
+				int $contain = 0;
+				$basenameMel = ` basenameEx $melOne `;
+				for( $toolOne in $tool ){
+					if( $basenameMel == $toolOne ){
+						$contain = 1;
+					}
+				}
+				
+				if( $contain == 0 ){
+					int $size = ` size $nonNiceMel `;
+					$nonNiceMel[$size] = $basenameMel;
+				}
+
+			}
+
+			string $withNiceMelOne;
+			for( $withNiceMelOne in $withNiceMel ){
+				string $label = $withNiceMelOne;
+				string $command = $withNiceMelOne;
+				string $colorStr[];
+				float $color[];
+				int $existColor = 1;
+				for( $i=0; $i<size($tool); $i++ ){
+					if( $tool[$i] == $label ){
+						$label = $nice[$i];
+						int $token = ` tokenize $RGB[$i] " " $colorStr `;
+						if( $token < 3 ){
+							$warning += "ボタン色指定情報の読み込みに失敗しました。デフォルトの色を指定します。  ";
+							$warning += $niceNameFile;
+							$warning += "    ";
+							$warning += $RGB[$i];
+							$warning += "\");\n";
+
+							$existColor = 0;
+							
+						}else{
+							
+							$color[0] = float($colorStr[0])/255;
+							$color[1] = float($colorStr[1])/255;
+							$color[2] = float($colorStr[2])/255;
+							
+						}
+					}
+				}
+				string $button = $cord + $command;
+				if( $existColor == 1 ){
+					frameLayout -labelVisible 0 ( "fl" + $button );
+						formLayout ( "fol" + $button );
+							frameLayout -width 30 -labelVisible 0 -borderStyle etchedOut ( "flLabel" + $button );
+								button -label "" -enable 0 -backgroundColor $color[0] $color[1] $color[2] ( "bLabel" + $button );
+							setParent..;
+							button	-label $label
+										-command $command
+										$button;
+						setParent..;
+					setParent..;
+					
+					formLayout -e
+						-af	( "flLabel" + $button )	"left"		0
+					
+						-ac	$button		"left"		0	( "flLabel" + $button )
+						-af	$button		"right"		0
+						( "fol" + $button );
+					
+				}else{
+					frameLayout -labelVisible 0 ( "fl" + $button );
+						formLayout ( "fol" + $button );
+							frameLayout -width 30 -labelVisible 0 -borderStyle etchedOut ( "flLabel" + $button );
+								button -label "" -enable 0 ( "bLabel" + $button );
+							setParent..;
+							button	-label $label 
+										-command $command
+										$button;
+							setParent..;
+					setParent..;
+					
+					formLayout -e
+						-af	( "flLabel" + $button )	"left"		0
+					
+						-ac	$button		"left"		0	( "flLabel" + $button )
+						-af	$button		"right"		0
+						( "fol" + $button );
+				}
+				int $size = `size $allButton`;
+				$allButton[$size] = $button;
+				
+				string $pm = $cord + "pm" + $command;
+				popupMenu	-parent $button
+									-button 3
+									$pm;
+				
+				string $txt = $command + ".txt";
+				string $txtPath = $STFolder + $txt;
+				int $exists = ` filetest -e $txtPath `;
+				string $line[];
+				clear $line;
+				if( $exists ){
+					int $ID = ` fopen $txtPath "r" `;
+					while( !`feof $ID` ){
+						string $addLine = ` fgetline $ID `;
+						int $size = ` size $line `;
+						$line[$size] = $addLine;
+					}
+					fclose $ID;
+					
+					string $mi = $cord + "mi" + $command;
+					string $lineOne;
+					int $cnt = 0;
+					for( $lineOne in $line ){
+						menuItem -parent  $pm
+										-label $lineOne
+										($mi + string($cnt));
+						$cnt += 1;
+					}
+				}
+								
+				$source = ($source + "source " + "\"" + $STFolder + $withNiceMelOne + ".mel\";\n" );
+				
+			}
+
+
+			string $nonNiceMelOne;
+			for( $nonNiceMelOne in $nonNiceMel ){
+				string $label = $nonNiceMelOne;
+				string $command = $nonNiceMelOne;
+				for( $i=0; $i<size($tool); $i++ ){
+					if( $tool[$i] == $label ){
+						$label = $nice[$i];
+					}
+				}
+				string $button = $cord + $command;
+				button -label $label -command $command $button;
+				int $size = `size $allButton`;
+				$allButton[$size] = $button;
+				
+				string $pm = $cord + "pm" + $command;
+				popupMenu	-parent $button
+									-button 3
+									$pm;
+				
+				string $txt = $command + ".txt";
+				string $txtPath = $STFolder + $txt;
+				int $exists = ` filetest -e $txtPath `;
+				string $line[];
+				clear $line;
+				if( $exists ){
+					int $ID = ` fopen $txtPath "r" `;
+					while( !`feof $ID` ){
+						string $addLine = ` fgetline $ID `;
+						int $size = ` size $line `;
+						$line[$size] = $addLine;
+					}
+					fclose $ID;
+					
+					string $mi = $cord + "mi" + $command;
+					string $lineOne;
+					int $cnt = 0;
+					for( $lineOne in $line ){
+						menuItem -parent  $pm
+										-label $lineOne
+										($mi + string($cnt));
+						$cnt += 1;
+					}
+				}
+								
+				$source = ($source + "source " + "\"" + $STFolder + $nonNiceMelOne + ".mel\";\n" );
+				
+			}
+		}
+	}
+	
+	if( size($warning) != 0 ){
+		$source += $warning;
+	}
+	
+	return $source;
+}
+	
+	
+	

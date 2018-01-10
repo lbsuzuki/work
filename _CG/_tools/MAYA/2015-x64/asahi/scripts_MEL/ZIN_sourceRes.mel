@@ -1,0 +1,81 @@
+//////////////////////////////////////////////////////////////////
+//	ZIN_sourceRes       //
+//////////////////////////////////////////////////////////////////
+//
+//	AUTHOR: 		goto kazufumi
+//
+//	CREATION DATE:	2013_12_05
+//	UPDATED DATE:	2013_12_05
+//
+//	VERSION:		1.0
+//
+//	HOW TO USE:		run "ZIN_sourceRes()"
+//
+/////////////////////////////////////////////////////////////////////////////////////
+
+/*=====================================================
+
+	現在設定されている言語のリソースファイルをソースします
+
+=====================================================*/
+
+/*=====================================================
+
+	更新
+
+=====================================================*/
+
+/*---------------------------------------------------------------------------------------------------
+
+	ZIN_sourceRes
+
+	現在設定されている言語のリソースファイルをソースします
+
+---------------------------------------------------------------------------------------------------*/
+
+global proc ZIN_sourceRes(){
+
+	int $language = 1;
+	if( ` optionVar -exists ZC_omLanguage ` ){
+		$language = ` optionVar -q ZC_omLanguage `;
+	}
+	
+	string $resPath;
+	switch( $language ){
+	
+		case 1:
+			$resPath = ZIN_commonAbsolutePath("ZIN_C_languageEnglish");
+			break;
+		case 2:
+			$resPath = ZIN_commonAbsolutePath("ZIN_C_languageJapanese");
+			break;
+			
+	}
+	$resPath += "/";
+	
+	string $res[] = ` getFileList -filespec "*.mel" -folder $resPath `;
+	
+	if( ` size $res ` != 0 ){
+		
+		string $source;
+		string $mel;
+		for( $mel in $res ){
+			
+			$source += "source ";
+			$source += "\"";
+			$source += $resPath;
+			$source += $mel;
+			$source += "\"";
+			$source += ";\n";
+
+		}
+		
+		$source = substituteAllString( $source , "\\" , "/" );
+		eval $source;
+		
+	}
+
+}
+
+
+

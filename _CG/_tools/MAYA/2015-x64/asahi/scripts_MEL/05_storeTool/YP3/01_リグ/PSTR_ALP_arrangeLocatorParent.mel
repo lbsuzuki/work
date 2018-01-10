@@ -1,0 +1,250 @@
+///////////////////////////////////////////////////////////////////////////////
+//	PSTR_ALP_arrangeLocatorParent            //	ジョイントにロケータを配置
+///////////////////////////////////////////////////////////////////////////////
+//
+//	AUTHOR: 		goto kazufumi
+//
+//	CREATION DATE:	2013_04_11
+//	UPDATED DATE:	2013_10_11
+//
+//	VERSION:			1.1
+//
+//	HOW TO USE:		run "PSTR_ALP_arrangeLocatorParent();"
+//
+//////////////////////////////////////////////////////////////////
+
+global proc PSTR_ALP_arrangeLocatorParent(){
+
+	string $sl[] = ` ls -sl `;
+
+	string $code = `textField -q -text PST_tfCordName`;
+	int $size = `size $code`;
+	if( $size != 0 ){
+		string $last = `substring $code $size $size`;
+		if( $last != "_" ){
+			if( $last != ":" ){
+				$code += "_";
+			}
+		}
+	}
+
+	//ピボット関係--------------------------------------------------------------------------------------------------------
+								
+	string $legALct[] = {			"L_foot_crv_pivotALct",
+											"R_foot_crv_pivotALct",
+											"L_heel_crv_pivotALct",
+											"R_heel_crv_pivotALct",
+											"L_toe_crv_pivotALct",
+											"R_toe_crv_pivotALct"									};
+											
+	string $parentLegALct[] = {	"L_foot01_jnt_ALct",
+												"R_foot01_jnt_ALct",
+												"L_foot02_jnt_ALct",
+												"R_foot02_jnt_ALct",
+												"L_foot03_end_ALct",											
+												"R_foot03_end_ALct"								};
+										
+
+	for( $i=0; $i<size($legALct); $i++ ){
+		//コードネームを追加
+		$legALct[$i] = $code + $legALct[$i];
+		$parentLegALct[$i] = $code + $parentLegALct[$i];
+		
+		string $parent[] = ` listRelatives -parent $legALct[$i] `;
+		if( $parent[0] != $parentLegALct[$i] ){
+			parent $legALct[$i] $parentLegALct[$i];
+		}
+	}
+		
+		
+	//指の親子関係--------------------------------------------------------------------------------------------------------
+	string $fingerParent01[] = {		"L_finger_01_01_jnt_ALct",
+												"L_finger_01_02_jnt_ALct",
+												"L_finger_01_03_jnt_ALct",
+												"L_hand02A_jnt_ALct",
+												"L_finger_02_01_jnt_ALct",
+												"L_finger_02_02_jnt_ALct",
+												"L_finger_02_03_jnt_ALct",
+												"L_hand02A_jnt_ALct",
+												"L_finger_03_01_jnt_ALct",
+												"L_finger_03_02_jnt_ALct",
+												"L_finger_03_03_jnt_ALct",
+												"L_hand02B_jnt_ALct",
+												"L_finger_04_01_jnt_ALct",
+												"L_finger_04_02_jnt_ALct",
+												"L_finger_04_03_jnt_ALct",
+												"L_hand02B_jnt_ALct",
+												"L_finger_05_01_jnt_ALct",
+												"L_finger_05_02_jnt_ALct",
+												"L_finger_05_03_jnt_ALct",
+
+												"R_finger_01_01_jnt_ALct",
+												"R_finger_01_02_jnt_ALct",
+												"R_finger_01_03_jnt_ALct",
+												"R_hand02A_jnt_ALct",
+												"R_finger_02_01_jnt_ALct",
+												"R_finger_02_02_jnt_ALct",
+												"R_finger_02_03_jnt_ALct",
+												"R_hand02A_jnt_ALct",
+												"R_finger_03_01_jnt_ALct",
+												"R_finger_03_02_jnt_ALct",
+												"R_finger_03_03_jnt_ALct",
+												"R_hand02B_jnt_ALct",
+												"R_finger_04_01_jnt_ALct",
+												"R_finger_04_02_jnt_ALct",
+												"R_finger_04_03_jnt_ALct",
+												"R_hand02B_jnt_ALct",
+												"R_finger_05_01_jnt_ALct",
+												"R_finger_05_02_jnt_ALct",
+												"R_finger_05_03_jnt_ALct",
+												
+												"L_hand01_jnt_ALct",
+												"L_hand01_jnt_ALct",
+												"L_hand01_jnt_ALct",
+												"L_hand01_jnt_ALct",
+												"L_arm_jnt_ALct",
+												"L_hand00_crv_pivotALct",
+												"L_shoulder02_jnt_ALct",
+												"L_shoulder02_jnt_ALct",
+												"L_shoulder01_jnt_ALct",
+												"L_hand01_jnt_ALct",
+												
+												"R_hand01_jnt_ALct",
+												"R_hand01_jnt_ALct",
+												"R_hand01_jnt_ALct",
+												"R_hand01_jnt_ALct",
+												"R_arm_jnt_ALct",
+												"R_hand00_crv_pivotALct",
+												"R_shoulder02_jnt_ALct",
+												"R_shoulder02_jnt_ALct",
+												"R_shoulder01_jnt_ALct",
+												"R_hand01_jnt_ALct"
+												};
+
+	
+	string $fingerChild01[] = {		"L_finger_01_02_jnt_ALct",
+												"L_finger_01_03_jnt_ALct",
+												"L_finger_01_04_end_ALct",
+												"L_finger_02_01_jnt_ALct",
+												"L_finger_02_02_jnt_ALct",
+												"L_finger_02_03_jnt_ALct",
+												"L_finger_02_04_end_ALct",
+												"L_finger_03_01_jnt_ALct",
+												"L_finger_03_02_jnt_ALct",
+												"L_finger_03_03_jnt_ALct",
+												"L_finger_03_04_end_ALct",
+												"L_finger_04_01_jnt_ALct",
+												"L_finger_04_02_jnt_ALct",
+												"L_finger_04_03_jnt_ALct",
+												"L_finger_04_04_end_ALct",
+												"L_finger_05_01_jnt_ALct",
+												"L_finger_05_02_jnt_ALct",
+												"L_finger_05_03_jnt_ALct",
+												"L_finger_05_04_end_ALct",
+
+												"R_finger_01_02_jnt_ALct",
+												"R_finger_01_03_jnt_ALct",
+												"R_finger_01_04_end_ALct",
+												"R_finger_02_01_jnt_ALct",
+												"R_finger_02_02_jnt_ALct",
+												"R_finger_02_03_jnt_ALct",
+												"R_finger_02_04_end_ALct",
+												"R_finger_03_01_jnt_ALct",
+												"R_finger_03_02_jnt_ALct",
+												"R_finger_03_03_jnt_ALct",
+												"R_finger_03_04_end_ALct",
+												"R_finger_04_01_jnt_ALct",
+												"R_finger_04_02_jnt_ALct",
+												"R_finger_04_03_jnt_ALct",
+												"R_finger_04_04_end_ALct",
+												"R_finger_05_01_jnt_ALct",
+												"R_finger_05_02_jnt_ALct",
+												"R_finger_05_03_jnt_ALct",
+												"R_finger_05_04_end_ALct",
+
+												"L_finger_01_01_jnt_ALct",
+												"L_hand02A_jnt_ALct",
+												"L_hand02B_jnt_ALct",
+												"L_arm_poleVector_lct_ALct",
+												"L_hand00_crv_pivotALct",
+												"L_hand01_jnt_ALct",
+												"L_arm_jnt_ALct",
+												"L_adjustElbow_jnt_ALct",
+												"L_shoulder02_jnt_ALct",
+												"L_adjustVelcro_jnt_ALct",
+												
+												"R_finger_01_01_jnt_ALct",
+												"R_hand02A_jnt_ALct",
+												"R_hand02B_jnt_ALct",
+												"R_arm_poleVector_lct_ALct",
+												"R_hand00_crv_pivotALct",
+												"R_hand01_jnt_ALct",
+												"R_arm_jnt_ALct",
+												"R_adjustElbow_jnt_ALct",
+												"R_shoulder02_jnt_ALct",
+												"R_adjustVelcro_jnt_ALct"
+												};
+												
+												
+												
+
+
+	//$fingerParent01 , $fingerChild01
+	for( $i=0; $i<size($fingerParent01); $i++ ){	
+		$fingerParent01[$i] = $code + $fingerParent01[$i];
+		$fingerChild01[$i] = $code + $fingerChild01[$i];
+	}
+	
+	//$fingerChild01を$fingerParent01の子にする
+	for( $i=0; $i<size($fingerParent01); $i++ ){
+		string $parent[] = ` listRelatives -parent $fingerChild01[$i] `;
+		if( $parent[0] != $fingerParent01[$i] ){
+			parent $fingerChild01[$i] $fingerParent01[$i];
+		}
+	}
+
+
+
+	//足------------------------------------------------------------------------------------------------
+	//親子関係
+	string $legParent[] = {		"L_leg01_jnt_ALct",
+											"L_leg01_jnt_ALct",
+											"L_leg02_jnt_ALct",	
+											"L_foot01_jnt_ALct",
+											"L_foot02_jnt_ALct",
+
+											"R_leg01_jnt_ALct",
+											"R_leg01_jnt_ALct",
+											"R_leg02_jnt_ALct",	
+											"R_foot01_jnt_ALct",
+											"R_foot02_jnt_ALct"				};
+										
+										
+	string $legChildren[] = {	"L_leg02_jnt_ALct",
+											"L_leg_poleVector_lct_ALct",
+											"L_foot01_jnt_ALct",
+											"L_foot02_jnt_ALct",
+											"L_foot03_end_ALct",
+
+											"R_leg02_jnt_ALct",
+											"R_leg_poleVector_lct_ALct",
+											"R_foot01_jnt_ALct",
+											"R_foot02_jnt_ALct",
+											"R_foot03_end_ALct"					};
+
+													
+	for( $i=0; $i<size($legParent); $i++ ){
+		$legParent[$i] = $code + $legParent[$i];
+		$legChildren[$i] = $code + $legChildren[$i];
+		string $parent[] = ` listRelatives -parent $legChildren[$i] `;
+		if( $parent[0] != $legParent[$i] ){
+			parent $legChildren[$i] $legParent[$i];
+		}
+	}
+	
+	select -r $sl;
+
+}
+
+
+

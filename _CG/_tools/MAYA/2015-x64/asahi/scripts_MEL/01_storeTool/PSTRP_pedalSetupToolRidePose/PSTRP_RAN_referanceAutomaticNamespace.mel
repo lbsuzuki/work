@@ -1,0 +1,69 @@
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+//	PSTRP_RAN_referanceAutomaticNamespace            //	リファレンス 自動ネームスペース
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+//	AUTHOR: 		goto kazufumi
+//
+//	CREATION DATE:	2014_01_06
+//	UPDATED DATE:	2014_01_06
+//
+//	VERSION:			1.0
+//
+//	HOW TO USE:		run "PSTRP_RAN_referanceAutomaticNamespace();"
+//
+//////////////////////////////////////////////////////////////////////////////////////////////
+
+/*------------------------------------------------------------------------------------------
+
+	PSTRP_RAN_referanceAutomaticNamespace
+	
+	リファレンス ダイアログボックスを開き、選択したmbファイルを
+	リファレンスします。
+	同時に選択したファイルからコードネームを取得しそれをネームスペースとします。
+
+------------------------------------------------------------------------------------------*/
+
+global proc PSTRP_RAN_referanceAutomaticNamespace(){
+
+	//絶対パスファイルから『pedalModels』パスを取得
+	string $modelsPath = ZIN_commonAbsolutePath("pedalModels");
+	//オプションバーに『PSTRP_RAN_lastPath』の値があれば取得
+	if( ` optionVar -exists PSTRP_RAN_lastPath ` ){
+		string $path = ` optionVar -q PSTRP_RAN_lastPath `;
+		//『PSTRP_RAN_lastPath』のサイズが0でなければ$modelsPathに取得
+		if( ` size $path ` != 0 ){
+			$modelsPath = $path;
+		}
+	}
+
+	//リファレンスするファイルパスをダイアログボックスを使用して取得
+	string $file[] = `fileDialog2	-startingDirectory $modelsPath
+														-dialogStyle 1
+														-caption "リファレンス"
+														-okCaption "リファレンス"
+														-fileMode 1`;
+	//取得したファイルパスからコードネームを取得
+	string $cn = ZIN_getCordName(basename($file[0],""))	;
+
+	//ファイルパスのサイズが0でないとき、ファイルをリファレンスで読み込み
+	if(` size $file[0] ` != 0){
+		file	-r
+				-type "mayaBinary"
+				-gl
+				-loadReferenceDepth "all"
+				-mergeNamespacesOnClash false
+				-namespace $cn
+				-options "v=0;"
+				$file[0];
+	}
+	
+	//オプションバーに記録するためのファイル名を除いたパスを取得
+	string $modelsPath = ` dirname $file[0] `;
+	//ファイルパスのサイズが0のとき、絶対パスファイルから『pedalModels』パスを取得
+	if( size($modelsPath) == 0 ){
+		$modelsPath = ZIN_commonAbsolutePath("pedalModels");
+	}
+	//オプションバー『PSTRP_RAN_lastPath』に値を記録
+	optionVar -stringValue PSTRP_RAN_lastPath $modelsPath;
+	
+}

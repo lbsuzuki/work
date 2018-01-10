@@ -1,0 +1,37 @@
+///////////////////////////////////////////////////////////////////////////////
+//	PSTR_IR_importRig            //		ÉäÉOÇÃì«Ç›çûÇ›
+///////////////////////////////////////////////////////////////////////////////
+//
+//	AUTHOR: 		goto kazufumi
+//
+//	CREATION DATE:	2013_04_15
+//	UPDATED DATE:	2013_10_11
+//
+//	VERSION:			1.1
+//
+//	HOW TO USE:		run "PSTR_IR_importRig()"
+//
+//////////////////////////////////////////////////////////////////
+
+global proc PSTR_IR_importRig(){
+
+	string $rigPath = ZIN_commonAbsolutePath("PSTR_IR_importRig");
+	
+	string $file[] = `fileDialog2	-dialogStyle 1
+												-startingDirectory $rigPath
+												-caption "ÉäÉOÇÃì«Ç›çûÇ›"
+												-fileMode 1`;
+	
+	if( `size $file[0]` != 0 ){
+		file	-import -type "mayaBinary" -ignoreVersion -mergeNamespacesOnClash false
+				-rpr ""
+				-options "v=0;" -pr
+				-loadReferenceDepth "all" $file[0];
+	}
+	
+}
+
+
+
+
+

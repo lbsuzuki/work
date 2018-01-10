@@ -1,0 +1,60 @@
+//////////////////////////////////////////////////////////////////////////////////////////////
+//	YP_RD_returnDefferenceXYZ    //      XYZ
+//////////////////////////////////////////////////////////////////////////////////////////////
+//
+//	AUTHOR: 		goto kazufumi
+//
+//	CREATION DATE: 	2016_04_09
+//	UPDATED DATE:	2016_04_09
+//
+//	VERSION:		1.0
+//
+//	HOW TO USE:		run "YP_RD_returnDefferenceXYZ()"
+//
+//////////////////////////////////////////////////////////////////////////////////////////////
+
+/*=====================================================
+
+	弱虫ペダル用の移動XYZと回転XYZの値の差を返すプロシージャです
+
+=====================================================*/
+
+/*------------------------------------------------------------------------------------------------
+
+	更新：
+	
+------------------------------------------------------------------------------------------------*/
+
+
+/*------------------------------------------------------------------------------------------------
+
+	YP_RD_returnDefferenceXYZ（ string 基準となるオブジェクト , string 移動と回転をさせたいオブジェクト ）
+	
+	移動XYZと回転XYZの値の差を返すプロシージャです
+	
+------------------------------------------------------------------------------------------------*/
+
+global proc float[] YP_RD_returnDefferenceXYZ( string $base , 
+											string $target ){
+	
+	string $b_pos_eval = " xform -q -ws -t " + $base;
+	string $t_pos_eval = " xform -q -ws -piv " + $target;
+	string $b_rot_eval = " xform -q -ws -ro " + $base;
+	string $t_rot_eval = " xform -q -ws -ro " + $target;
+	
+	float $b_pos[] = eval($b_pos_eval);
+	float $t_pos[] = eval($t_pos_eval);
+	float $b_rot[] = eval($b_rot_eval);
+	float $t_rot[] = eval($t_rot_eval);
+	
+	float $return[];
+	$return[0] = $b_pos[0]-$t_pos[0];
+	$return[1] = $b_pos[1]-$t_pos[1];
+	$return[2] = $b_pos[2]-$t_pos[2];
+	$return[3] = $b_rot[0]-$t_rot[0];
+	$return[4] = $b_rot[1]-$t_rot[1];
+	$return[5] = $b_rot[2]-$t_rot[2];
+	
+	return $return;
+	
+}

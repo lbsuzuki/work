@@ -1,0 +1,271 @@
+///////////////////////////////////////////////////////////////////////////////
+//	PSTR_A_arrangeLLeg            //	左足のリグ調整
+///////////////////////////////////////////////////////////////////////////////
+//
+//	AUTHOR: 		goto kazufumi
+//
+//	CREATION DATE:	2013_04_15
+//	UPDATED DATE:	2013_10_11
+//
+//	VERSION:			1.1
+//
+//	HOW TO USE:		run "PSTR_A_arrangeLLeg();"
+//
+//////////////////////////////////////////////////////////////////
+
+global proc PSTR_A_arrangeLLeg(){
+
+	string $cord = `textField -q -text PST_tfCordName`;
+	int $size = `size $cord`;
+	string $last = `substring $cord $size $size`;
+	if( $last != "_" ){
+		$cord += "_";
+	}
+	
+	
+	//adjustHip_linkをworldの子にする
+	string $L_adjustHip_link = $cord + "L_adjustHip_link";
+	select -r $L_adjustHip_link;
+	parent -w;
+	
+	
+	//コンストレイント
+	string $L_leg_distance01_lct = $cord + "L_leg_distance01_lct";
+	string $L_leg_distance01_lct_poC[] = ` listConnections -source 1 -destination 0 -type "pointConstraint" $L_leg_distance01_lct `;
+	delete $L_leg_distance01_lct_poC[0];
+	
+	string $L_leg_distance02_lct = $cord + "L_leg_distance02_lct";
+	string $L_leg_distance02_lct_poC[] = ` listConnections -source 1 -destination 0 -type "pointConstraint" $L_leg_distance02_lct `;
+	delete $L_leg_distance02_lct_poC[0];
+	
+	//IK
+	string $L_leg_IK = $cord + "L_leg_IK";
+	string $L_foot01_IK = $cord + "L_foot01_IK";
+	string $L_foot02_IK = $cord + "L_foot02_IK";
+	string $L_leg_poleVector_crv = $cord + "L_leg_poleVector_crv";
+	
+	//IK削除
+	delete $L_leg_IK;
+	delete $L_foot01_IK;
+	delete $L_foot02_IK;
+
+
+	//ロケータとリグ（骨を含む）を位置合わせ
+		//宣言
+		string $lct01[] = {	"L_leg01_jnt_ALct",
+									"L_leg02_jnt_ALct",
+									"L_foot01_jnt_ALct",
+									"L_foot02_jnt_ALct",
+									"L_foot03_end_ALct"			};
+								
+		string $rig01[] = {	"L_leg01_link",
+									"L_leg02_jnt",
+									"L_foot01_jnt",
+									"L_foot02_jnt",
+									"L_foot03_end"					};
+
+											
+											
+		string $lct02[] = {	"L_toe_crv_pivotALct",
+										"L_heel_crv_pivotALct",
+										"L_leg_poleVector_lct_ALct"			};
+								
+
+		string $rig02[] = {	"L_toe_crv",
+										"L_heel_crv",
+										"L_leg_poleVector_lct"					};
+									
+									
+				
+		
+								
+		//コードネーム追加
+		for( $i=0; $i<size($lct01); $i++ ){
+			$lct01[$i] = $cord + $lct01[$i];
+			$rig01[$i] = $cord + $rig01[$i];
+
+		}
+		
+		for( $i=0; $i<size($lct02); $i++ ){
+			$lct02[$i] = $cord + $lct02[$i];
+			$rig02[$i] = $cord + $rig02[$i];
+		}
+
+		//位置合わせ
+		for( $i=0; $i<size($lct01); $i++ ){
+			float $pos[] = PSTR_A_translateXYZ( $lct01[$i] , $rig01[$i] );
+			move -r $pos[0] $pos[1] $pos[2] $rig01[$i];			
+		}
+		
+		
+		float $lpos[] = ` xform -q -ws -t ( $cord + "L_foot_crv_pivotALct" )`;
+		float $rpiv[] = ` xform -q -ws -rp ( $cord + "L_foot_crv" )`;
+		float $return[];
+		$return[0] = $lpos[0]-$rpiv[0];
+		$return[1] = $lpos[1]-$rpiv[1];
+		$return[2] = $lpos[2]-$rpiv[2];
+		move -r $return[0] $return[1] $return[2] ( $cord + "L_foot_crv" );
+		
+		
+		for( $i=0; $i<size($lct02); $i++ ){
+			float $pos[] = PSTR_A_translateXYZ( $lct02[$i] , $rig02[$i] );
+			move -r $pos[0] $pos[1] $pos[2] $rig02[$i];
+		}
+		
+		string $L_heel_crv_pivotALct = $cord + "L_heel_crv_pivotALct";
+		string $L_foot_crv = $cord + "L_foot_crv";
+		float $pos[] = ` xform -q -ws -sp $L_heel_crv_pivotALct `;
+		xform -ws -sp $pos[0] $pos[1] $pos[2] $L_foot_crv;
+		
+	
+
+	string $lct[];
+		
+	//リグ再構築
+		//IK
+		string $select01[] = {		"L_leg01_jnt",
+											"L_foot01_jnt",
+											"L_foot02_jnt"		};
+											
+		string $select02[] = {		"L_foot01_jnt",
+											"L_foot02_jnt",
+											"L_foot03_end"		};
+											
+		string $IK[] = {				"L_leg_IK",
+											"L_foot01_IK",
+											"L_foot02_IK"					};
+									
+		string $parent[] = {		"L_heel_crv",
+											"L_toe_crv",
+											"L_foot_crv"				};
+											
+		clear $lct;
+		$lct = {		"L_foot01_jnt_ALct",
+						"L_foot02_jnt_ALct",
+						"L_foot03_end_ALct"		};
+		
+		
+		for( $i=0; $i<size($select01); $i++ ){
+			$select01[$i] = $cord + $select01[$i];
+			$select02[$i] = $cord + $select02[$i];
+			$IK[$i] = $cord + $IK[$i];
+			$parent[$i] = $cord + $parent[$i];
+			$lct[$i] = $cord + $lct[$i];
+			
+			select -r $select01[$i] $select02[$i];
+		
+			string $ik[] = `ikHandle -sol ikRPsolver`;
+			rename $ik[0] $IK[$i];
+			
+			parent $IK[$i] $parent[$i];
+			
+			float $pos[] = PSTR_A_translateXYZ( $lct[$i] , $IK[$i] );
+			move -r $pos[0] $pos[1] $pos[2] $IK[$i];
+			
+		}
+
+
+		select -r $L_leg_poleVector_crv $L_leg_IK;
+		poleVectorConstraint -weight 1;
+		
+	//ロケータと距離ツール関係を位置合わせ
+		//宣言
+		
+		clear $lct;
+		$lct = {		"L_leg01_jnt_ALct",
+						"L_foot01_jnt_ALct",
+						"L_leg01_jnt_ALct",
+						"L_foot01_jnt_ALct"		};
+						
+		for( $i=0; $i<size($lct); $i++ ){
+			$lct[$i] = $cord + $lct[$i];
+		}	
+		
+		string $distanceLct[] = {		"L_leg_distance01_lct",
+												"L_leg_distance02_lct",
+												"L_leg_baseDistance01_lct",
+												"L_leg_baseDistance02_lct"			};
+
+		for( $i=0; $i<size($distanceLct); $i++ ){
+			$distanceLct[$i] = $cord + $distanceLct[$i];
+		}
+												
+	
+		//位置合わせ
+		for( $i=0; $i<size($distanceLct); $i++ ){
+			float $pos[] = PSTR_A_translateXYZ( $lct[$i] , $distanceLct[$i] );
+			move -r $pos[0] $pos[1] $pos[2] $distanceLct[$i];
+		}
+		
+		
+		//距離ツール
+		string $L_leg01_crv = $cord + "L_leg01_crv";
+		select -r $L_leg01_crv $L_leg_distance01_lct;
+		pointConstraint -mo -weight 1;
+	
+		string $L_leg_IK = $cord + "L_leg_IK";
+		select -r $L_leg_IK  $L_leg_distance02_lct;
+		pointConstraint -mo -weight 1;
+		
+		//adjustHip_linkをleg01_crvの子にする
+		string $L_leg01_crv = $cord + "L_leg01_crv";
+		parent $L_adjustHip_link $L_leg01_crv;
+
+		
+		PSTR_renameAttrWeight();
+		
+		
+		//足のリグをフリーズ
+		//ターゲット：L_foot_crv
+			//一時的な親
+			string $L_foot_constlink = $cord + "L_foot_constlink";
+			//最終的な親
+			string $L_foot_crv = $cord + "L_foot_crv";
+			//子
+			string $L_toe_crv = $cord + "L_toe_crv";
+			string $L_leg_poleVector_lct = $cord + "L_leg_poleVector_lct";
+			string $L_foot02_IK = $cord + "L_foot02_IK";
+			
+			parent $L_toe_crv $L_foot_constlink;
+			parent $L_leg_poleVector_lct $L_foot_constlink;
+			parent $L_foot02_IK $L_foot_constlink;
+			select -r $L_foot_crv;
+			makeIdentity -apply true -t 1 -r 1 -s 1 -n 0;
+			parent $L_toe_crv $L_foot_crv;
+			parent $L_leg_poleVector_lct $L_foot_crv;
+			parent $L_foot02_IK $L_foot_crv;
+			
+		//ターゲット：L_toe_crv
+			//一時的な親
+			//$L_foot_crv
+			
+			//最終的な親
+			//$L_toe_crv
+			
+			//子
+			string $L_heel_crv = $cord + "L_heel_crv";
+			string $L_foot01_IK = $cord + "L_foot01_IK";
+			
+			parent $L_heel_crv $L_foot_crv;
+			parent $L_foot01_IK $L_foot_crv;
+			select -r $L_toe_crv;
+			makeIdentity -apply true -t 1 -r 1 -s 1 -n 0;
+			parent $L_heel_crv $L_toe_crv;
+			parent $L_foot01_IK $L_toe_crv;
+		
+		//ターゲット：L_heel_crv
+			//一時的な親
+			//$L_toe_crv
+			
+			//最終的な親
+			//$L_heel_crv
+		
+			//子
+			string $L_leg_IK = $cord + "L_leg_IK";
+			
+			parent $L_leg_IK $L_toe_crv;
+			select -r $L_heel_crv;
+			makeIdentity -apply true -t 1 -r 1 -s 1 -n 0;
+			parent $L_leg_IK $L_heel_crv;		
+		
+}

@@ -1,0 +1,178 @@
+///////////////////////////////////////////////////////////////////////////////
+//	PSTR_ABBS_addBaseBlendShape            //	ブレンドシェイプ追加作成
+///////////////////////////////////////////////////////////////////////////////
+//
+//	AUTHOR: 		goto kazufumi
+//
+//	CREATION DATE:	2013_04_11
+//	UPDATED DATE:	2014_04_07
+//
+//	VERSION:			1.2
+//
+//	HOW TO USE:		run "PSTR_ABBS_addBaseBlendShape();"
+//
+//////////////////////////////////////////////////////////////////
+
+/*==========================================================================
+■更新内容
+
+	1.2	ブレンドメッシュにlambert1を自動で割り当てるようにしました
+
+==========================================================================*/
+
+global proc PSTR_ABBS_addBaseBlendShape(){
+
+	if( `window -q -exists PSTR_ABBS_window` ) deleteUI PSTR_ABBS_window;
+
+	window	-title "ブレンド シェイプ 追加作成"
+				PSTR_ABBS_window;
+		frameLayout -label "ブレンドシェイプ名 入力" -borderStyle "etchedOut" PSTR_ABBS_flAll;
+		formLayout PSTR_ABBS_folAll;
+			formLayout PSTR_ABBS_folBlendShapeName;
+				text -label "ブレンドシェイプ名を入力してください。\nオブジェクトとヌルの名前の基準とします。" PSTR_ABBS_tExp;
+				text -h 25 -label "ブレンドシェイプ名" PSTR_ABBS_tBlendShapeName;
+				textField -h 25 -text "" PSTR_ABBS_tfBlendShapeName;
+			setParent..;
+			formLayout PSTR_ABBS_folButton;
+				button -label "適用" -command "PSTR_ABBS_apply()" PSTR_ABBS_btnApply;
+				button -label "キャンセル" -command "deleteUI PSTR_ABBS_window" PSTR_ABBS_btnCancel;
+			setParent..;
+		setParent..;
+	showWindow;
+	
+	
+	formLayout -e
+	
+		-af	PSTR_ABBS_folBlendShapeName		"top"			0
+		-af	PSTR_ABBS_folBlendShapeName		"left"			0
+		-af	PSTR_ABBS_folBlendShapeName		"right"		0
+		
+		-af	PSTR_ABBS_folButton						"left"			0
+		-af	PSTR_ABBS_folButton						"right"		0
+		-af	PSTR_ABBS_folButton						"bottom"	0
+	
+	PSTR_ABBS_folAll;
+	
+
+	formLayout -e
+	
+		-af	PSTR_ABBS_tExp							"top"		5
+		-af	PSTR_ABBS_tExp							"left"		0
+		-af	PSTR_ABBS_tExp							"right"	0
+		
+		-ac	PSTR_ABBS_tBlendShapeName		"top"		5	PSTR_ABBS_tExp
+		-af	PSTR_ABBS_tBlendShapeName		"left"		20
+		
+		-ac	PSTR_ABBS_tfBlendShapeName		"top"		5	PSTR_ABBS_tExp
+		-ac	PSTR_ABBS_tfBlendShapeName		"left"		3	PSTR_ABBS_tBlendShapeName
+		-af	PSTR_ABBS_tfBlendShapeName		"right"	20
+
+	PSTR_ABBS_folBlendShapeName;
+	
+	formLayout -e
+	
+		-af	PSTR_ABBS_btnApply					"top"		0
+		-af	PSTR_ABBS_btnApply					"left"		0
+		-ap	PSTR_ABBS_btnApply					"right"	0	50
+		
+		-af	PSTR_ABBS_btnCancel					"top"		0
+		-ap	PSTR_ABBS_btnCancel					"left"		0	50
+		-af	PSTR_ABBS_btnCancel					"right"	0
+		
+	PSTR_ABBS_folButton;
+	
+	window -e -width 410 -height 120 PSTR_ABBS_window;
+	
+}
+
+global proc PSTR_ABBS_apply(){
+
+	string $baseBlend = ` textField -q -text PSTR_ABBS_tfBlendShapeName `;
+	PSTR_ABBS_run($baseBlend);
+
+}
+
+global proc PSTR_ABBS_run( string $baseBlend ){
+
+	string $mesh[] = `ls -type transform -sl`;
+	string $meshOne;
+
+	string $cord = `textField -q -text PST_tfCordName`;
+	int $size = `size $cord`;
+	string $last = `substring $cord $size $size`;
+	if( $last != "_" ){
+		$cord += "_";
+	}
+	
+	string $grp = $cord + $baseBlend + "Blend_grp";
+
+
+	string $CTRL_crv = $cord + "CTRL_crv";
+	
+	for( $meshOne in $mesh ){
+		string $parts[];
+		int $token = `tokenize $meshOne "_" $parts`;
+		string $basename;
+		for( $i = 0; $i < $token; $i++ ){
+			if( $i == 0  ){
+				$basename = $parts[0];
+			}else{
+			
+				if( $i == ($token-1) ){
+					if( $parts[$i] != "mesh" ){
+						$basename = $basename + "_" + $parts[$i] + "_" + $baseBlend;
+					}else{
+						$basename = $basename + "_" + $baseBlend;
+					}
+				}else{
+					$basename = $basename + "_" + $parts[$i];					
+				}
+				
+			}
+		}
+		
+		string $blend = $basename + "Blend";
+		string $blendMesh = $basename + "BlendMesh";
+		
+		select -r $meshOne;
+		string $blendS[] = `blendShape -n $blend`;
+		blendShapeAddBaseTarget($blendS[0]);
+		string $select[] = `ls -sl`;
+		rename $select[0] $blendMesh;
+		
+		connectAttr -f ($CTRL_crv + ".envelope_atr") ($blend + ".envelope");
+		
+		string $select[] = `ls -sl`;
+		rename $select[0] $blendMesh;
+		
+		parent $blendMesh $grp;
+		
+		setAttr ($blendS[0] + "." + $meshOne + "1") 1;
+		setAttr ($blendMesh + ".translateX") 0;
+		setAttr ($blendMesh + ".translateY") 0;
+		setAttr ($blendMesh + ".translateZ") 0;
+		setAttr ($blendMesh + ".rotateX") 0;
+		setAttr ($blendMesh + ".rotateY") 0;
+		setAttr ($blendMesh + ".rotateZ") 0;
+		setAttr ($blendMesh + ".scaleX") 1;
+		setAttr ($blendMesh + ".scaleY") 1;
+		setAttr ($blendMesh + ".scaleZ") 1;
+		
+		select -r $blendMesh;
+		hyperShade -assign initialShadingGroup;
+		
+	}
+	
+}
+
+
+
+
+
+
+
+
+
+
+
+

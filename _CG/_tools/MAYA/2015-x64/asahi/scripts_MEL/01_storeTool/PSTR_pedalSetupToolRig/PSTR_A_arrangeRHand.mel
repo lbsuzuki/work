@@ -1,0 +1,178 @@
+///////////////////////////////////////////////////////////////////////////////
+//	PSTR_A_arrangeRHand            //		右手のリグ調整
+///////////////////////////////////////////////////////////////////////////////
+//
+//	AUTHOR: 		goto kazufumi
+//
+//	CREATION DATE:	2013_04_15
+//	UPDATED DATE:	2013_10_11
+//
+//	VERSION:			1.1
+//
+//	HOW TO USE:		run "PSTR_A_arrangeRHand();"
+//
+//////////////////////////////////////////////////////////////////
+
+global proc PSTR_A_arrangeRHand(){
+
+	string $cord = `textField -q -text PST_tfCordName`;
+	int $size = `size $cord`;
+	string $last = `substring $cord $size $size`;
+	if( $last != "_" ){
+		$cord += "_";
+	}
+	
+	//IK
+	string $R_arm_IK = $cord + "R_arm_IK";
+	delete $R_arm_IK;
+	
+	
+	//R_arm_distance02_lct
+	string $R_arm_distance02_lct = $cord + "R_arm_distance02_lct";
+	string $R_arm_distance02_lct_poC[] = `listConnections -source 1 -destination 0 -type "pointConstraint" $R_arm_distance02_lct`;
+	delete $R_arm_distance02_lct_poC[0];
+	
+	//手首
+	string $lct[] = 
+	{
+				"R_hand01_jnt_ALct"
+	};
+	
+	string $rig[] = 
+	{			
+				"R_hand01_constlink",
+				"R_hand01_jnt",
+				"R_arm_distance02_lct",
+				"R_arm_baseDistance02_lct"
+	};
+	
+	$lct[0] = $cord + $lct[0];
+	for( $i=0; $i<size($rig); $i++ ){
+		$rig[$i] = $cord + $rig[$i];
+		float $pos[] = PSTR_A_translateXYZ( $lct[0] , $rig[$i] );
+		move -r $pos[0] $pos[1] $pos[2] $rig[$i];
+	}
+	
+	
+	
+	
+	//指
+	clear $lct;
+	$lct =
+	{			
+				"R_finger_01_01_jnt_ALct",
+				"R_finger_01_02_jnt_ALct",
+				"R_finger_01_03_jnt_ALct",
+				"R_finger_01_04_end_ALct",
+				"R_hand02A_jnt_ALct",
+				"R_finger_02_01_jnt_ALct",
+				"R_finger_02_02_jnt_ALct",
+				"R_finger_02_03_jnt_ALct",
+				"R_finger_02_04_end_ALct",
+				"R_finger_03_01_jnt_ALct",
+				"R_finger_03_02_jnt_ALct",
+				"R_finger_03_03_jnt_ALct",
+				"R_finger_03_04_end_ALct",
+				"R_hand02B_jnt_ALct",
+				"R_finger_04_01_jnt_ALct",
+				"R_finger_04_02_jnt_ALct",
+				"R_finger_04_03_jnt_ALct",
+				"R_finger_04_04_end_ALct",
+				"R_finger_05_01_jnt_ALct",
+				"R_finger_05_02_jnt_ALct",
+				"R_finger_05_03_jnt_ALct",
+				"R_finger_05_04_end_ALct"
+	};
+	
+	clear $rig;
+	$rig =
+	{			
+				"R_finger_01_01_lct",
+				"R_finger_01_02_lct",
+				"R_finger_01_03_lct",
+				"R_finger_01_04_end_lct",
+				"R_hand02A_lct",
+				"R_finger_02_01_lct",
+				"R_finger_02_02_lct",
+				"R_finger_02_03_lct",
+				"R_finger_02_04_end_lct",
+				"R_finger_03_01_lct",
+				"R_finger_03_02_lct",
+				"R_finger_03_03_lct",
+				"R_finger_03_04_end_lct",
+				"R_hand02B_lct",
+				"R_finger_04_01_lct",
+				"R_finger_04_02_lct",
+				"R_finger_04_03_lct",
+				"R_finger_04_04_end_lct",
+				"R_finger_05_01_lct",
+				"R_finger_05_02_lct",
+				"R_finger_05_03_lct",
+				"R_finger_05_04_end_lct"
+	};
+
+	
+	for( $i=0; $i<size($lct); $i++ ){
+		$lct[$i] = $cord + $lct[$i];
+		$rig[$i] = $cord + $rig[$i];
+		float $pos[] = PSTR_A_translateXYZ( $lct[$i] , $rig[$i] );
+		move -r $pos[0] $pos[1] $pos[2] $rig[$i];
+		float $ori[] = ` xform -q -os -ro $lct[$i] `;
+		rotate $ori[0] $ori[1] $ori[2] $rig[$i];
+	}
+		
+	
+	
+	
+	//IK
+	string $R_shoulder02_jnt = $cord + "R_shoulder02_jnt";
+	string $R_hand01_jnt = $cord + "R_hand01_jnt";
+	string $R_hand01_crv = $cord + "R_hand01_crv";
+	string $R_arm_IK = $cord + "R_arm_IK";
+	string $co_rig_grp = $cord + "co_rig_grp";
+	select -r $R_shoulder02_jnt $R_hand01_jnt;
+	string $ik[] = `ikHandle -sol ikRPsolver `;
+	rename $ik[0] $R_arm_IK;
+	parent $R_arm_IK $co_rig_grp;
+	select -r $R_hand01_crv $R_arm_IK;
+	pointConstraint -mo -weight 1;
+	
+	//IKの極ベクトル
+	string $R_arm_PoleVector_crv = $cord + "R_arm_poleVector_crv";
+	select -r $R_arm_PoleVector_crv $R_arm_IK;
+	poleVectorConstraint -weight 1;
+	
+	
+	//R_arm_Distance02_lct
+	select -r  $R_hand01_crv $R_arm_distance02_lct;
+	pointConstraint -mo -weight 1;
+	
+
+	
+	string $con[];
+	//手首リグと手首骨とのコンストレイント
+	string $R_hand01_crv = $cord + "R_hand01_crv";
+	select -r $R_hand01_crv $R_hand01_jnt;
+	orientConstraint -offset 0 0 0 -weight 1;
+	scaleConstraint -offset 1 1 1 -weight 1;
+
+	//constlink座標のフリーズ
+	string $grp = `group -em`;
+	xform -os -piv 0 0 0;
+	string $R_hand01_constlink = $cord + "R_hand01_constlink";
+	string $co_rig_grp = $cord + "co_rig_grp";
+	parent $grp $co_rig_grp;
+	float $pos[] = PSTR_A_translateXYZ( $R_hand01_constlink , $grp );
+	move -r $pos[0] $pos[1] $pos[2] $grp;
+    float $piv[] = `xform -q -ws -piv $R_hand01_constlink`;
+    xform -ws -piv $piv[0] $piv[1] $piv[2] $grp;
+	makeIdentity -apply 1 -t 1 -r 0 -s 0 -n 0 $grp;
+	string $R_hand01_lct = $cord + "R_hand01_lct";
+	parent $R_hand01_lct $grp;
+	select -r $R_hand01_constlink;
+	Delete;
+	rename $grp $R_hand01_constlink;
+
+	PSTR_renameAttrWeight();
+}
+

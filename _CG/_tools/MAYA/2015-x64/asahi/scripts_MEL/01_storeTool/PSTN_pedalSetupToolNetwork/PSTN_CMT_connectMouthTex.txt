@@ -1,0 +1,26 @@
+======================================================
+　■説明
+　口の種類を切り替えるアニメーションカーブ（scv）を選択し、
+　実行すると左目テクスチャとscvを接続します。
+　下記は接続するソースとアニメーションカーブ（scv）です。
+　scv項目を選択して実行してください。
+
+　ソース： コード + texCTRL_link.mouthTex_atr
+
+　   scv： L_tilt_normal_mouthV_scv
+	   L_tilt_cool_mouthV_scv
+	   L_tilt_serious_mouthV_scv
+	   L_tilt_smile_mouthV_scv
+	   side_serious_mouthV_scv
+	   side_smile_mouthV_scv
+	   side_normal_mouthV_scv
+	   side_cool_mouthV_scv
+	   front_normal_mouthV_scv
+	   front_cool_mouthV_scv
+	   front_serious_mouthV_scv
+	   front_smile_mouthV_scv
+	   R_tilt_normal_mouthV_scv
+	   R_tilt_cool_mouthV_scv
+	   R_tilt_serious_mouthV_scv
+	   R_tilt_smile_mouthV_scv
+======================================================

@@ -1,0 +1,110 @@
+///////////////////////////////////////////////////////////////////////////////
+//	ZIN_commonAbsolutePath            //     　共通絶対パス取得		  //
+///////////////////////////////////////////////////////////////////////////////
+//
+//	AUTHOR: 		goto kazufumi
+//
+//	CREATION DATE:			2013_02_24
+//	UPDATED DATE:			2016_05_24
+//
+//	VERSION:		1.1
+//
+//	HOW TO USE:		run "ZIN_commonAbsolutePath( ツール名 );"
+//
+//////////////////////////////////////////////////////////////////
+
+/*------------------------------------------------------------------------------
+
+	■更新内容：
+	
+		1.1	ZIN_commonAbsolutePath.txtファイルと
+				00_commonAbsolutePathフォルダの存在を確認するように修正
+
+------------------------------------------------------------------------------*/
+
+/*------------------------------------------------------------------------------
+
+	ZIN_commonAbsolutePath( $tool )
+
+	引数		ツール名（英表記）
+
+	戻り値	コンフィグ絶対パス
+
+	共通絶対パスファイルから指定されたツールの
+	コンフィグ絶対パスを取得し返します。
+
+------------------------------------------------------------------------------*/
+
+global proc string ZIN_commonAbsolutePath( string $tool ){
+
+	int $existZin_setup = ZIN_existCommonAbsolutePath();
+	if( !$existZin_setup ){
+		error "「ZIN_setup.mel」が存在しません。よって共通絶対パスを検索できませんでした。\n";
+	}
+	
+	//「ZIN_setup.mel」が保存されているディレクトリを取得
+	//「ZIN_setup.mel」を含むフルパスが取得されます。
+	string $setupPath = `whatIs ZIN_setup.mel`;
+	
+	int $size = size($setupPath);
+	$setupPath = `substring $setupPath 18 $size`;		
+
+	//「ZIN_setup.mel」以外のフルパスを取得
+	string $scriptPath = `dirname $setupPath`;
+	
+
+	
+	//共通絶対パスフォルダのフルパス、共通絶対パスファイルのフルパスを取得
+	string $absolutePathFolder = $scriptPath + "/00_commonAbsolutePath";
+	if( !` filetest -d $absolutePathFolder ` ){
+		error ( "次のパスが存在しません。" + $absolutePathFolder );
+	}
+	
+	string $absolutePathFile = $scriptPath + "/00_commonAbsolutePath/ZIN_commonAbsolutePath.txt";
+	if( !` filetest -f $absolutePathFile ` ){
+		error ( "次のファイルが存在しません。" + $absolutePathFolder );
+	}
+	
+	
+	//返す絶対パスを取得する変数$returnを宣言
+	string $return;
+	
+	//絶対パスファイルから一行ずつ取得
+	//取得した行からツール名を照合し、
+	//該当する行から絶対パスを取得、返します。
+	int $id = `fopen $absolutePathFile "r"`;
+	string $textParts[];
+	while( !`feof $id` ){
+		$text = `fgetline $id`;
+		int $token = `tokenize $text ">>" $textParts`;
+		if( $token > 1 ){
+			if( $textParts[0] == $tool ){
+				int $size = ` size $textParts[1] `;
+				string $lastString = ` substring $textParts[1] $size $size `;
+				if( $lastString == "\n" ){
+					string $parts[];
+					tokenize $textParts[1] "\n" $parts;
+					$return = $parts[0];
+				}else{
+					$return = $textParts[1];
+				}
+			}
+		}
+	}
+	
+	fclose $id;
+	
+	if( size($return) != 0 ){
+		return $return;
+	}else{
+		error ( $tool + " の絶対パスが見つかりませんでした。次のファイルを確認してください。 " + $absolutePathFile );
+	}
+
+
+
+
+}
+
+
+
+

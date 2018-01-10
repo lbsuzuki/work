@@ -1,0 +1,554 @@
+///////////////////////////////////////////////////////////////////////////////
+//	PSTR_AL_arrangeLocator            //	ジョイントにロケータを配置
+///////////////////////////////////////////////////////////////////////////////
+//
+//	AUTHOR: 		goto kazufumi
+//
+//	CREATION DATE:	2013_04_11
+//	UPDATED DATE:	2016_04_10
+//
+//	VERSION:			1.3
+//
+//	HOW TO USE:		run "PSTR_AL_arrangeLocator();"
+//
+//////////////////////////////////////////////////////////////////
+
+
+/*=======================================================
+
+	PSTR_AL_arrangeLocator
+	
+	ジョイントにロケータを配置しました
+
+=======================================================*/
+
+/*-------------------------------------------------------------------------------------------------------
+
+	更新
+	
+		1.3		『hand00』に対応
+				『positionElbow』のロケータが出ないように対応
+		1.2		ロケータを降順になるようにしました
+
+-------------------------------------------------------------------------------------------------------*/
+
+
+global proc PSTR_AL_arrangeLocator(){
+
+	//ロケータ作成
+	string $root[] = `ls -type "joint" -sl`;
+	if( size($root) == 0 ){
+		error "ジョイントのルートを選択してください。\n";
+	}
+	SelectHierarchy;
+	string $jnt[];
+	string $temp[] = `ls -type "joint" -sl`;
+	$temp = ` sort $temp `;
+	for( $i=0; $i<size($temp); $i++ ){
+		$jnt[(size($temp)-(1+$i))] = $temp[$i];
+	}
+	
+	string $jntOne;
+	
+	string $code = `textField -q -text PST_tfCordName`;
+	int $size = `size $code`;
+	if( $size != 0 ){
+		string $last = `substring $code $size $size`;
+		if( $last != "_" ){
+			if( $last != ":" ){
+				$code += "_";
+			}
+		}
+	}
+	
+	
+	
+	
+	//グループ作成
+	string $grp = `group -em`;
+	xform -os -piv 0 0 0;
+	$grp = `rename $grp ( $code  + "baseLct_grp")`;
+
+	for( $jntOne in $jnt ){
+
+		string $lct[] = `spaceLocator -p 0 0 0`;
+		string $shape[] = `listRelatives -shapes $lct[0]`;
+		setAttr ( $shape[0] + ".localScaleX" ) 3.0;
+		setAttr ( $shape[0] + ".localScaleY" ) 3.0;
+		setAttr ( $shape[0] + ".localScaleZ" ) 3.0;
+		setAttr ( $shape[0] + ".overrideEnabled" ) 1;
+		setAttr ( $shape[0] + ".overrideColor" ) 18;
+		
+		$lct[0] = `rename $lct[0] ( $jntOne + "_ALct" )`;
+		
+		float $pos[] = `xform -q -ws -t $jntOne`;
+		move $pos[0] $pos[1] $pos[2] $lct[0];
+		
+		parent $lct[0] $grp;
+		
+	}
+	
+	
+	//ピボット関係--------------------------------------------------------------------------------------------------------
+	string $legCrv[] = {			"L_foot_crv",
+									"R_foot_crv",
+									"L_heel_crv",
+									"R_heel_crv",
+									"L_toe_crv",
+									"R_toe_crv"	};
+										
+	string $legALct[] = {			"L_foot_crv_pivotALct",
+									"R_foot_crv_pivotALct",
+									"L_heel_crv_pivotALct",
+									"R_heel_crv_pivotALct",
+									"L_toe_crv_pivotALct",
+									"R_toe_crv_pivotALct"			};
+											
+	string $parentLegALct[] = {		"L_foot01_jnt_ALct",
+									"R_foot01_jnt_ALct",
+									"L_foot02_jnt_ALct",
+									"R_foot02_jnt_ALct",
+									"L_foot03_end_ALct",											
+									"R_foot03_end_ALct"					};
+										
+
+	for( $i=0; $i<size($legCrv); $i++ ){
+		//コードネームを追加
+		$legCrv[$i] = $code + $legCrv[$i];
+		$legALct[$i] = $code + $legALct[$i];
+		$parentLegALct[$i] = $code + $parentLegALct[$i];
+		
+		//ロケータ作成　調整
+		spaceLocator -n $legALct[$i] -p 0 0 0;
+		string $shape[] = `listRelatives -shapes $legALct[$i]`;
+		setAttr ( $shape[0] + ".localScaleX" ) 3.0;
+		setAttr ( $shape[0] + ".localScaleY" ) 3.0;
+		setAttr ( $shape[0] + ".localScaleZ" ) 3.0;
+		setAttr ( $shape[0] + ".overrideEnabled" ) 1;
+		setAttr ( $shape[0] + ".overrideColor" ) 18;
+		
+		//ロケータ移動
+		float $piv[] = ` xform -q -ws -rp $legCrv[$i] `;
+		move $piv[0] $piv[1] $piv[2] $legALct[$i];
+		
+		parent $legALct[$i] $parentLegALct[$i];
+		
+	}
+	
+	for( $i=2; $i<size($legALct); $i++ ){
+		setAttr ( $legALct[$i] + ".visibility" ) 0;
+	}
+	
+
+	
+	
+	//極ベクトル関係--------------------------------------------------------------------------------------------------------
+	string $poleVectorBase[] = {		"L_arm_poleVector_lct",
+										"R_arm_poleVector_lct",
+										"L_leg_poleVector_lct",
+										"R_leg_poleVector_lct"						};
+	
+	string $poleVectorALct[] = {		"L_arm_poleVector_lct_ALct",
+										"R_arm_poleVector_lct_ALct",
+										"L_leg_poleVector_lct_ALct",
+										"R_leg_poleVector_lct_ALct"					};
+
+	for( $i=0; $i<size($poleVectorBase); $i++ ){
+			
+			//コードネームを追加
+			$poleVectorBase[$i] = $code + $poleVectorBase[$i];
+			$poleVectorALct[$i] = $code + $poleVectorALct[$i];
+			
+			//ロケータ作成　調整
+			spaceLocator -n $poleVectorALct[$i] -p 0 0 0;
+			string $shape[] = `listRelatives -shapes $poleVectorALct[$i]`;
+			setAttr ( $shape[0] + ".localScaleX" ) 3.0;
+			setAttr ( $shape[0] + ".localScaleY" ) 3.0;
+			setAttr ( $shape[0] + ".localScaleZ" ) 3.0;
+			setAttr ( $shape[0] + ".overrideEnabled" ) 1;
+			setAttr ( $shape[0] + ".overrideColor" ) 18;
+
+			//ロケータ移動
+			float $piv[] = `xform -q -ws -piv $poleVectorBase[$i]`;
+			move $piv[0] $piv[1] $piv[2] $poleVectorALct[$i];
+			
+			//ロケータをグループの子供にする
+			parent $poleVectorALct[$i] $grp;
+		
+	}
+	
+	
+
+	//指--------------------------------------------------------------------------------------------------------
+	string $fingerBase[] = {		"L_finger_01_01_lct",
+									"L_finger_01_02_lct",
+									"L_finger_01_03_lct",
+									"L_finger_01_04_end_lct",
+									"L_hand02A_lct",
+									"L_finger_02_01_lct",
+									"L_finger_02_02_lct",
+									"L_finger_02_03_lct",
+									"L_finger_02_04_end_lct",
+									"L_finger_03_01_lct",
+									"L_finger_03_02_lct",
+									"L_finger_03_03_lct",
+									"L_finger_03_04_end_lct",
+									"L_hand02B_lct",
+									"L_finger_04_01_lct",
+									"L_finger_04_02_lct",
+									"L_finger_04_03_lct",
+									"L_finger_04_04_end_lct",
+									"L_finger_05_01_lct",
+									"L_finger_05_02_lct",
+									"L_finger_05_03_lct",
+									"L_finger_05_04_end_lct",
+									"L_adjustVelcro_lct",
+
+									"R_finger_01_01_lct",
+									"R_finger_01_02_lct",
+									"R_finger_01_03_lct",
+									"R_finger_01_04_end_lct",
+									"R_hand02A_lct",
+									"R_finger_02_01_lct",
+									"R_finger_02_02_lct",
+									"R_finger_02_03_lct",
+									"R_finger_02_04_end_lct",
+									"R_finger_03_01_lct",
+									"R_finger_03_02_lct",
+									"R_finger_03_03_lct",
+									"R_finger_03_04_end_lct",
+									"R_hand02B_lct",
+									"R_finger_04_01_lct",
+									"R_finger_04_02_lct",
+									"R_finger_04_03_lct",
+									"R_finger_04_04_end_lct",
+									"R_finger_05_01_lct",
+									"R_finger_05_02_lct",
+									"R_finger_05_03_lct",
+									"R_finger_05_04_end_lct",
+									"R_adjustVelcro_lct"			};
+									
+	
+	
+	string $fingerALct[] = {		"L_finger_01_01_jnt_ALct",
+									"L_finger_01_02_jnt_ALct",
+									"L_finger_01_03_jnt_ALct",
+									"L_finger_01_04_end_ALct",
+									"L_hand02A_jnt_ALct",
+									"L_finger_02_01_jnt_ALct",
+									"L_finger_02_02_jnt_ALct",
+									"L_finger_02_03_jnt_ALct",
+									"L_finger_02_04_end_ALct",
+									"L_finger_03_01_jnt_ALct",
+									"L_finger_03_02_jnt_ALct",
+									"L_finger_03_03_jnt_ALct",
+									"L_finger_03_04_end_ALct",
+									"L_hand02B_jnt_ALct",
+									"L_finger_04_01_jnt_ALct",
+									"L_finger_04_02_jnt_ALct",
+									"L_finger_04_03_jnt_ALct",
+									"L_finger_04_04_end_ALct",
+									"L_finger_05_01_jnt_ALct",
+									"L_finger_05_02_jnt_ALct",
+									"L_finger_05_03_jnt_ALct",
+									"L_finger_05_04_end_ALct",
+									"L_adjustVelcro_jnt_ALct",
+
+									"R_finger_01_01_jnt_ALct",
+									"R_finger_01_02_jnt_ALct",
+									"R_finger_01_03_jnt_ALct",
+									"R_finger_01_04_end_ALct",
+									"R_hand02A_jnt_ALct",
+									"R_finger_02_01_jnt_ALct",
+									"R_finger_02_02_jnt_ALct",
+									"R_finger_02_03_jnt_ALct",
+									"R_finger_02_04_end_ALct",
+									"R_finger_03_01_jnt_ALct",
+									"R_finger_03_02_jnt_ALct",
+									"R_finger_03_03_jnt_ALct",
+									"R_finger_03_04_end_ALct",
+									"R_hand02B_jnt_ALct",
+									"R_finger_04_01_jnt_ALct",
+									"R_finger_04_02_jnt_ALct",
+									"R_finger_04_03_jnt_ALct",
+									"R_finger_04_04_end_ALct",
+									"R_finger_05_01_jnt_ALct",
+									"R_finger_05_02_jnt_ALct",
+									"R_finger_05_03_jnt_ALct",
+									"R_finger_05_04_end_ALct",
+									"R_adjustVelcro_jnt_ALct"				};
+
+									
+	//$targetの方向を$fingerBaseに合わせる
+	for( $i=0; $i<size($fingerBase); $i++ ){
+	
+		$fingerBase[$i] = $code + $fingerBase[$i];
+		$fingerALct[$i] = $code + $fingerALct[$i];
+		float $ori[] = ` xform -q -ws -ro $fingerBase[$i] `;
+		rotate $ori[0] $ori[1] $ori[2] $fingerALct[$i];
+	
+	}
+		
+		
+	//指の親子関係--------------------------------------------------------------------------------------------------------
+	string $fingerParent01[] = {		"L_finger_01_01_jnt_ALct",
+												"L_finger_01_02_jnt_ALct",
+												"L_finger_01_03_jnt_ALct",
+												"L_hand02A_jnt_ALct",
+												"L_finger_02_01_jnt_ALct",
+												"L_finger_02_02_jnt_ALct",
+												"L_finger_02_03_jnt_ALct",
+												"L_hand02A_jnt_ALct",
+												"L_finger_03_01_jnt_ALct",
+												"L_finger_03_02_jnt_ALct",
+												"L_finger_03_03_jnt_ALct",
+												"L_hand02B_jnt_ALct",
+												"L_finger_04_01_jnt_ALct",
+												"L_finger_04_02_jnt_ALct",
+												"L_finger_04_03_jnt_ALct",
+												"L_hand02B_jnt_ALct",
+												"L_finger_05_01_jnt_ALct",
+												"L_finger_05_02_jnt_ALct",
+												"L_finger_05_03_jnt_ALct",
+												"L_hand01_jnt_ALct",
+
+												"R_finger_01_01_jnt_ALct",
+												"R_finger_01_02_jnt_ALct",
+												"R_finger_01_03_jnt_ALct",
+												"R_hand02A_jnt_ALct",
+												"R_finger_02_01_jnt_ALct",
+												"R_finger_02_02_jnt_ALct",
+												"R_finger_02_03_jnt_ALct",
+												"R_hand02A_jnt_ALct",
+												"R_finger_03_01_jnt_ALct",
+												"R_finger_03_02_jnt_ALct",
+												"R_finger_03_03_jnt_ALct",
+												"R_hand02B_jnt_ALct",
+												"R_finger_04_01_jnt_ALct",
+												"R_finger_04_02_jnt_ALct",
+												"R_finger_04_03_jnt_ALct",
+												"R_hand02B_jnt_ALct",
+												"R_finger_05_01_jnt_ALct",
+												"R_finger_05_02_jnt_ALct",
+												"R_finger_05_03_jnt_ALct",
+												"R_hand01_jnt_ALct",
+												
+												"L_hand01_jnt_ALct",
+												"L_hand01_jnt_ALct",
+												"L_hand01_jnt_ALct",
+												"L_hand01_jnt_ALct",
+												"L_arm_jnt_ALct",
+												"L_shoulder02_jnt_ALct",
+												"L_shoulder02_jnt_ALct",
+												"L_shoulder01_jnt_ALct",
+												
+												"R_hand01_jnt_ALct",
+												"R_hand01_jnt_ALct",
+												"R_hand01_jnt_ALct",
+												"R_hand01_jnt_ALct",
+												"R_arm_jnt_ALct",
+												"R_shoulder02_jnt_ALct",
+												"R_shoulder02_jnt_ALct",
+												"R_shoulder01_jnt_ALct"
+												};
+
+	
+	string $fingerChild01[] = {		"L_finger_01_02_jnt_ALct",
+												"L_finger_01_03_jnt_ALct",
+												"L_finger_01_04_end_ALct",
+												"L_finger_02_01_jnt_ALct",
+												"L_finger_02_02_jnt_ALct",
+												"L_finger_02_03_jnt_ALct",
+												"L_finger_02_04_end_ALct",
+												"L_finger_03_01_jnt_ALct",
+												"L_finger_03_02_jnt_ALct",
+												"L_finger_03_03_jnt_ALct",
+												"L_finger_03_04_end_ALct",
+												"L_finger_04_01_jnt_ALct",
+												"L_finger_04_02_jnt_ALct",
+												"L_finger_04_03_jnt_ALct",
+												"L_finger_04_04_end_ALct",
+												"L_finger_05_01_jnt_ALct",
+												"L_finger_05_02_jnt_ALct",
+												"L_finger_05_03_jnt_ALct",
+												"L_finger_05_04_end_ALct",
+												"L_adjustVelcro_jnt_ALct",
+
+												"R_finger_01_02_jnt_ALct",
+												"R_finger_01_03_jnt_ALct",
+												"R_finger_01_04_end_ALct",
+												"R_finger_02_01_jnt_ALct",
+												"R_finger_02_02_jnt_ALct",
+												"R_finger_02_03_jnt_ALct",
+												"R_finger_02_04_end_ALct",
+												"R_finger_03_01_jnt_ALct",
+												"R_finger_03_02_jnt_ALct",
+												"R_finger_03_03_jnt_ALct",
+												"R_finger_03_04_end_ALct",
+												"R_finger_04_01_jnt_ALct",
+												"R_finger_04_02_jnt_ALct",
+												"R_finger_04_03_jnt_ALct",
+												"R_finger_04_04_end_ALct",
+												"R_finger_05_01_jnt_ALct",
+												"R_finger_05_02_jnt_ALct",
+												"R_finger_05_03_jnt_ALct",
+												"R_finger_05_04_end_ALct",
+												"R_adjustVelcro_jnt_ALct",
+												
+												"L_finger_01_01_jnt_ALct",
+												"L_hand02A_jnt_ALct",
+												"L_hand02B_jnt_ALct",
+												"L_arm_poleVector_lct_ALct",
+												"L_hand01_jnt_ALct",
+												"L_arm_jnt_ALct",
+												"L_adjustElbow_jnt_ALct",
+												"L_shoulder02_jnt_ALct",
+												
+												"R_finger_01_01_jnt_ALct",
+												"R_hand02A_jnt_ALct",
+												"R_hand02B_jnt_ALct",
+												"R_arm_poleVector_lct_ALct",
+												"R_hand01_jnt_ALct",
+												"R_arm_jnt_ALct",
+												"R_adjustElbow_jnt_ALct",
+												"R_shoulder02_jnt_ALct"
+												};
+												
+												
+												
+
+
+	//$fingerParent01 , $fingerChild01
+	for( $i=0; $i<size($fingerParent01); $i++ ){	
+		$fingerParent01[$i] = $code + $fingerParent01[$i];
+		$fingerChild01[$i] = $code + $fingerChild01[$i];
+	}
+	
+	//$fingerChild01を$fingerParent01の子にする
+	for( $i=0; $i<size($fingerParent01); $i++ ){
+		parent $fingerChild01[$i] $fingerParent01[$i];
+	}
+
+
+	//ピボット関係　手--------------------------------------------------------------------------------------------------------
+	string $handCrv[] = {			"L_hand00_crv",
+									"R_hand00_crv"		};
+										
+	string $handALct[] = {			"L_hand00_crv_pivotALct",
+									"R_hand00_crv_pivotALct"			};
+											
+	string $childHandALct[] = {		"L_hand01_jnt_ALct",
+									"R_hand01_jnt_ALct"						};
+										
+
+	for( $i=0; $i<size($handCrv); $i++ ){
+		//コードネームを追加
+		$handCrv[$i] = $code + $handCrv[$i];
+		$handALct[$i] = $code + $handALct[$i];
+		$childHandALct[$i] = $code + $childHandALct[$i];
+		
+		//ロケータ作成　調整
+		spaceLocator -n $handALct[$i] -p 0 0 0;
+		string $shape[] = `listRelatives -shapes $handALct[$i]`;
+		setAttr ( $shape[0] + ".localScaleX" ) 3.0;
+		setAttr ( $shape[0] + ".localScaleY" ) 3.0;
+		setAttr ( $shape[0] + ".localScaleZ" ) 3.0;
+		setAttr ( $shape[0] + ".overrideEnabled" ) 1;
+		setAttr ( $shape[0] + ".overrideColor" ) 18;
+		
+		//ロケータ移動
+		float $piv[] = ` xform -q -ws -rp $handCrv[$i] `;
+		move $piv[0] $piv[1] $piv[2] $handALct[$i];
+		
+		parent $childHandALct[$i] $handALct[$i] ;
+		
+		//ロケータをグループの子供にする
+		parent $handALct[$i] $grp;
+		
+	}
+	
+	string $handParent[] = {	"L_arm_jnt_ALct",
+								"R_arm_jnt_ALct"		};
+								
+	string $handChild[] = {		"L_hand00_crv_pivotALct",
+								"R_hand00_crv_pivotALct"		};
+								
+	for( $i=0; $i<size($handParent); $i++ ){
+	
+		//コードネームを追加
+		$handParent[$i] = $code + $handParent[$i];
+		$handChild[$i] = $code + $handChild[$i];
+		parent $handChild[$i] $handParent[$i];
+	}
+
+	
+	//足
+	//親子関係
+	string $legParent[] = {		"L_leg01_jnt_ALct",
+								"L_leg01_jnt_ALct",
+								"L_leg02_jnt_ALct",	
+								"L_foot01_jnt_ALct",
+								"L_foot02_jnt_ALct",
+
+								"R_leg01_jnt_ALct",
+								"R_leg01_jnt_ALct",
+								"R_leg02_jnt_ALct",	
+								"R_foot01_jnt_ALct",
+								"R_foot02_jnt_ALct"				};
+										
+										
+	string $legChildren[] = {	"L_leg02_jnt_ALct",
+								"L_leg_poleVector_lct_ALct",
+								"L_foot01_jnt_ALct",
+								"L_foot02_jnt_ALct",
+								"L_foot03_end_ALct",
+
+								"R_leg02_jnt_ALct",
+								"R_leg_poleVector_lct_ALct",
+								"R_foot01_jnt_ALct",
+								"R_foot02_jnt_ALct",
+								"R_foot03_end_ALct"					};
+
+													
+	for( $i=0; $i<size($legParent); $i++ ){
+		$legParent[$i] = $code + $legParent[$i];
+		$legChildren[$i] = $code + $legChildren[$i];
+		parent $legChildren[$i] $legParent[$i];
+	}
+	
+	
+	//positionElbowのロケータがあるとき消去
+	string $posEl[] = {		"L_positionElbow00_jnt_ALct",
+							"L_positionElbow01_jnt_ALct",
+							"L_positionElbow02_jnt_ALct",
+							"L_positionElbow03_jnt_ALct",
+							"R_positionElbow00_jnt_ALct",
+							"R_positionElbow01_jnt_ALct",
+							"R_positionElbow02_jnt_ALct",
+							"R_positionElbow03_jnt_ALct",
+							"L_positionKnee00_jnt_ALct",
+							"L_positionKnee01_jnt_ALct",
+							"L_positionKnee02_jnt_ALct",
+							"R_positionKnee00_jnt_ALct",
+							"R_positionKnee01_jnt_ALct",
+							"R_positionKnee02_jnt_ALct"							};
+							
+	for( $one in $posEl ){
+		string $target = $code + $one;
+		int $exist = ` objExists $target `;
+		if( $exist ){
+			delete $target;
+		}
+	}
+	
+	
+	
+	select -r $root;
+	
+
+	//コンストレイントのウェイト名を接続先のオブジェクト名からコードネームをなくした名前にする。
+	YP_RAW_renameAttrWeight();	
+}
+
+
+

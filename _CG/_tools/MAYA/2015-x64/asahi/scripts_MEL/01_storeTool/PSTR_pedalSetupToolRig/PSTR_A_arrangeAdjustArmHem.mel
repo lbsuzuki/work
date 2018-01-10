@@ -1,0 +1,60 @@
+///////////////////////////////////////////////////////////////////////////////
+//	PSTR_A_arrangeAdjustArmHem            //	òrêûÇÃí≤êÆÉäÉOÇÃí≤êÆ
+///////////////////////////////////////////////////////////////////////////////
+//
+//	AUTHOR: 		goto kazufumi
+//
+//	CREATION DATE:	2013_09_07
+//	UPDATED DATE:	2013_10_11
+//
+//	VERSION:			1.1
+//
+//	HOW TO USE:		run "PSTR_A_arrangeAdjustArmHem();"
+//
+//////////////////////////////////////////////////////////////////
+
+global proc PSTR_A_arrangeAdjustArmHem(){
+
+	string $cord = `textField -q -text PST_tfCordName`;
+	int $size = `size $cord`;
+	string $last = `substring $cord $size $size`;
+	if( $last != "_" ){
+		$cord += "_";
+	}
+	
+	string $lct[] = {		"L_adjustArmHem_jnt_ALct",
+								"R_adjustArmHem_jnt_ALct"							};
+
+	string $rig[] = {		"L_adjustArmHem_link",
+								"R_adjustArmHem_link"									};
+								
+	string $hand01[] = {		"L_hand01_crv",
+										"R_hand01_crv"										};
+
+	for( $i=0; $i<size($lct); $i++ ){
+		$lct[$i] = $cord + $lct[$i];
+		$rig[$i] = $cord + $rig[$i];
+		$hand01[$i] = $cord + $hand01[$i];
+		string $paC[] = `listConnections -source 1 -destination 0 -type "parentConstraint" $rig[$i]`;
+		delete $paC[0];
+		
+		int $result = 0;
+		$result = `objExists $rig[$i]`;
+		if( $result ){
+			float $pos[] = PSTR_A_translateXYZ( $lct[$i] , $rig[$i] );
+			move -r $pos[0] $pos[1] $pos[2] $rig[$i];
+		}
+		
+		select -r $hand01[$i] $rig[$i];
+		parentConstraint -mo -weight 1;
+		
+	}
+	
+
+}
+
+
+
+
+
+

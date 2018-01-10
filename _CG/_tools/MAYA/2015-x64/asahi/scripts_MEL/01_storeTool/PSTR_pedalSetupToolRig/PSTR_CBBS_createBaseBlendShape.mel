@@ -1,0 +1,193 @@
+///////////////////////////////////////////////////////////////////////////////
+//	PSTR_CBBS_createBaseBlendShape            //	ブレンドシェイプ作成
+///////////////////////////////////////////////////////////////////////////////
+//
+//	AUTHOR: 		goto kazufumi
+//
+//	CREATION DATE:	2013_04_11
+//	UPDATED DATE:	2014_04_07
+//
+//	VERSION:			1.2
+//
+//	HOW TO USE:		run "PSTR_CBBS_createBaseBlendShape();"
+//
+//////////////////////////////////////////////////////////////////
+
+/*==========================================================================
+■更新内容
+
+	1.2	ブレンドメッシュにlambert1を自動で割り当てるようにしました
+
+==========================================================================*/
+
+global proc PSTR_CBBS_createBaseBlendShape(){
+
+	if( `window -q -exists PSTR_CBBS_window` ) deleteUI PSTR_CBBS_window;
+
+	window	-title "ブレンド シェイプ 作成"
+				PSTR_CBBS_window;
+		frameLayout -label "ブレンドシェイプ名 入力" -borderStyle "etchedOut" PSTR_CBBS_flAll;
+		formLayout PSTR_CBBS_folAll;
+			formLayout PSTR_CBBS_folBlendShapeName;
+				text -label "ブレンドシェイプ名を入力してください。\nオブジェクトとヌルの名前の基準とします。" PSTR_CBBS_tExp;
+				text -h 25 -label "ブレンドシェイプ名" PSTR_CBBS_tBlendShapeName;
+				textField -h 25 -text "" PSTR_CBBS_tfBlendShapeName;
+			setParent..;
+			formLayout PSTR_CBBS_folButton;
+				button -label "適用" -command "PSTR_CBBS_assign()" PSTR_CBBS_btnAssign;
+				button -label "キャンセル" -command "deleteUI PSTR_CBBS_window" PSTR_CBBS_btnCancel;
+			setParent..;
+		setParent..;
+	showWindow;
+	
+	
+	formLayout -e
+	
+		-af	PSTR_CBBS_folBlendShapeName		"top"			0
+		-af	PSTR_CBBS_folBlendShapeName		"left"			0
+		-af	PSTR_CBBS_folBlendShapeName		"right"		0
+		
+		-af	PSTR_CBBS_folButton						"left"			0
+		-af	PSTR_CBBS_folButton						"right"		0
+		-af	PSTR_CBBS_folButton						"bottom"	0
+	
+	PSTR_CBBS_folAll;
+	
+
+	formLayout -e
+	
+		-af	PSTR_CBBS_tExp							"top"		5
+		-af	PSTR_CBBS_tExp							"left"		0
+		-af	PSTR_CBBS_tExp							"right"	0
+		
+		-ac	PSTR_CBBS_tBlendShapeName		"top"		5	PSTR_CBBS_tExp
+		-af	PSTR_CBBS_tBlendShapeName		"left"		20
+		
+		-ac	PSTR_CBBS_tfBlendShapeName		"top"		5	PSTR_CBBS_tExp
+		-ac	PSTR_CBBS_tfBlendShapeName		"left"		3	PSTR_CBBS_tBlendShapeName
+		-af	PSTR_CBBS_tfBlendShapeName		"right"	20
+
+	PSTR_CBBS_folBlendShapeName;
+	
+	formLayout -e
+	
+		-af	PSTR_CBBS_btnAssign					"top"		0
+		-af	PSTR_CBBS_btnAssign					"left"		0
+		-ap	PSTR_CBBS_btnAssign					"right"	0	50
+		
+		-af	PSTR_CBBS_btnCancel					"top"		0
+		-ap	PSTR_CBBS_btnCancel					"left"		0	50
+		-af	PSTR_CBBS_btnCancel					"right"	0
+		
+	PSTR_CBBS_folButton;
+	
+	window -e -width 410 -height 120 PSTR_CBBS_window;
+	
+}
+
+global proc PSTR_CBBS_assign(){
+
+	string $baseBlend = ` textField -q -text PSTR_CBBS_tfBlendShapeName `;
+	PSTR_CBBS_run($baseBlend);
+
+}
+
+global proc PSTR_CBBS_run( string $baseBlend ){
+
+	string $mesh[] = `ls -type transform -sl`;
+	string $meshOne;
+
+	string $cord = `textField -q -text PST_tfCordName`;
+	int $size = `size $cord`;
+	string $last = `substring $cord $size $size`;
+	if( $last != "_" ){
+		$cord += "_";
+	}
+	
+	string $grp = `group -em`;
+	xform -os -piv 0 0 0;
+	$grp = ` rename $grp ($cord + $baseBlend + "Blend_grp") `;
+
+
+	string $CTRL_crv = $cord + "CTRL_crv";
+	
+	for( $meshOne in $mesh ){
+		string $parts[];
+		int $token = `tokenize $meshOne "_" $parts`;
+		string $basename;
+		for( $i = 0; $i < $token; $i++ ){
+			if( $i == 0  ){
+				$basename = $parts[0];
+			}else{
+			
+				if( $i == ($token-1) ){
+					if( $parts[$i] != "mesh" ){
+						$basename = $basename + "_" + $parts[$i] + "_" + $baseBlend;
+					}else{
+						$basename = $basename + "_" + $baseBlend;
+					}
+				}else{
+					$basename = $basename + "_" + $parts[$i];					
+				}
+				
+			}
+		}
+		
+		string $blend = $basename + "Blend";
+		string $blendMesh = $basename + "BlendMesh";
+		
+		select -r $meshOne;
+		string $blendS[] = `blendShape -n $blend`;
+		blendShapeAddBaseTarget($blendS[0]);
+		string $select[] = `ls -sl`;
+		rename $select[0] $blendMesh;
+		
+		connectAttr -f ($CTRL_crv + ".envelope_atr") ($blend + ".envelope");
+		
+		string $select[] = `ls -sl`;
+		rename $select[0] $blendMesh;
+		
+		parent $blendMesh $grp;
+		
+		setAttr ($blendS[0] + "." + $meshOne + "1") 1;
+		
+		select -r $blendMesh;
+		hyperShade -assign initialShadingGroup;
+		
+	}
+
+	string $mesh_grp = $cord + "mesh_grp";
+	string $children[] = `listRelatives -children $mesh_grp`;
+	string $child;
+	string $blend_grp = $cord + "blend_grp";
+	int $exist = 0;
+	for( $child in $children ){
+		if( $child == $blend_grp ){
+			$exist = 1;
+		}
+	}
+	
+	if( $exist == 0 ){
+		string $storeGrp = `group -em`;
+		xform -os -piv 0 0 0;
+		rename $storeGrp $blend_grp;
+		parent $blend_grp $mesh_grp;
+	}
+	
+	parent $grp $blend_grp;
+	
+	connectAttr -f ($CTRL_crv + ".blendVisible_atr") ($blend_grp + ".visibility");
+	
+}
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,69 @@
+//////////////////////////////////////////////////////////////////////////////////////////////
+//	ZIN_V_version    //      仁バージョン情報
+//////////////////////////////////////////////////////////////////////////////////////////////
+//
+//	AUTHOR: 		goto kazufumi
+//
+//	CREATION DATE: 	2016_07_26
+//	UPDATED DATE:		2016_07_28
+//
+//	VERSION:		1.0
+//
+//	HOW TO USE:		run "ZIN_V_version()"
+//
+//////////////////////////////////////////////////////////////////////////////////////////////
+
+/*=====================================================
+
+	仁ツールメニューのバージョン情報を表示します
+
+=====================================================*/
+
+/*=====================================================
+
+	更新：
+
+	v1.01	ZIN Tool v2.01にバージョンアップ
+
+=====================================================*/
+
+/*----------------------------------------------------------------------
+
+	
+
+----------------------------------------------------------------------*/
+
+global proc ZIN_V_version(){
+
+	string $ZinVersion = "ZIN Tool v2.0";
+
+	string $tool = "仁バージョン情報";
+	
+	if(`window -exists ZIN_V_window`){
+		deleteUI ZIN_V_window;
+	}
+
+	window	-title $tool	-sizeable 0 ZIN_V_window;
+		formLayout -bgc 0.25 0.25 0.25 ZIN_V_folAll;
+			string $versionTx = "Version: " + $ZinVersion;
+			text -l $versionTx ZIN_V_tVersion;
+			button -l "OK" -bgc 0.35 0.35 0.35 -c "deleteUI ZIN_V_window" ZIN_V_bOK;
+		setParent..;
+	showWindow;
+	
+	formLayout -e
+
+		-af	ZIN_V_tVersion		"top"			30
+		-af	ZIN_V_tVersion		"left"			95
+		
+		-af	ZIN_V_bOK			"left"			0
+		-af	ZIN_V_bOK			"right"		0
+		-af	ZIN_V_bOK			"bottom"	0
+		
+		ZIN_V_folAll;
+	
+	
+	window -e -w 300 -h 100 ZIN_V_window;
+	
+}
+

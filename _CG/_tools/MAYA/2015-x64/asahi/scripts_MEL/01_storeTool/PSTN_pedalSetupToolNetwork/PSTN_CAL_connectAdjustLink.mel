@@ -1,0 +1,34 @@
+///////////////////////////////////////////////////////////////////////////////
+//	PSTN_CAL_connectAdjustLink            //		調整リグ リンク可視性とコントローラを接続
+///////////////////////////////////////////////////////////////////////////////
+//
+//	AUTHOR: 		goto kazufumi
+//
+//	CREATION DATE:	2013_08_11
+//	UPDATED DATE:	2013_08_11
+//
+//	VERSION:			1.1
+//
+//	HOW TO USE:		run "PSTN_CAL_connectAdjustLink();"
+//
+//////////////////////////////////////////////////////////////////
+
+global proc PSTN_CAL_connectAdjustLink(){
+
+	string $cord = `textField -q -text PST_tfCordName`;
+	int $size = `size $cord`;
+	string $last = `substring $cord $size $size`;
+	if( $last != "_" ){
+		$cord += "_";
+	}
+
+	string $scv[] = `ls -type "transform" -sl`;
+	string $one;
+	for( $one in $scv ){
+		int $connect = ` isConnected -ignoreUnitConversion ( $cord + "CTRL_crv.rigAdjustVisible_atr" ) ( $one + ".visibility" ) `;
+		if( !$connect ){
+			connectAttr -f ( $cord + "CTRL_crv.rigAdjustVisible_atr" ) ( $one + ".visibility" );
+		}
+	}
+
+}

@@ -1,0 +1,74 @@
+///////////////////////////////////////////////////////////////////////////////
+//	PSTR_A_arrangeAdjustBreast            //
+///////////////////////////////////////////////////////////////////////////////
+//
+//	AUTHOR: 		goto kazufumi
+//
+//	CREATION DATE:	2013_09_07
+//	UPDATED DATE:		2016_07_13
+//
+//	VERSION:			1.2
+//
+//	HOW TO USE:		run "PSTR_A_arrangeAdjustBreast();"
+//
+//////////////////////////////////////////////////////////////////
+
+/*================================================================
+
+	更新内容
+	
+	1.2		2つあった胸の調整リグを1つになったため、それに合わせてスクリプトを変更しました
+	
+
+================================================================*/
+
+global proc PSTR_A_arrangeAdjustBreast(){
+
+	string $code = `textField -q -text PST_tfCordName`;
+	int $size = `size $code`;
+	if( $size != 0 ){
+		string $last = `substring $code $size $size`;
+		if( $last != "_" ){
+			if( $last != ":" ){
+				$code += "_";
+			}
+		}
+	}
+	
+	//ロケータのペアレント再現
+	PSTR_ALP_arrangeLocatorParent;
+	
+	string $lct[] = {		"adjustBreast_jnt_ALct"								};
+
+	string $rig[] = {		"adjustBreast_link"											};
+
+	string $spine03[] = {		"spine03_crv"										};
+								
+	for( $i=0; $i<size($lct); $i++ ){
+		$lct[$i] = $code + $lct[$i];
+		$rig[$i] = $code + $rig[$i];
+		$spine03[$i] = $code + $spine03[$i];
+		string $paC[] = `listConnections -source 1 -destination 0 -type "parentConstraint" $rig[$i]`;
+		delete $paC[0];
+		string $scC[] = `listConnections -source 1 -destination 0 -type "scaleConstraint" $rig[$i]`;
+		delete $scC[0];
+		
+		int $result = 0;
+		$result = `objExists $rig[$i]`;
+		if( $result ){
+			float $pos[] = YP_RD_returnDefferenceXYZ( $lct[$i] , $rig[$i] );
+			move -r $pos[0] $pos[1] $pos[2] $rig[$i];
+		}
+		
+		select -r $spine03[$i] $rig[$i];
+		parentConstraint -mo -weight 1;
+		scaleConstraint -mo -weight 1;
+		
+	}
+}
+
+
+
+
+
+

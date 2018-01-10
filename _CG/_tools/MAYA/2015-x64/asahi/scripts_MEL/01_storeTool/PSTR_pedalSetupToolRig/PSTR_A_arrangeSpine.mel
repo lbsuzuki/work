@@ -1,0 +1,80 @@
+///////////////////////////////////////////////////////////////////////////////
+//	PSTR_A_arrangeSpine            //	背骨から頭部にかけてのリグ調整
+///////////////////////////////////////////////////////////////////////////////
+//
+//	AUTHOR: 		goto kazufumi
+//
+//	CREATION DATE:	2013_04_15
+//	UPDATED DATE:	2013_10_11
+//
+//	VERSION:			1.1
+//
+//	HOW TO USE:		run "PSTR_A_arrangeSpine();"
+//
+//////////////////////////////////////////////////////////////////
+
+global proc PSTR_A_arrangeSpine(){
+
+	string $cord = `textField -q -text PST_tfCordName`;
+	int $size = `size $cord`;
+	string $last = `substring $cord $size $size`;
+	if( $last != "_" ){
+		$cord += "_";
+	}
+	
+	//コンストレイント削除
+	string $chin02_jnt = $cord + "chin02_jnt";
+	string $chin02_jnt_paC[] = `listConnections -source 1 -destination 0 -type "parentConstraint" $chin02_jnt`;
+	delete $chin02_jnt_paC[0];
+	string $chin02_jnt_scC[] = `listConnections -source 1 -destination 0 -type "scaleConstraint" $chin02_jnt`;
+	delete $chin02_jnt_scC[0];
+	
+	
+	
+	
+	
+	string $lct[] = {		"waist_jnt_ALct",
+								"spine01_jnt_ALct",
+								"spine02_jnt_ALct",
+								"spine03_jnt_ALct",
+								"neck_jnt_ALct",
+								"head01_jnt_ALct",
+								"chin01_jnt_ALct",
+								"chin02_jnt_ALct",
+								"chin01_jnt_ALct",
+								"head02_end_ALct"				};
+								
+	string $rig[] = {		"waist_link",
+									"spine01_link",
+									"spine02_link",
+									"spine03_link",
+									"neck_link",
+									"head01_link",
+									"chin01_jnt",
+									"chin02_jnt",
+									"chin_crv",
+									"head02_end"					};
+	
+	for( $i=0; $i<size($lct); $i++ ){
+	
+		$lct[$i] = $cord + $lct[$i];
+		$rig[$i] = $cord + $rig[$i];
+	
+		float $pos[] = PSTR_A_translateXYZ( $lct[$i] , $rig[$i] );
+		move -r $pos[0] $pos[1] $pos[2] $rig[$i];
+		
+	}
+	
+	//トランスフォームのフリーズ
+	string $chin_crv = $cord + "chin_crv";
+	makeIdentity -apply 1 -t 1 -r 0 -s 0 -n 0 $chin_crv;
+	
+	//コンストレイント復元
+	select -r $chin_crv $chin02_jnt;
+	parentConstraint -mo -weight 1;
+	scaleConstraint -mo -weight 1;
+	
+	//
+	PSTR_renameAttrWeight();
+	
+}

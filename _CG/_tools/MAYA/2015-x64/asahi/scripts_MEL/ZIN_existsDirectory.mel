@@ -1,0 +1,56 @@
+//////////////////////////////////////////////////////////////////
+//		ZIN_existsDirectory          //   
+//////////////////////////////////////////////////////////////////
+//
+//	AUTHOR: 		goto kazufumi
+//
+//	CREATION DATE: 	2012_03_23
+//	UPDATED DATE:		2012_03_23
+//
+//	VERSION:		1.0
+//
+//	HOW TO USE:		run "ZIN_existsDirectory();"
+//
+//////////////////////////////////////////////////////////////////
+
+/*----------------------------------------------------------------------------------------------------
+
+	ZIN_existsDirectory( パス, ディレクトリを作成するかどうか )
+
+	指定されたパスが存在するかどうかを調査し、引数によってはディレクトリを作成します。
+	返り値：		パスが存在するとき				文字列　1　を配列として返します
+			パスが存在せず、$createが0　のとき		文字列　0　を配列として返します
+			パスが存在せず、$createが1　のとき		文字列　0　と　ディレクトリパス　を配列として返します
+
+----------------------------------------------------------------------------------------------------*/
+
+
+global proc string[] ZIN_existsDirectory( string $path, int $create ){
+
+	string $message[] = {"1"};
+	int $existsPath = `filetest -e $path`;
+	
+	if( $existsPath == 0 ){
+	
+		if( $create == 1 ){
+		
+			int $size = `size $path`;
+			string $lastStr = `substring $path $size $size`;
+			if( $lastStr != "/" ){
+			
+				$path = $path + "/";
+			
+			}
+			sysFile -makeDir $path;
+			$message[1] = "\n次のディレクトリを作成しました。\n";
+			$message[2] = $path;
+		
+		}
+	
+		$message[0] = "0";
+	
+	}
+
+	return $message;
+	
+}

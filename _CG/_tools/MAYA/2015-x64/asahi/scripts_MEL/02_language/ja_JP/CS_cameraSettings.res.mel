@@ -1,0 +1,36 @@
+///////////////////////////////////////////////////////////////////////////////
+//	BS_bitmapSize.res
+///////////////////////////////////////////////////////////////////////////////
+//
+//	AUTHOR: 		goto kazufumi
+//
+//	CREATION DATE:	2013_12_09
+//	UPDATED DATE:	2013_12_09
+//
+//	VERSION:				1.0
+//
+//////////////////////////////////////////////////////////////////
+
+/*================================================================
+
+	『ビットマップ サイズ』日本語バージョンのリソース
+
+================================================================*/
+
+/*================================================================
+
+	更新内容
+
+================================================================*/
+
+displayString -r -v "カメラセット作成" zm_CS.windowTitle;
+displayString -r -v "作成概要" zm_CS.flNewCameraSet;
+displayString -r -v "以下の２つのカメラを作成します。" zm_CS.tNCSExp;
+displayString -r -v "イメージプレーン付きのカメラ " zm_CS.tNCSCameraWithImagePlane;
+displayString -r -v ": animCamera" zm_CS.tNCSColonAnimCamera;
+displayString -r -v "レンダリング用のカメラ " zm_CS.tPercentItem;
+displayString -r -v "%" zm_CS.tPercent;
+displayString -r -v "イメージプレーンサイズを\nレンダリングサイズに割り当てます。" zm_CS.tExpress;
+displayString -r -v "適用" zm_CS.btnApply;
+displayString -r -v "ＯＫ" zm_CS.btnOK;
+displayString -r -v "キャンセル" zm_CS.btnCancel;

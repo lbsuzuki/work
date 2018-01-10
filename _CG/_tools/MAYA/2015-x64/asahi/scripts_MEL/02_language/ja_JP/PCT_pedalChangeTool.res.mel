@@ -1,0 +1,50 @@
+///////////////////////////////////////////////////////////////////////////////
+//	PCT_pedalChangeTool.res
+///////////////////////////////////////////////////////////////////////////////
+//
+//	AUTHOR: 		goto kazufumi
+//
+//	CREATION DATE:	2013_12_05
+//	UPDATED DATE:	2013_12_05
+//
+//	VERSION:				1.01
+//
+//////////////////////////////////////////////////////////////////
+
+/*================================================================
+
+	『切り替えツール』日本語バージョンのリソース
+
+================================================================*/
+
+/*================================================================
+
+	更新内容
+
+================================================================*/
+
+displayString -r -v "切り替え ツール" zm_PCT.windowTitle;
+
+displayString -r -v "アンチエイリアス" zm_PCT_CA.tlAntialiasing;
+displayString -r -v "アンチエイリアス解除機構の作成" zm_PCT_CA.flMakeAntialiasingCancellationMechanism;
+displayString -r -v "ネームスペース リスト" zm_PCT_CA.flNamespaceList;
+displayString -r -v "更新" zm_PCT_CA.btnReload;
+displayString -r -v "全選択" zm_PCT_CA.btnSelectAll;
+displayString -r -v "アンチエイリアス解除機構の作成" zm_PCT_CA.btnMakeAntialiasingCancellationMechanism;
+displayString -r -v "アンチエイリアスの切り替え" zm_PCT_CA.flChangeAntialiasing;
+displayString -r -v "現在の状態 ： " zm_PCT_CA.tCurrentState;
+displayString -r -v "アンチエイリアス ON" zm_PCT_CA.btnAntialiasingON;
+displayString -r -v "アンチエイリアス OFF" zm_PCT_CA.btnAntialiasingOFF;
+
+displayString -r -v "タイヤ ブラシ" zm_PCT_CTB.tlChangeTireBrush;
+displayString -r -v "タイヤ ブラシの切り替え" zm_PCT_CTB.flChangeTireBrush;
+displayString -r -v "現在の状態 ： " zm_PCT_CTB.tCurrentState;
+displayString -r -v "昼" zm_PCT_CTB.btnNOON;
+displayString -r -v "夜" zm_PCT_CTB.btnNIGHT;
+
+displayString -r -v "ネームスペース リスト からネームスペースを選択してください。" zm_PCT_CA_selectNS.ePleaseChooseNamespace;
+displayString -r -v "antiRampがありません。" zm_PCT_CA_antiON.eThereIsNoAntiRamp;
+displayString -r -v "antiRampがありません。" zm_PCT_CA_antiOFF.eThereIsNoAntiRamp;
+displayString -r -v "miDefaultFramebuffer が存在してません。" zm_PCT_CA_inputAntiCurrentState.tThereIsNoMiDefaultFramebuffer;
+
+

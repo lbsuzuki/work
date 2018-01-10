@@ -1,0 +1,154 @@
+///////////////////////////////////////////////////////////////////////////////
+//	PSTRP_RMBC_rideMamaBicycleConstraint        //	乗車コンストレイント
+///////////////////////////////////////////////////////////////////////////////
+//
+//	AUTHOR: 		goto kazufumi
+//
+//	CREATION DATE:	2013_07_08
+//	UPDATED DATE:	2013_10_11
+//
+//	VERSION:			1.1
+//
+//	HOW TO USE:		run "PSTRP_RMBC_rideMamaBicycleConstraint();"
+//
+//////////////////////////////////////////////////////////////////
+
+global proc PSTRP_RMBC_rideMamaBicycleConstraint(){
+
+	string $select[] = `ls -sl`;
+
+	//自転車
+		//自転車ネームスペース取得
+		string $bikeParts01[];
+		int $bikeToken01 = ` tokenize $select[0] ":" $bikeParts01`;
+		string $nsBike;
+		if( $bikeToken01 == 1 ){
+			$nsBike = "";
+		}else if( $bikeToken01 == 2 ){
+			$nsBike = $bikeParts01[0];
+		}else if( $bikeToken01 > 2 ){
+			for( $i=0; $i<($bikeToken01-1); $i++ ){
+				if( $i==0 ){
+					$nsBike = $bikeParts01[0];
+				}else{
+					$nsBike += ":";
+					$nsBike += $bikeParts01[$i];
+				}
+			}
+		}
+
+		//自転車コードネーム取得
+		string $bikeParts02[];
+		int $bikeToken02 = ` tokenize $bikeParts01[$bikeToken01-1] "_" $bikeParts02`;
+		string $cnBike;
+		if( $bikeToken02 == 1 ){
+			error ("選択したオブジェクトにコードネームが存在しません。\n" + $select[0] );
+		}else{
+			$cnBike = $bikeParts02[0];
+		}
+
+		string $nscnBike;
+		if( size($nsBike) == 0 ){
+			$nscnBike = $cnBike;
+		}else{
+			$nscnBike = $nsBike + ":" + $cnBike;
+		}
+		string $L_armConstrainLct = $nscnBike + "_L_armConstrainLct";
+		string $R_armConstrainLct = $nscnBike + "_R_armConstrainLct";
+		string $L_footConstrainLct = $nscnBike + "_L_footConstrainLct";
+		string $R_footConstrainLct = $nscnBike + "_R_footConstrainLct";
+		string $bike_world_CTRL_crv =$nscnBike + "_world_CTRL_crv";
+		
+	//キャラ
+		//キャラネームスペース取得
+		string $charaParts01[];
+		int $charaToken01 = ` tokenize $select[1] ":" $charaParts01`;
+		string $nsChara;
+		if( $charaToken01 == 1 ){
+			$nsChara = "";
+		}else if( $charaToken01 == 2 ){
+			$nsChara = $charaParts01[0];
+		}else if( $charaToken01 > 2 ){
+			for( $i=0; $i<($charaToken01-1); $i++ ){
+				if( $i==0 ){
+					$nsChara = $charaParts01[0];
+				}else{
+					$nsChara += ":";
+					$nsChara += $charaParts01[$i];
+				}
+			}
+		}
+
+		//キャラコードネーム取得
+		string $charaParts02[];
+		int $charaToken02 = ` tokenize $charaParts01[$charaToken01-1] "_" $charaParts02`;
+		string $cnChara;
+		if( $charaToken02 == 1 ){
+			error ("選択したオブジェクトにコードネームが存在しません。\n" + $select[1] );
+		}else{
+			$cnChara = $charaParts02[0];
+		}
+		
+		string $nscnChara;
+		if( size($nsChara) == 0 ){
+			$nscnChara = $cnChara;
+		}else{
+			$nscnChara = $nsChara + ":" + $cnChara;
+		}
+		string $L_hand01_constlink = $nscnChara + "_L_hand01_constlink";
+		string $R_hand01_constlink = $nscnChara + "_R_hand01_constlink";
+		string $L_foot_constlink = $nscnChara + "_L_foot_constlink";
+		string $R_foot_constlink = $nscnChara + "_R_foot_constlink";
+		string $chara_rootCTRL_crv = $nscnChara + "_rootCTRL_link";
+
+		
+		
+		
+	//キャラと自転車をコンストレイント
+		//自転車のコンストリンクロケータの座標を取得 A
+		vector $L_armBike_t = ` xform -q -ws -rp $L_armConstrainLct `;
+		vector $R_armBike_t = ` xform -q -ws -rp $R_armConstrainLct `;
+		vector $L_legBike_t = ` xform -q -ws -rp $L_footConstrainLct `;
+		vector $R_legBike_t = ` xform -q -ws -rp $R_footConstrainLct `;
+
+		//キャラのコンストリンクロケータの座標を取得 B
+		vector $L_armChara_t = ` xform -q -ws -rp $L_hand01_constlink `;
+		vector $R_armChara_t = ` xform -q -ws -rp $R_hand01_constlink `;
+		vector $L_legChara_t = ` xform -q -ws -rp $L_foot_constlink `;
+		vector $R_legChara_t = ` xform -q -ws -rp $R_foot_constlink `;
+		
+		//座標の差を計算 A-B 　計算結果の座標に移動させる
+		vector $L_arm_t = $L_armBike_t - $L_armChara_t;
+		vector $R_arm_t = $R_armBike_t - $R_armChara_t;
+		vector $L_leg_t = $L_legBike_t - $L_legChara_t;
+		vector $R_leg_t = $R_legBike_t - $R_legChara_t;
+		move ($L_arm_t.x) ($L_arm_t.y) ($L_arm_t.z) $L_hand01_constlink;
+		move ($R_arm_t.x) ($R_arm_t.y) ($R_arm_t.z) $R_hand01_constlink;
+		move ($L_leg_t.x) ($L_leg_t.y) ($L_leg_t.z) $L_foot_constlink;
+		move ($R_leg_t.x) ($R_leg_t.y) ($R_leg_t.z) $R_foot_constlink;
+		
+		//腕と脚をペアレントコンストレイント
+		select -r $L_armConstrainLct $L_hand01_constlink;
+		parentConstraint -mo -weight 1;
+		scaleConstraint -mo -weight 1;
+		select -r $R_armConstrainLct $R_hand01_constlink;
+		parentConstraint -mo -weight 1;
+		scaleConstraint -mo -weight 1;
+		select -r $L_footConstrainLct $L_foot_constlink;
+		parentConstraint -mo -weight 1;
+		scaleConstraint -mo -weight 1;
+		select -r $R_footConstrainLct $R_foot_constlink;
+		parentConstraint -mo -weight 1;
+		scaleConstraint -mo -weight 1;
+		
+		//キャラと自転車のルートをコンストレイント
+		select -r $bike_world_CTRL_crv $chara_rootCTRL_crv;
+		pointConstraint -mo -weight 1;
+		orientConstraint -mo -weight 1;
+		scaleConstraint -mo -weight 1;
+	
+}
+
+
+
+

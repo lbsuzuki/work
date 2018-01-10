@@ -1,0 +1,102 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="ja">
+<head>
+
+	<meta http-equiv="Content-Type" content="text/html; charset=Shift_JIS">
+
+	<link rel="stylesheet" type="text/css" href="../../0-X/css/bodyTextStyle.css">
+	
+	<title>モデルローダ ルール</title>
+
+
+</head>
+
+<body>
+
+<h1></h1>
+
+	<p>
+	</p>
+
+		<div class="index">
+		
+			<h3 id="index">index</h3>
+		
+			<ul>
+		
+			<li><a href="#●●●">作品ファイルパス</a></li>
+			<li><a href="#▲▲▲">モデルリストファイル</a></li>
+			
+			</ul>
+		
+		</div>
+
+
+<h2 id="●●●">作品ファイルパス</h2>
+	
+	<p>
+	作品ファイルパス
+		<p>
+		…「作品名」「アセットパス」「モデルリストフォルダ名」の情報を格納しているテキストファイルです。
+		</p>
+	</p>
+	<p>
+	構成は次のとおりです。<br>
+	作品名>>アセットパス>>モデルリストフォルダ名<br>
+	<br>
+	・必ず各項目の間に「>>」を半角で入れる必要があります。<br>
+	・アセットパスは実在するパスでないとエラーが起こります。<br>
+	・必ずアセットパス直下にあるフォルダをモデルリストフォルダにする必要があります。<br>
+	</p>
+	<p>
+	<img src="pict/titleFilePath.jpg" border="0" alt="titleFilePath.jpg(48921 byte)" width="591" height="219">
+	</p>
+	
+
+
+<h2 id="●●●">モデルリストファイル</h2>
+
+	<p>
+	モデルリストファイル
+		<p>
+		…ＵＩのリスト項目を構成する情報が格納されているテキストファイルです。<br><br>
+		</p>
+	</p>
+	<p>
+	構成は次のとおりです。<br><br>
+	===リスト名<br>
+	---タブ名>>シーンフォルダ名<br>
+	モデルコード　　　　コメント<br><br>
+	===リスト名<br>
+	---タブ名<br>
+	モデルコード　　　　コメント<br>
+	.<br>
+	.<br>
+	.<br><br>
+	
+	必ず次のルールを守ってください。<br>
+	・リスト名の前に「===」を必ずつけてください<br>
+	・タブ名の前に「---」を必ずつけてください<br>
+	・タブ名と同一のフォルダ内にシーンフォルダがあり、<br>
+	　そこからmbファイルを読み込むようにしたいとき（例えばscenesフォルダから読み込みたいとき）<br>
+	　タブ名の後ろに「>>」をつけてシーンフォルダ名を書いてください。<br>
+	・モデルコードとコメントの間にタブでスペースをあけてください。<br>
+	
+		
+	
+	
+	</p>
+	<img src="pict/modelList.jpg" border="0" alt="modelList.jpg(164241 byte)" width="738" height="1086">
+	</p>
+
+
+	<p>
+	<a href="#index">topへ戻る</a>
+	</p>
+
+
+</body>
+
+
+
+</html>

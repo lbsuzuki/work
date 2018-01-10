@@ -1,0 +1,76 @@
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//	PSTRO_CC_connectContour	//	
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+//	AUTHOR: 		goto kazufumi
+//
+//	CREATION DATE:	2014_02_20
+//	UPDATED DATE:	2014_02_20
+//
+//	VERSION:			1.0
+//
+//	HOW TO USE:		run "PSTRO_CC_connectContour();"
+//
+//////////////////////////////////////////////////////////////////
+
+/*================================================================
+
+
+
+================================================================*/
+
+
+/*================================================================
+
+	■更新内容：
+
+
+================================================================*/
+
+
+/*----------------------------------------------------------------------
+
+	PSTRO_CC_connectContour
+	
+	CTRL_crv.lineTexThickness_atr　から　texLine_multiplyDivide.input1X　に
+	接続します。
+	
+----------------------------------------------------------------------*/
+
+global proc PSTRO_CC_connectContour(){
+
+	string $code = `textField -q -text PST_tfCordName`;
+	int $size = `size $code`;
+	if( $size != 0 ){
+		string $last = `substring $code $size $size`;
+		if( $last != "_" ){
+			if( $last != ":" ){
+				$code += "_";
+			}
+		}
+	}
+	
+	string $CTRL_crv = $code + "CTRL_crv";
+	string $con[] = ` ls -type "contour_shader_simple"  `;
+
+	string $warning[];
+	
+	for( $conOne in $con ){
+		string $source[] = ` listConnections -s 1 -d 0 ( $conOne + ".width" ) `;
+		if( size($source) == 0 ){
+			connectAttr -f ( $CTRL_crv + ".lineWidth" ) ( $conOne + ".width" );	
+		}else{
+			$warning[size($warning)] = $conOne;
+		}
+	}
+	
+	if( size($warning) != 0 ){
+		for( $warningOne in $warning ){
+			warning ( $warningOne + "　のwidthはすでに接続されているものがあるので無視しました。" );
+		}
+	}
+
+}
+
+
+

@@ -1,0 +1,104 @@
+///////////////////////////////////////////////////////////////////////////////
+//	PSTR_M_mirrorLocator            //
+///////////////////////////////////////////////////////////////////////////////
+//
+//	AUTHOR: 		goto kazufumi
+//
+//	CREATION DATE:	2016_03_14
+//	UPDATED DATE:		2016_07_13
+//
+//	VERSION:			1.1
+//
+//	HOW TO USE:		run "PSTR_M_mirrorLocator();"
+//
+//////////////////////////////////////////////////////////////////
+
+
+/*================================================================
+
+	更新内容
+	
+	1.1		【L_adjustBreast_jnt_ALct】【L_adjustPocket_jnt_ALct】を外しました
+	
+
+================================================================*/
+
+
+global proc PSTR_M_mirrorLocator(){
+
+	string $code = `textField -q -text PST_tfCordName`;
+	int $size = `size $code`;
+	if( $size != 0 ){
+		string $last = `substring $code $size $size`;
+		if( $last != "_" ){
+			if( $last != ":" ){
+				$code += "_";
+			}
+		}
+	}
+
+	string $L[] = {
+						"L_leg01_jnt_ALct",
+						"L_leg02_jnt_ALct",
+						"L_foot01_jnt_ALct",
+						"L_foot_crv_pivotALct",
+						"L_foot02_jnt_ALct",
+						"L_heel_crv_pivotALct",
+						"L_foot03_end_ALct",
+						"L_toe_crv_pivotALct",
+						"L_leg_poleVector_lct_ALct",
+						"L_adjustHip_jnt_ALct",
+						"L_adjustNeck01_jnt_ALct",
+						"L_adjustNeck02_jnt_ALct",
+						"L_shoulder01_jnt_ALct",
+						"L_shoulder02_jnt_ALct",
+						"L_arm_jnt_ALct",
+						"L_hand00_crv_pivotALct",
+						"L_hand01_jnt_ALct",
+						"L_finger_01_01_jnt_ALct",
+						"L_finger_01_02_jnt_ALct",
+						"L_finger_01_03_jnt_ALct",
+						"L_finger_01_04_end_ALct",
+						"L_hand02A_jnt_ALct",
+						"L_finger_02_01_jnt_ALct",
+						"L_finger_02_02_jnt_ALct",
+						"L_finger_02_03_jnt_ALct",
+						"L_finger_02_04_end_ALct",
+						"L_finger_03_01_jnt_ALct",
+						"L_finger_03_02_jnt_ALct",
+						"L_finger_03_03_jnt_ALct",
+						"L_finger_03_04_end_ALct",
+						"L_hand02B_jnt_ALct",
+						"L_finger_04_01_jnt_ALct",
+						"L_finger_04_02_jnt_ALct",
+						"L_finger_04_03_jnt_ALct",
+						"L_finger_04_04_end_ALct",
+						"L_finger_05_01_jnt_ALct",
+						"L_finger_05_02_jnt_ALct",
+						"L_finger_05_03_jnt_ALct",
+						"L_finger_05_04_end_ALct",
+						"L_arm_poleVector_lct_ALct",
+						"L_adjustElbow_jnt_ALct",
+						"L_adjustScapula_jnt_ALct",
+						"L_adjustVelcro_jnt_ALct"
+					};
+					
+	for( $one in $L ){
+
+		$one = $code + $one;
+		string $R = substituteAllString( $one , "L_" , "R_" );
+		
+		float $posL[] =  ` xform -q -ws -t $one `;
+		move ($posL[0]*(-1)) $posL[1] $posL[2] $R;
+		
+
+	}
+
+
+}
+
+
+
+
+
+

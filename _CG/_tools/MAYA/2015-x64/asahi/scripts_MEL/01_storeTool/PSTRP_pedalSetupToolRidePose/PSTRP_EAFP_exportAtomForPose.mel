@@ -1,0 +1,61 @@
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+//	PSTRP_EAFP_exportAtomForPose            //	Atom 書き出し（ポーズ専用）
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+//	AUTHOR: 		goto kazufumi
+//
+//	CREATION DATE:	2014_01_06
+//	UPDATED DATE:	2014_01_06
+//
+//	VERSION:			1.0
+//
+//	HOW TO USE:		run "PSTRP_EAFP_exportAtomForPose();"
+//
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/*---------------------------------------------------------------------------------------------------------------------
+
+	PSTRP_EAFP_exportAtomForPose
+	
+	選択したオブジェクトから下位のオブジェクトの値をatomファイルとしてエクスポートします。
+
+---------------------------------------------------------------------------------------------------------------------*/
+
+global proc PSTRP_EAFP_exportAtomForPose(){
+
+	//絶対パスファイルから『pedalModels』パスを取得
+	string $modelsPath = ZIN_commonAbsolutePath("pedalModels");
+	//オプションバーに『PSTRP_AFP_lastPath』の値があれば取得
+	if( ` optionVar -exists PSTRP_AFP_lastPath ` ){
+		string $path = ` optionVar -q PSTRP_AFP_lastPath `;
+		//『PSTRP_AFP_lastPath』のサイズが0でなければ$modelsPathに取得
+		if( ` size $path ` != 0 ){
+			$modelsPath = $path;
+		}
+	}
+	
+	//保存先のパスと保存したいAtomファイル名をダイアログボックスを使用して取得
+	string $atom[] = `fileDialog2	-startingDirectory $modelsPath
+											-fileFilter "Atom (*.atom)"
+											-dialogStyle 1
+											-caption "Export Atom"
+											-okCaption "Export Atom"
+											-fileMode 0`;
+	
+	//パスのサイズが0でないときAtomファイルを保存
+	if(size($atom[0]) != 0){
+		performExportAnim 1;
+		file	-force -options "precision=8;statics=1;baked=1;sdk=0;constraint=0;animLayers=0;selected=childrenToo;whichRange=2;range=0:0;hierarchy=none;controlPoints=0;useChannelBox=2;options=keys;"
+				-typ "atomExport" -es $atom[0];
+	}
+	
+	//オプションバーに記録するためのファイル名を除いたパスを取得
+	string $modelsPath = ` dirname $atom[0] `;
+	//ファイルパスのサイズが0のとき、絶対パスファイルから『pedalModels』パスを取得
+	if( size($modelsPath) == 0 ){
+		$modelsPath = ZIN_commonAbsolutePath("pedalModels");
+	}
+	//オプションバー『PSTRP_AFP_lastPath』に値を記録
+	optionVar -stringValue PSTRP_AFP_lastPath $modelsPath;
+	
+}

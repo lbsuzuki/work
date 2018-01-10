@@ -1,0 +1,4 @@
+RW_R2DT_rename2DTexture>>2Dテクスチャを接続先を元にリネーム
+RW_RFN_renameFileNode>>fileノードをイメージのファイル名を元にリネーム
+RW_RL_renameLuminance>>luminanceノードを接続先を元にリネーム
+RW_RMFL_renameMaterialFromLayeredTexture>>レイヤテクスチャ.outColorと接続しているマテリアル名をリネーム

@@ -1,0 +1,86 @@
+///////////////////////////////////////////////////////////////////////////////
+//	PSTRO_CFPV_changeFacialPivotVisible            //	
+///////////////////////////////////////////////////////////////////////////////
+//
+//	AUTHOR: 		goto kazufumi
+//
+//	CREATION DATE:	2016_04_11
+//	UPDATED DATE:	2016_04_11
+//
+//	VERSION:			1.0
+//
+//	HOW TO USE:		run "PSTRO_CFPV_changeFacialPivotVisible();"
+//
+//////////////////////////////////////////////////////////////////
+
+
+/*=======================================================
+
+	PSTRO_CFPV_changeFacialPivotVisible
+	
+	ジョイントにロケータを配置しました
+
+=======================================================*/
+
+/*-------------------------------------------------------------------------------------------------------
+
+	更新
+
+-------------------------------------------------------------------------------------------------------*/
+
+
+global proc PSTRO_CFPV_changeFacialPivotVisible(){
+
+	//ロケータ作成
+	
+	string $crv[] = {	"L_eye_crv",
+						"R_eye_crv",
+						"mouth_crv"						};
+	
+	string $link[] = {	"L_eye_link",
+						"R_eye_link",
+						"mouth_link"						};
+						
+	
+	string $code = `textField -q -text PST_tfCordName`;
+	int $size = `size $code`;
+	if( $size != 0 ){
+		string $last = `substring $code $size $size`;
+		if( $last != "_" ){
+			if( $last != ":" ){
+				$code += "_";
+			}
+		}
+	}
+	
+	for( $i=0; $i<size($crv); $i++ ){
+		$crv[$i] = $code + $crv[$i];
+	}
+	
+	for( $i=0; $i<size($link); $i++ ){
+		$link[$i] = $code + $link[$i];
+	}
+	
+	string $linkAlct[];
+	
+	for( $i=0; $i<size($link); $i++ ){
+
+		int $v = ` getAttr ( $link[$i] + ".displayRotatePivot" ) `;
+		int $v = 1-$v;
+		setAttr ( $link[$i] + ".displayRotatePivot" ) $v;
+		
+	}
+	
+	for( $i=0; $i<size($crv); $i++ ){
+
+		int $v = ` getAttr ( $crv[$i] + ".displayRotatePivot" ) `;
+		int $v = 1-$v;
+		setAttr ( $crv[$i] + ".displayRotatePivot" ) $v;
+
+	}
+
+	
+}
+
+
+

@@ -1,0 +1,52 @@
+///////////////////////////////////////////////////////////////////////////////
+//	PSTRO_M_mirrorLocatorFacial            //
+///////////////////////////////////////////////////////////////////////////////
+//
+//	AUTHOR: 		goto kazufumi
+//
+//	CREATION DATE:	2016_04_11
+//	UPDATED DATE:	2016_04_11
+//
+//	VERSION:			1.0
+//
+//	HOW TO USE:		run "PSTRO_M_mirrorLocatorFacial();"
+//
+//////////////////////////////////////////////////////////////////
+
+global proc PSTRO_M_mirrorLocatorFacial(){
+
+	string $code = `textField -q -text PST_tfCordName`;
+	int $size = `size $code`;
+	if( $size != 0 ){
+		string $last = `substring $code $size $size`;
+		if( $last != "_" ){
+			if( $last != ":" ){
+				$code += "_";
+			}
+		}
+	}
+
+	string $L[] = {		"L_eye_link_ALct",
+						"L_eye_crv_pivotALct"						};
+							
+							
+					
+	for( $one in $L ){
+
+		$one = $code + $one;
+		string $R = substituteAllString( $one , "L_" , "R_" );
+		
+		float $posL[] =  ` xform -q -ws -t $one `;
+		move ($posL[0]*(-1)) $posL[1] $posL[2] $R;
+		
+
+	}
+
+
+}
+
+
+
+
+
+

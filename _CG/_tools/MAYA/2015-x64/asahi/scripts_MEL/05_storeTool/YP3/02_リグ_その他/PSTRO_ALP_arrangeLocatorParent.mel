@@ -1,0 +1,66 @@
+///////////////////////////////////////////////////////////////////////////////
+//	PSTRO_ALP_arrangeLocatorParent            //	表情ロケータのペアレント再現
+///////////////////////////////////////////////////////////////////////////////
+//
+//	AUTHOR: 		goto kazufumi
+//
+//	CREATION DATE:	2016_04_11
+//	UPDATED DATE:	2016_04_11
+//
+//	VERSION:			1.1
+//
+//	HOW TO USE:		run "PSTRO_ALP_arrangeLocatorParent();"
+//
+//////////////////////////////////////////////////////////////////
+
+global proc PSTRO_ALP_arrangeLocatorParent(){
+
+	string $sl[] = ` ls -sl `;
+
+	string $code = `textField -q -text PST_tfCordName`;
+	int $size = `size $code`;
+	if( $size != 0 ){
+		string $last = `substring $code $size $size`;
+		if( $last != "_" ){
+			if( $last != ":" ){
+				$code += "_";
+			}
+		}
+	}
+
+		
+		
+	//指の親子関係--------------------------------------------------------------------------------------------------------
+	string $parent[] = {				"L_eye_link_ALct",
+										"R_eye_link_ALct",
+										"mouth_link_ALct"				};
+
+	
+	string $child[] = {					"L_eye_crv_pivotALct",
+										"R_eye_crv_pivotALct",
+										"mouth_crv_pivotALct"			};
+												
+												
+												
+
+
+	
+	for( $i=0; $i<size($parent); $i++ ){	
+		$parent[$i] = $code + $parent[$i];
+		$child[$i] = $code + $child[$i];
+	}
+	
+	//子にする
+	for( $i=0; $i<size($parent); $i++ ){
+		string $p[] = ` listRelatives -parent $child[$i] `;
+		if( $p[0] != $child[$i] ){
+			parent $child[$i] $parent[$i];
+		}
+	}
+
+	select -r $sl;
+
+}
+
+
+

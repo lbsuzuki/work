@@ -1,0 +1,180 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="ja">
+<head>
+
+	<meta http-equiv="Content-Type" content="text/html; charset=Shift_JIS">
+
+	<link rel="stylesheet" type="text/css" href="../../0-X/css/bodyTextStyle.css">
+	
+	<title>テクスチャ解像度切り替え チュートリアル</title>
+
+
+</head>
+
+<body>
+
+<h1></h1>
+
+	<p>
+	</p>
+
+		<div class="index">
+		
+			<h3 id="index">index</h3>
+		
+			<ul>
+		
+			<li><a href="#概要">概要</a></li>
+			<li><a href="#用意">低解像度ファイルの用意</a></li>
+			<li><a href="#起動">起動</a></li>
+			<li><a href="#切り替え範囲">切り替えるfileノードの範囲を設定</a></li>
+			<li><a href="#低解像度">低解像度に切り替え</a></li>
+			<li><a href="#高解像度">高解像度に切り替え</a></li>
+			<li><a href="#パネル">高解像度切り替え時のパネルを編集</a></li>
+			
+			</ul>
+		
+		</div>
+
+
+<h2 id="概要">概要</h2>
+	<p>
+	解像度の高いテクスチャを多用しているモデルがシーンにいることで<br>
+	テクスチャの読み込みに時間がかかりビューポート上でのテクスチャ表示に時間がかかることがあります。<br>
+	本ツールは用途に応じて読み込むテクスチャを切り替え、作業効率をあげるのを目的としています。
+	</p>
+	<img src="pict/使用方法_0_概要.jpg" border="0" alt="使用方法_0_概要.jpg(193010 byte)" width="1393" height="475">
+
+	<p>
+	<a href="#index">topへ戻る</a>
+	</p>
+
+
+<h2 id="用意">低解像度ファイルの用意</h2>
+	<p>
+	解像度の切り替えを行うには、いくつか条件があります。
+	</p>
+	
+	
+	<h3>高解像度テクスチャと低解像度テクスチャの２種類を用意</h3>
+		<p>
+		高解像度テクスチャをもとに低解像度テクスチャを用意してください<br>
+		<img src="pict/使用方法_0_テクスチャ用意.jpg" border="0" alt="使用方法_0_テクスチャ用意.jpg(59283 byte)" width="476" height="339">
+		</p>
+	
+	
+	<h3>高解像度テクスチャと低解像度テクスチャは同じ名前にする</h3>
+		<p>
+		高解像度と低解像度のファイル名は同じなるようにしてください<br>
+		<img src="pict/使用方法_0_同じ名前のテクスチャ.jpg" border="0" alt="使用方法_0_同じ名前のテクスチャ.jpg(69036 byte)" width="476" height="339">
+		</p>
+		
+		
+	<h3>低解像度テクスチャを規定の場所に置く</h3>
+		<p>
+		高解像度テクスチャと同じ階層に【tex_low】フォルダを作成し<br>
+		その中に低解像度テクスチャを置いてください。<br>
+		<img src="pict/使用方法_0_フォルダ構造.jpg" border="0" alt="使用方法_0_フォルダ構造.jpg(227477 byte)" width="848" height="594">
+		</p>
+	<p>
+	<a href="#index">topへ戻る</a>
+	</p>
+
+
+<h2 id="起動">起動</h2>
+<h3>仁ツール</h3>
+
+<img src="pict/使用方法_1_起動.jpg" border="0" alt="使用方法_1_起動.jpg(56720 byte)" width="338" height="300">
+	
+
+	<p>
+	<a href="#index">topへ戻る</a>
+	</p>
+	
+	
+<h2 id="切り替え範囲">切り替えるfileノードの範囲を設定</h2>
+	<h3>すべてのfileノードを対象とする場合</h3>
+	<p>
+	fileノード項目の【すべて】ラジオボタンを選択<br>
+	これによりシーン内のfileノードすべてに作用します。
+	</p>
+	<img src="pict/使用方法_2_1_fileノードの範囲.jpg" border="0" alt="使用方法_2_1_fileノードの範囲.jpg(53624 byte)" width="559" height="356">
+
+	<h3>選択しているfileノードを対象とする場合</h3>
+	<p>
+	fileノード項目の【選択】ラジオボタンを選択<br>
+	これにより適用ボタンを押した時点で選択しているfileノードに作用します。
+	</p>
+	<img src="pict/使用方法_2_2_fileノードの範囲.jpg" border="0" alt="使用方法_2_2_fileノードの範囲.jpg(53624 byte)" width="559" height="356">
+
+	<p>
+	<a href="#index">topへ戻る</a>
+	</p>
+
+
+
+<h2 id="低解像度">低解像度に切り替え</h2>
+	<h3>解像度状態を【アニメーション】に設定</h3>
+	<p>
+	解像度状態項目から【アニメーション】ラジオボタンを選択し、【適用】ボタンをクリックします。
+	
+	</p>
+	<img src="pict/使用方法_3_1_低解像度切り替え.jpg" border="0" alt="使用方法_3_1_低解像度切り替え.jpg(304921 byte)" width="975" height="561">
+
+	<h3>低解像度切り替え結果</h3>
+	<p>
+	fileノードのファイルパスに【tex_low\】の文字列を追加します。<br>
+	文字列は必ずファイル名の前に追加されます。
+	</p>
+	<img src="pict/使用方法_3_2_低解像度切り替え.jpg" border="0" alt="使用方法_3_2_低解像度切り替え.jpg(310297 byte)" width="975" height="561">
+
+	<p>
+	<a href="#index">topへ戻る</a>
+	</p>
+
+
+
+<h2 id="高解像度">高解像度に切り替え</h2>
+	<h3>解像度状態を【レンダリング】に設定</h3>
+	<p>
+	解像度状態項目から【レンダリング】ラジオボタンを選択し、【適用】ボタンをクリックします。
+	
+	</p>
+	<img src="pict/使用方法_3_3_低解像度切り替え.jpg" border="0" alt="使用方法_3_3_低解像度切り替え.jpg(295312 byte)" width="975" height="561">
+
+	<h3>低解像度切り替え結果</h3>
+	<p>
+	fileノードのファイルパスから【tex_low\】の文字列を削除します。<br>
+	削除されるのは必ずファイル名の前にある文字列となります。
+	</p>
+	<img src="pict/使用方法_3_4_低解像度切り替え.jpg" border="0" alt="使用方法_3_4_低解像度切り替え.jpg(324037 byte)" width="975" height="561">
+
+	<p>
+	<a href="#index">topへ戻る</a>
+	</p>
+
+
+<h2 id="パネル">高解像度切り替え時のパネルを編集</h2>
+	<h3></h3>
+	<p>
+	解像度状態項目から【レンダリング】ラジオボタンを選択し、【適用】ボタンをクリックします。
+	
+	</p>
+	<img src="pict/使用方法_3_3_低解像度切り替え.jpg" border="0" alt="使用方法_3_3_低解像度切り替え.jpg(295312 byte)" width="975" height="561">
+
+	<h3>低解像度切り替え結果</h3>
+	<p>
+	fileノードのファイルパスから【tex_low\】の文字列を削除します。<br>
+	削除されるのは必ずファイル名の前にある文字列となります。
+	</p>
+	<img src="pict/使用方法_3_4_低解像度切り替え.jpg" border="0" alt="使用方法_3_4_低解像度切り替え.jpg(324037 byte)" width="975" height="561">
+
+	<p>
+	<a href="#index">topへ戻る</a>
+	</p>
+
+
+</body>
+
+
+</html>

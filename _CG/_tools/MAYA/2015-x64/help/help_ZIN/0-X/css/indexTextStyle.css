@@ -1,0 +1,84 @@
+	<style>
+body {
+ margin-top: 2em;
+ margin-right: 3em;
+ margin-bottom: 2em;
+ margin-left: 6em;
+ color: black;
+ background: white;
+ font-family: "Meiryo", "ÉÅÉCÉäÉI";
+ font-style: normal;
+}
+article {
+ margin-top: 1em;
+ margin-right: 0em;
+ margin-bottom: 2em;
+ margin-left: 0em;
+}
+header {
+ margin-top: 2em;
+ margin-right: 0em;
+ margin-bottom: 2em;
+ margin-left: 0em;
+}
+footer {
+ margin-top: 2em;
+ margin-right: 0em;
+ margin-bottom: 2em;
+ margin-left: 0em;
+ text-align: center;
+}
+h2 {
+ margin-top: 1em;
+ margin-right: 0em;
+ margin-bottom: 0em;
+ margin-left: 0em;
+ padding: 0.3em 0.3em 0.3em 1.2em;
+ color: white;
+ background: #008080;
+}
+h3 {
+ border-bottom-style: solid;
+ border-bottom-color: #008080;
+ border-bottom-width: thin;
+ border-left-style: solid;
+ border-left-color: #008080;
+ border-left-width: thick;
+ margin-top: 1em;
+ margin-right: 0em;
+ margin-bottom: 1em;
+ margin-left: 0em;
+ padding: 0em 0em 0em 1em;
+}
+h4 {
+ margin-top: 0em;
+ margin-right: 0em;
+ margin-bottom: 1em;
+ margin-left: 1em;
+}
+dl {
+ margin-top: 0em;
+ margin-right: 1em;
+ margin-bottom: 0em;
+ margin-left: 2em;
+}
+ul {
+ margin-top: 0em;
+ margin-right: 1em;
+ margin-bottom: 0em;
+ margin-left: 2em;
+ list-style-type: none;
+}
+.tbox {
+ height: 10em;
+ margin-top: 0em;
+ margin-right: 2em;
+ margin-bottom: 0em;
+ margin-left: 3em;
+ border-left-style: solid;
+ border-left-color: #a0a0a0;
+ border-width: thin;
+ font-size: small;
+ overflow: auto;
+}
+	</style>

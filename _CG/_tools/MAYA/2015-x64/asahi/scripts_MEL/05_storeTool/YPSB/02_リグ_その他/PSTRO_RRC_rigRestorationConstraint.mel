@@ -1,0 +1,60 @@
+///////////////////////////////////////////////////////////////////////////////
+//	PSTRO_RRC_rigRestorationConstraint            //		
+///////////////////////////////////////////////////////////////////////////////
+//
+//	AUTHOR: 		goto kazufumi
+//
+//	CREATION DATE:	2016_04_28
+//	UPDATED DATE:		2016_04_28
+//
+//	VERSION:			1.0
+//
+//	HOW TO USE:		run "PSTRO_RRC_rigRestorationConstraint();"
+//
+//////////////////////////////////////////////////////////////////
+
+global proc PSTRO_RRC_rigRestorationConstraint(){
+
+	global string $PSTRO_RRC_crv[];
+	
+	global string $PSTRO_RRC_paC[];
+	global string $PSTRO_RRC_scC[];
+	global string $PSTRO_RRC_poC[];
+	global string $PSTRO_RRC_orC[];
+
+	for( $one in $PSTRO_RRC_crv ){
+		
+		string $jnt = substituteAllString( $one , "crv" , "jnt" );
+		
+		if( size($PSTRO_RRC_paC) != 0 ){
+			select -r $one;
+			select -add $jnt;
+			parentConstraint -mo -weight 1;
+		}
+
+		if( size($PSTRO_RRC_scC) != 0 ){
+			select -r $one;
+			select -add $jnt;
+			scaleConstraint -mo -weight 1;
+		}
+
+		if( size($PSTRO_RRC_poC) != 0 ){
+			select -r $one;
+			select -add $jnt;
+			pointConstraint -mo -weight 1;
+		}
+		
+		if( size($PSTRO_RRC_orC) != 0 ){
+			select -r $one;
+			select -add $jnt;
+			orientConstraint -mo -weight 1;
+		}
+
+	}
+
+	select -r $PSTRO_RRC_crv;
+
+
+
+}
+

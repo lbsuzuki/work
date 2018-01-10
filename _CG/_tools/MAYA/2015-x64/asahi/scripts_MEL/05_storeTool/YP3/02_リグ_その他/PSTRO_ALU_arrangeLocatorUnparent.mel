@@ -1,0 +1,48 @@
+///////////////////////////////////////////////////////////////////////////////
+//	PSTRO_ALU_arrangeLocatorUnparent            //	表情ロケータのペアレント解除
+///////////////////////////////////////////////////////////////////////////////
+//
+//	AUTHOR: 		goto kazufumi
+//
+//	CREATION DATE:	2013_11_04
+//	UPDATED DATE:	2013_11_04
+//
+//	VERSION:			1.0
+//
+//	HOW TO USE:		run "PSTRO_ALU_arrangeLocatorUnparent();"
+//
+//////////////////////////////////////////////////////////////////
+
+global proc PSTRO_ALU_arrangeLocatorUnparent(){
+
+	string $sl[] = ` ls -sl `;
+
+	string $code = `textField -q -text PST_tfCordName`;
+	int $size = `size $code`;
+	if( $size != 0 ){
+		string $last = `substring $code $size $size`;
+		if( $last != "_" ){
+			if( $last != ":" ){
+				$code += "_";
+			}
+		}
+	}
+
+	
+	//ALct--------------------------------------------------------------------------------------------------------
+
+	string $ALct[] = {					"L_eye_crv_pivotALct",
+										"R_eye_crv_pivotALct",
+										"mouth_crv_pivotALct"			};
+
+	
+	string $one;
+	for( $one in $ALct ){
+		parent ( $code + $one ) ( $code + "facialLct_grp" );
+	}
+		
+	select -r $sl;
+}
+
+
+

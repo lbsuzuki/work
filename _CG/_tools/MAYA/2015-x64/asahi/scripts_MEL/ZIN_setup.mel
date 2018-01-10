@@ -1,0 +1,114 @@
+//////////////////////////////////////////////////////////////////////////////////////////////
+//	ZIN_setup    //      ZINツールセットアップ
+//////////////////////////////////////////////////////////////////////////////////////////////
+//
+//	AUTHOR: 		goto kazufumi
+//
+//	CREATION DATE: 	2011_11_11
+//	UPDATED DATE:		2016_07_26
+//
+//	VERSION:		2.0
+//
+//	HOW TO USE:		run "ZIN_setup()"
+//
+//////////////////////////////////////////////////////////////////////////////////////////////
+
+/*=====================================================
+
+	旭専用ツール　仁ツールをmayaのメニューに表示します。
+	内容は社外用に書き換えています。
+
+=====================================================*/
+
+/*=====================================================
+
+	更新:
+
+
+
+=====================================================*/
+
+/*----------------------------------------------------------------------
+
+	ZIN_setup
+
+	ZINツールをmayaメニューに表示します。
+
+----------------------------------------------------------------------*/
+
+
+global proc ZIN_setup(){
+
+	ZIN_sourceRes();
+
+	setParent "MayaWindow";
+	menu -l (uiRes("zm_ZIN_S.mMain")) -tearOff 1 -allowOptionBoxes 1 ZIN_S_mMain;
+
+		//モデリング
+		menuItem -label (uiRes("zm_ZIN_S.miModeling")) -subMenu 1 -tearOff 1 ZIN_S_miModeling;
+			menuItem -label (uiRes("zm_ZIN_S.miSE")) -command "SE_sharpEdge()" ZIN_S_miSE;
+			setParent -menu ..;
+		//レンダリング
+		menuItem -label (uiRes("zm_ZIN_S.miRendering")) -subMenu 1 -tearOff 1 ZIN_S_miRendering;
+			menuItem -label (uiRes("zm_ZIN_S.miET")) -command "ET_editTool()" ZIN_S_miET;
+			menuItem -divider 1;
+			menuItem -label (uiRes("zm_ZIN_S.miBS")) -command "BS_bitmapSize()" ZIN_S_miBS;
+			menuItem -divider 1;
+			menuItem -label (uiRes("zm_ZIN_S.miCFR")) -command "CFR_changeFileResolution()" ZIN_S_miCFR;
+			setParent -menu ..;
+		//セットアップ
+		menuItem -label (uiRes("zm_ZIN_S.miSetup")) -subMenu 1 -tearOff 1 ZIN_S_miSetup;
+			menuItem -label (uiRes("zm_ZIN_S.miFO")) -command "FO_filterTypeOFF()" ZIN_S_miFO;
+			setParent -menu ..;
+		//シーン設定
+		menuItem -label (uiRes("zm_ZIN_S.miSceneSetting")) -subMenu 1 -tearOff 1 ZIN_S_miSceneSetting;
+			menuItem -label (uiRes("zm_ZIN_S.miLS")) -command "LS_loadScene()" ZIN_S_miLS;
+			menuItem -divider 1;
+			menuItem -label (uiRes("zm_ZIN_S.miML")) -command "ML_modelLoader()" ZIN_S_miML;
+			setParent -menu ..;
+
+		//-------------------------------------------------------------------------------------------------------------
+		  menuItem -divider 1; setParent -menu ..;
+		//-------------------------------------------------------------------------------------------------------------
+
+		//その他
+		menuItem -label (uiRes("zm_ZIN_S.miOther")) -subMenu 1 -tearOff 1 -allowOptionBoxes 1 ZIN_S_miOther;
+			menuItem -label (uiRes("zm_ZIN_S.miRW")) -command "RW_renamerWindow()" ZIN_S_miRW;
+			menuItem -divider 1;
+			menuItem -label (uiRes("zm_ZIN_S.miST")) -command "STW_storeToolWindow()" ZIN_S_miST;
+			setParent -menu ..;
+
+		//-------------------------------------------------------------------------------------------------------------
+		  menuItem -divider 1; setParent -menu ..;
+		//-------------------------------------------------------------------------------------------------------------
+		
+		//設定
+		menuItem -label (uiRes("zm_ZIN_S.miZC")) -command "ZC_zinConfig()" ZIN_S_miZC;
+		
+		//-------------------------------------------------------------------------------------------------------------
+		  menuItem -divider 1; setParent -menu ..;
+		//-------------------------------------------------------------------------------------------------------------
+		
+		menuItem -label (uiRes("zm_ZIN_S.miAboutZIN")) -subMenu 1 -tearOff 1 ZIN_S_miAboutZIN;
+			menuItem -label (uiRes("zm_ZIN_S.miHelpZIN")) -command "system \"load I:/work/_CG/_tools/MAYA/2015-x64/help/help_ZIN/help_ZIN.html\"" ZIN_S_miHelpZIN;
+			menuItem -label (uiRes("zm_ZIN_S.miVersionZIN")) -command "ZIN_V_version()" ZIN_S_miVersionZIN;
+			setParent -menu ..;
+
+	setParent -m "..";
+	
+
+	
+
+}
+
+
+
+
+
+
+
+
+
+
+
+

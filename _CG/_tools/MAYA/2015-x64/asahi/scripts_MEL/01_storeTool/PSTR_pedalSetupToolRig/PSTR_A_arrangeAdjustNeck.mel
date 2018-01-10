@@ -1,0 +1,53 @@
+///////////////////////////////////////////////////////////////////////////////
+//	PSTR_A_arrangeAdjustNeck            //	ã›ÇÃÉäÉOí≤êÆ
+///////////////////////////////////////////////////////////////////////////////
+//
+//	AUTHOR: 		goto kazufumi
+//
+//	CREATION DATE:	2013_09_07
+//	UPDATED DATE:	2013_10_11
+//
+//	VERSION:			1.1
+//
+//	HOW TO USE:		run "PSTR_A_arrangeAdjustNeck();"
+//
+//////////////////////////////////////////////////////////////////
+
+global proc PSTR_A_arrangeAdjustNeck(){
+
+	string $cord = `textField -q -text PST_tfCordName`;
+	int $size = `size $cord`;
+	string $last = `substring $cord $size $size`;
+	if( $last != "_" ){
+		$cord += "_";
+	}
+	
+	string $lct[] = {		"L_adjustNeck01_jnt_ALct",
+								"L_adjustNeck02_jnt_ALct",
+								"adjustNeck_jnt_ALct",
+								"R_adjustNeck01_jnt_ALct",
+								"R_adjustNeck02_jnt_ALct"								};
+
+	string $rig[] = {		"L_adjustNeck01_link",
+								"L_adjustNeck02_link",
+								"adjustNeck_link",
+								"R_adjustNeck01_link",
+								"R_adjustNeck02_link"									};
+
+	for( $i=0; $i<size($lct); $i++ ){
+		$lct[$i] = $cord + $lct[$i];
+		$rig[$i] = $cord + $rig[$i];
+		int $result = 0;
+		$result = `objExists $rig[$i]`;
+		if( $result ){
+			float $pos[] = PSTR_A_translateXYZ( $lct[$i] , $rig[$i] );
+			move -r $pos[0] $pos[1] $pos[2] $rig[$i];
+		}
+	}
+}
+
+
+
+
+
+

@@ -1,0 +1,59 @@
+///////////////////////////////////////////////////////////////////////////////
+//	PSTN_CLTN_createLineThicknessNetwork            //		線の太さネットワーク作成
+///////////////////////////////////////////////////////////////////////////////
+//
+//	AUTHOR: 		goto kazufumi
+//
+//	CREATION DATE:	2014_04_08
+//	UPDATED DATE:	2014_04_08
+//
+//	VERSION:			1.0
+//
+//	HOW TO USE:		run "PSTN_CLTN_createLineThicknessNetwork()"
+//
+//////////////////////////////////////////////////////////////////
+
+global proc PSTN_CLTN_createLineThicknessNetwork(){
+
+	string $file = `shadingNode -asTexture file`;
+	string $p2d = `shadingNode -asUtility place2dTexture`;
+	connectAttr -f ( $p2d + ".coverage" ) ( $file + ".coverage" );
+	connectAttr -f ( $p2d + ".translateFrame" ) ( $file + ".translateFrame" );
+	connectAttr -f ( $p2d + ".rotateFrame" ) ( $file + ".rotateFrame" );
+	connectAttr -f ( $p2d + ".mirrorU" ) ( $file + ".mirrorU" );
+	connectAttr -f ( $p2d + ".mirrorV" ) ( $file + ".mirrorV" );
+	connectAttr -f ( $p2d + ".stagger" ) ( $file + ".stagger" );
+	connectAttr -f ( $p2d + ".wrapU" ) ( $file + ".wrapU" );
+	connectAttr -f ( $p2d + ".wrapV" ) ( $file + ".wrapV" );
+	connectAttr -f ( $p2d + ".repeatUV" ) ( $file + ".repeatUV" );
+	connectAttr -f ( $p2d + ".offset" ) ( $file + ".offset" );
+	connectAttr -f ( $p2d + ".rotateUV" ) ( $file + ".rotateUV" );
+	connectAttr -f ( $p2d + ".noiseUV" ) ( $file + ".noiseUV" );
+	connectAttr -f ( $p2d + ".vertexUvOne" ) ( $file + ".vertexUvOne" );
+	connectAttr -f ( $p2d + ".vertexUvTwo" ) ( $file + ".vertexUvTwo" );
+	connectAttr -f ( $p2d + ".vertexUvThree" ) ( $file + ".vertexUvThree" );
+	connectAttr -f ( $p2d + ".vertexCameraOne" ) ( $file + ".vertexCameraOne" );
+	connectAttr ( $p2d + ".outUV" ) ( $file + ".uv" );
+	connectAttr ( $p2d + ".outUvFilterSize" ) ( $file + ".uvFilterSize" );
+
+	string $ramp = `shadingNode -asTexture ramp`;
+	string $p2d = `shadingNode -asUtility place2dTexture`;
+	connectAttr ( $p2d + ".outUV" ) ( $ramp + ".uv" );
+	connectAttr ( $p2d + ".outUvFilterSize" ) ( $ramp + ".uvFilterSize" );
+
+	string $lumi = `shadingNode -asUtility luminance`;
+
+	connectAttr -f ( $file + ".outColor" ) ( $lumi + ".value" );
+	connectAttr -f ( $lumi + ".outValue" ) ( $ramp + ".vCoord" );
+
+	removeMultiInstance -break 1 ( $ramp + ".colorEntryList[1]" );
+	setAttr ( $ramp + ".colorEntryList[0].color" ) -type double3 0 0 0 ;
+	setAttr ( $ramp + ".colorEntryList[2].color" ) -type double3 1 1 1 ;
+	setAttr ( $ramp + ".interpolation" ) 0;
+	
+}
+
+
+
+
+

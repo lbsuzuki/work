@@ -1,0 +1,34 @@
+///////////////////////////////////////////////////////////////////////////////
+//	PSTN_CMV_connectMouthVisibility            //		å˚ÇÃâ¬éãê´Ç∆scvÇê⁄ë±
+///////////////////////////////////////////////////////////////////////////////
+//
+//	AUTHOR: 		goto kazufumi
+//
+//	CREATION DATE:	2013_08_11
+//	UPDATED DATE:	2013_10_24
+//
+//	VERSION:			1.1
+//
+//	HOW TO USE:		run "PSTN_CMV_connectMouthVisibility();"
+//
+//////////////////////////////////////////////////////////////////
+
+global proc PSTN_CMV_connectMouthVisibility(){
+
+	string $cord = `textField -q -text PST_tfCordName`;
+	int $size = `size $cord`;
+	string $last = `substring $cord $size $size`;
+	if( $last != "_" ){
+		$cord += "_";
+	}
+
+	string $scv[] = `ls -type "animCurve" -sl`;
+	string $one;
+	for( $one in $scv ){
+		int $connect = ` isConnected -ignoreUnitConversion ( $cord + "CTRL_crv.mouthVisible_atr" ) ( $one + ".input" ) `;
+		if( !$connect ){
+			connectAttr -f ( $cord + "CTRL_crv.mouthVisible_atr" ) ( $one + ".input" );
+		}
+	}
+
+}

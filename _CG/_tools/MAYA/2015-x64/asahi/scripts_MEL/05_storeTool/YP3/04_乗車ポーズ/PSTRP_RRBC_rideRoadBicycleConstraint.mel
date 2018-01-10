@@ -1,0 +1,327 @@
+///////////////////////////////////////////////////////////////////////////////
+//	PSTRP_RRBC_rideRoadBicycleConstraint        //	乗車コンストレイント（ロードバイクver）
+///////////////////////////////////////////////////////////////////////////////
+//
+//	AUTHOR: 		goto kazufumi
+//
+//	CREATION DATE:	2013_07_08
+//	UPDATED DATE:	2013_10_11
+//
+//	VERSION:			1.1
+//
+//	HOW TO USE:		run "PSTRP_RRBC_rideRoadBicycleConstraint();"
+//
+//////////////////////////////////////////////////////////////////
+
+
+global proc PSTRP_RRBC_rideRoadBicycleConstraint(){
+
+	//ツール・バージョン
+	string $title = "乗車ポーズ　ネームスペースとコードネームの状態選択";
+	string $version = "1.0";
+	
+	//テンプレート定義
+	if( !` uiTemplate -exists PSTRP_RRBC_uiTempInput ` ){
+		uiTemplate PSTRP_RRBC_uiTempInput;
+	}
+	
+	text -dt PSTRP_RRBC_uiTempInput -h 25;
+	button -dt PSTRP_RRBC_uiTempInput -h 25;
+	radioButton -dt PSTRP_RRBC_uiTempInput -h 25;
+	frameLayout -dt PSTRP_RRBC_uiTempInput -w 100;
+	
+	//重複ウィンドウ調査
+	if( ` window -q -exists PSTRP_RRBC_window ` ){
+		deleteUI PSTRP_RRBC_window;
+	}
+
+	window	-title ( $title + "(v" + $version + ")" )
+			PSTRP_RRBC_window;
+			
+		setUITemplate -pst PSTRP_RRBC_uiTempInput;
+		
+		frameLayout -lv 0 -bs etchedOut PSTRP_RRBC_flAll;
+			formLayout PSTRP_RRBC_folAll;
+			
+				text -l "ネームスペースとコードネームの状態を選択してください。" PSTRP_RRBC_tChoice;
+				
+				separator -style "in" PSTRP_RRBC_sep1;
+				
+				text -l "Bike" PSTRP_RRBC_tBike;
+				
+				radioCollection PSTRP_RRBC_rcBChoice;
+
+				
+					radioButton -l "ネームスペース＋コードネーム" PSTRP_RRBC_rbBNamespaceAndCordName;
+					radioButton -l "ネームスペースのみ" -sl PSTRP_RRBC_rbBNamespace;
+					radioButton -l "コードネームのみ" PSTRP_RRBC_rbBCodeName;
+					radioButton -l "なし" PSTRP_RRBC_rbBNone;
+			
+				separator -style "in" PSTRP_RRBC_sep2;
+					
+				text -l "Chara" PSTRP_RRBC_tChara;
+					
+				radioCollection PSTRP_RRBC_rcCChoice;
+				
+					radioButton -l "ネームスペース＋コードネーム" PSTRP_RRBC_rbCNamespaceAndCordName;
+					radioButton -l "ネームスペースのみ" -sl PSTRP_RRBC_rbCNamespace;
+					radioButton -l "コードネームのみ" PSTRP_RRBC_rbCCodeName;
+					radioButton -l "なし" PSTRP_RRBC_rbCNone;
+			
+				
+				button -l "Apply" -c "PSTRP_RRBC_rideRoadBicycleConstraintRun()" PSTRP_RRBC_btnApply;
+				button -l "Cancel" -c "deleteUI PSTRP_RRBC_window" PSTRP_RRBC_btnCancel;
+					
+				
+					
+			setParent..;
+		setParent..;
+	showWindow;
+	
+	
+	formLayout -e
+	
+		-af PSTRP_RRBC_tChoice						"top"		5
+		-af PSTRP_RRBC_tChoice						"left"		100
+		
+		-ac PSTRP_RRBC_sep1							"top"		5	PSTRP_RRBC_tChoice
+		-af PSTRP_RRBC_sep1							"left"		0
+		-af PSTRP_RRBC_sep1							"right"		0
+		
+		-ac PSTRP_RRBC_tBike						"top"		5	PSTRP_RRBC_sep1
+		-ac PSTRP_RRBC_tBike						"right"		5	PSTRP_RRBC_rbBNamespaceAndCordName
+		
+		-ac PSTRP_RRBC_rbBNamespaceAndCordName		"top"		5	PSTRP_RRBC_sep1
+		-af PSTRP_RRBC_rbBNamespaceAndCordName		"left"		100
+		
+		-ac PSTRP_RRBC_rbBNamespace					"top"		0	PSTRP_RRBC_rbBNamespaceAndCordName
+		-af PSTRP_RRBC_rbBNamespace					"left"		100
+		
+		-ac PSTRP_RRBC_rbBCodeName					"top"		0	PSTRP_RRBC_rbBNamespace
+		-af PSTRP_RRBC_rbBCodeName					"left"		100
+		
+		-ac PSTRP_RRBC_rbBNone						"top"		0	PSTRP_RRBC_rbBCodeName
+		-af PSTRP_RRBC_rbBNone						"left"		100
+		
+		
+		-ac PSTRP_RRBC_sep2							"top"		5	PSTRP_RRBC_rbBNone
+		-af PSTRP_RRBC_sep2							"left"		0
+		-af PSTRP_RRBC_sep2							"right"		0
+		
+		-ac PSTRP_RRBC_tChara						"top"		5	PSTRP_RRBC_sep2
+		-ac PSTRP_RRBC_tChara						"right"		5	PSTRP_RRBC_rbCNamespaceAndCordName
+		
+		-ac PSTRP_RRBC_rbCNamespaceAndCordName		"top"		5	PSTRP_RRBC_sep2
+		-af PSTRP_RRBC_rbCNamespaceAndCordName		"left"		100
+		
+		-ac PSTRP_RRBC_rbCNamespace					"top"		0	PSTRP_RRBC_rbCNamespaceAndCordName
+		-af PSTRP_RRBC_rbCNamespace					"left"		100
+		
+		-ac PSTRP_RRBC_rbCCodeName					"top"		0	PSTRP_RRBC_rbCNamespace
+		-af PSTRP_RRBC_rbCCodeName					"left"		100
+		
+		-ac PSTRP_RRBC_rbCNone						"top"		0	PSTRP_RRBC_rbCCodeName
+		-af PSTRP_RRBC_rbCNone						"left"		100
+		
+		
+		-af PSTRP_RRBC_btnApply						"left"		0
+		-ap PSTRP_RRBC_btnApply						"right"		0	50
+		-af PSTRP_RRBC_btnApply						"bottom"	0
+		
+		-ap PSTRP_RRBC_btnCancel					"left"		0	50
+		-af PSTRP_RRBC_btnCancel					"right"		0
+		-af PSTRP_RRBC_btnCancel					"bottom"	0
+
+		PSTRP_RRBC_folAll;
+		
+		
+	
+	
+}
+
+
+global proc PSTRP_RRBC_rideRoadBicycleConstraintRun(){
+
+	string $select[] = `ls -sl`;
+	
+	string $rbB = ` radioCollection -q -select PSTRP_RRBC_rcBChoice `;
+	string $rbC = ` radioCollection -q -select PSTRP_RRBC_rcCChoice `;
+
+	//自転車
+	
+		//自転車ネームスペース取得
+		string $nsBike;
+		string $bikeParts01[];
+		int $bikeToken01 = ` tokenize $select[0] ":" $bikeParts01`;
+		if( $bikeToken01 == 1 ){
+			$nsBike = "";
+		}else if( $bikeToken01 == 2 ){
+			$nsBike = $bikeParts01[0];
+		}else if( $bikeToken01 > 2 ){
+			for( $i=0; $i<($bikeToken01-1); $i++ ){
+				if( $i==0 ){
+					$nsBike = $bikeParts01[0];
+				}else{
+					$nsBike += ":";
+					$nsBike += $bikeParts01[$i];
+				}
+			}
+		}
+
+
+		//自転車コードネーム取得
+		string $cnBike;
+		string $bikeParts02[];
+		int $bikeToken02 = ` tokenize $bikeParts01[$bikeToken01-1] "_" $bikeParts02`;
+		if( $bikeToken02 == 1 ){
+			error ("選択したオブジェクトにコードネームが存在しません。\n" + $select[0] );
+		}else{
+			$cnBike = $bikeParts02[0];
+			$cnBike += "_";
+		}
+		
+		string $nscnBike = "";
+		if( $rbB == "PSTRP_RRBC_rbBNamespaceAndCordName" ){
+			$nscnBike = $nsBike + ":" +  $cnBike;
+		}else if( $rbB == "PSTRP_RRBC_rbBNamespace" ){
+			$nscnBike = $nsBike + ":";
+		}else if( $rbB == "PSTRP_RRBC_rbBCodeName" ){
+			$nscnBike = $cnBike;
+		}
+
+		string $L_armConstrainLctU = $nscnBike + "L_upperHandle_arm_const_lct";
+		string $R_armConstrainLctU = $nscnBike + "R_upperHandle_arm_const_lct";
+		string $L_armConstrainLctL = $nscnBike + "L_lowerHandle_arm_const_lct";
+		string $R_armConstrainLctL = $nscnBike + "R_lowerHandle_arm_const_lct";
+		string $L_footConstrainLct = $nscnBike + "footConstraint_L_lct";
+		string $R_footConstrainLct = $nscnBike + "footConstraint_R_lct";
+		string $bike_world_CTRL_crv =$nscnBike + "world_CTRL_crv";
+		
+	//キャラ
+		//キャラネームスペース取得
+		string $charaParts01[];
+		int $charaToken01 = ` tokenize $select[1] ":" $charaParts01`;
+		string $nsChara;
+		if( $charaToken01 == 1 ){
+			$nsChara = "";
+		}else if( $charaToken01 == 2 ){
+			$nsChara = $charaParts01[0];
+		}else if( $charaToken01 > 2 ){
+			for( $i=0; $i<($charaToken01-1); $i++ ){
+				if( $i==0 ){
+					$nsChara = $charaParts01[0];
+				}else{
+					$nsChara += ":";
+					$nsChara += $charaParts01[$i];
+				}
+			}
+		}
+
+		//キャラコードネーム取得
+		string $charaParts02[];
+		int $charaToken02 = ` tokenize $charaParts01[$charaToken01-1] "_" $charaParts02`;
+		string $cnChara;
+		if( $charaToken02 == 1 ){
+			error ("選択したオブジェクトにコードネームが存在しません。\n" + $select[1] );
+		}else{
+			$cnChara = $charaParts02[0];
+			$cnChara += "_";
+		}
+		
+		string $nscnChara = "";
+		if( $rbC == "PSTRP_RRBC_rbCNamespaceAndCordName" ){
+			$nscnChara = $nsChara + ":" +  $cnChara;
+		}else if( $rbC == "PSTRP_RRBC_rbCNamespace" ){
+			$nscnChara = $nsChara + ":";
+		}else if( $rbC == "PSTRP_RRBC_rbCCodeName" ){
+			$nscnChara = $cnChara;
+		}
+		string $L_hand01_constlink = $nscnChara + "L_hand01_constlink";
+		string $R_hand01_constlink = $nscnChara + "R_hand01_constlink";
+		string $L_foot_constlink = $nscnChara + "L_foot_constlink";
+		string $R_foot_constlink = $nscnChara + "R_foot_constlink";
+		string $chara_rootCTRL_crv = $nscnChara + "rootCTRL_link";
+
+		
+		
+		
+	//キャラと自転車をコンストレイント
+		//自転車のコンストリンクロケータの座標を取得 A
+		vector $L_armBikeU_t = ` xform -q -ws -rp $L_armConstrainLctU `;
+		vector $R_armBikeU_t = ` xform -q -ws -rp $R_armConstrainLctU `;
+		vector $L_armBikeL_t = ` xform -q -ws -rp $L_armConstrainLctL `;
+		vector $R_armBikeL_t = ` xform -q -ws -rp $R_armConstrainLctL `;
+		vector $L_legBike_t = ` xform -q -ws -rp $L_footConstrainLct `;
+		vector $R_legBike_t = ` xform -q -ws -rp $R_footConstrainLct `;
+
+		//キャラのコンストリンクロケータの座標を取得 B
+		vector $L_armChara_t = ` xform -q -ws -rp $L_hand01_constlink `;
+		vector $R_armChara_t = ` xform -q -ws -rp $R_hand01_constlink `;
+		vector $L_legChara_t = ` xform -q -ws -rp $L_foot_constlink `;
+		vector $R_legChara_t = ` xform -q -ws -rp $R_foot_constlink `;
+		
+		//座標の差を計算 A-B 　計算結果の座標に移動させる
+		vector $L_armU_t = $L_armBikeU_t - $L_armChara_t;
+		vector $R_armU_t = $R_armBikeU_t - $R_armChara_t;
+		vector $L_armL_t = $L_armBikeL_t - $L_armChara_t;
+		vector $R_armL_t = $R_armBikeL_t - $R_armChara_t;
+		vector $L_leg_t = $L_legBike_t - $L_legChara_t;
+		vector $R_leg_t = $R_legBike_t - $R_legChara_t;
+		move -r ($L_armU_t.x) ($L_armU_t.y) ($L_armU_t.z) $L_hand01_constlink;
+		move -r ($R_armU_t.x) ($R_armU_t.y) ($R_armU_t.z) $R_hand01_constlink;
+		move ($L_leg_t.x) ($L_leg_t.y) ($L_leg_t.z) $L_foot_constlink;
+		move ($R_leg_t.x) ($R_leg_t.y) ($R_leg_t.z) $R_foot_constlink;
+		
+		//腕と脚をペアレントコンストレイント
+		select -r $L_armConstrainLctU $L_hand01_constlink;
+		string $L_pC[] = ` parentConstraint -mo -weight 1 `;
+		string $L_sC[] = ` scaleConstraint -mo -weight 1 `;
+		select -r $R_armConstrainLctU $R_hand01_constlink;
+		string $R_pC[] = ` parentConstraint -mo -weight 1 `;
+		string $R_sC[] = ` scaleConstraint -mo -weight 1 `;
+		
+		select -r $L_armConstrainLctL $L_hand01_constlink;
+		parentConstraint -weight 0;
+		scaleConstraint -mo -weight 0;
+		select -r $R_armConstrainLctL $R_hand01_constlink;
+		parentConstraint -weight 0;
+		scaleConstraint -mo -weight 0;
+		
+		select -r $L_footConstrainLct $L_foot_constlink;
+		parentConstraint -mo -weight 1;
+		scaleConstraint -mo -weight 1;
+		select -r $R_footConstrainLct $R_foot_constlink;
+		parentConstraint -mo -weight 1;
+		scaleConstraint -mo -weight 1;
+		
+		//キャラと自転車のルートをコンストレイント
+		select -r $bike_world_CTRL_crv $chara_rootCTRL_crv;
+		pointConstraint -mo -weight 1;
+		orientConstraint -mo -weight 1;
+		scaleConstraint -mo -weight 1;
+		
+	
+		
+		//hand01_crvとコンストレイントを接続
+		
+		string $L_hand01_crv = $nscnChara + "L_hand01_crv";
+		string $R_hand01_crv = $nscnChara + "R_hand01_crv";
+		
+		string $pma = $nscnChara + "L_handPosition_plusMinusAverage";
+		connectAttr -f ( $L_hand01_crv + ".Position" ) ( $L_pC[0] + ".L_lowerHandle_arm_const_lctW1" );
+		connectAttr -f ( $L_hand01_crv + ".Position" ) ( $L_sC[0] + ".L_lowerHandle_arm_const_lctW1" );
+		connectAttr -f ( $pma + ".output2Dx" ) ( $L_pC[0] + ".L_upperHandle_arm_const_lctW0" );
+		connectAttr -f ( $pma + ".output2Dx" ) ( $L_sC[0] + ".L_upperHandle_arm_const_lctW0" );
+		
+		string $pma = $nscnChara + "R_handPosition_plusMinusAverage";
+		connectAttr -f ( $R_hand01_crv + ".Position" ) ( $R_pC[0] + ".R_lowerHandle_arm_const_lctW1" );
+		connectAttr -f ( $R_hand01_crv + ".Position" ) ( $R_sC[0] + ".R_lowerHandle_arm_const_lctW1" );
+		connectAttr -f ( $pma + ".output2Dx" ) ( $R_pC[0] + ".R_upperHandle_arm_const_lctW0" );
+		connectAttr -f ( $pma + ".output2Dx" ) ( $R_sC[0] + ".R_upperHandle_arm_const_lctW0" );
+
+	
+}
+
+
+
+

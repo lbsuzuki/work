@@ -1,0 +1,42 @@
+///////////////////////////////////////////////////////////////////////////////
+//	PSTR_SS_smoothSkin            //
+///////////////////////////////////////////////////////////////////////////////
+//
+//	AUTHOR: 		goto kazufumi
+//
+//	CREATION DATE:	2016_04_15
+//	UPDATED DATE:	2016_04_15
+//
+//	VERSION:		1.0
+//
+//	HOW TO USE:		run "PSTR_SS_smoothSkin();"
+//
+//////////////////////////////////////////////////////////////////
+
+global proc PSTR_SS_smoothSkin(){
+
+	string $grp = "base_meshGrp";
+	string $jnt = "waist_jnt";
+
+	string $code = `textField -q -text PST_tfCordName`;
+	int $size = `size $code`;
+	if( $size != 0 ){
+		string $last = `substring $code $size $size`;
+		if( $last != "_" ){
+			if( $last != ":" ){
+				$code += "_";
+			}
+		}
+	}
+	
+	$grp = $code + $grp;
+	$jnt = $code + $jnt;
+
+	select -r $grp;
+	select -add $jnt;
+
+	colorizeSkeleton $jnt true;
+	newSkinCluster "-bindMethod 0 -normalizeWeights 1 -weightDistribution 0 -mi 3 -dr 4 -rui false,multipleBindPose,1"; 
+
+}
+

@@ -1,0 +1,1216 @@
+///////////////////////////////////////////////////////////////////////////////
+//	ET_editTool            //	一括編集ツール
+///////////////////////////////////////////////////////////////////////////////
+//
+//	AUTHOR: 		goto kazufumi
+//
+//	CREATION DATE:	2013_05_26
+//	UPDATED DATE:	2013_05_26
+//
+//	VERSION:			1.1
+//
+//	HOW TO USE:		run "ET_editTool();"
+//
+//////////////////////////////////////////////////////////////////
+
+/*================================================================
+
+	一括で編集するツールをまとめてあります。
+	
+		スムーズメッシュ
+		contourノード
+	
+================================================================*/
+
+
+/*================================================================
+
+	■更新内容：
+
+================================================================*/
+
+
+/*---------------------------------------------------------------
+
+	ET_editTool
+	
+	ウインドウを表示します。
+
+---------------------------------------------------------------*/
+global proc ET_editTool(){
+
+	//Mayaのバージョン
+	string $mVersion = ` about -v `;
+
+	//重複ウインドウ削除
+	if( `window -q -exists ET_window` ) deleteUI ET_window;
+	
+	//UIテンプレート定義
+	if( !`uiTemplate -exists ET_uiTemp ` ) uiTemplate ET_uiTemp;
+	
+	text -dt ET_uiTemp -h 25;
+	radioButton -dt ET_uiTemp -h 25;
+	button -dt ET_uiTemp -w 50 -h 25;
+	checkBox -dt ET_uiTemp -h 25;
+	optionMenu -dt ET_uiTemp -h 25;
+	floatSliderGrp -dt ET_uiTemp -h 25;
+	intSliderGrp -dt ET_uiTemp -h 25;
+	
+	
+	//設定の読み込み
+	string $prefRcTarget = "ET_ESM_rbSelectMesh";
+	int $prefCbSmoothMesh = 1;
+	int $prefCbUseGlobalSubdivisionMethod = 1;
+	int $prefOmSubdivisionMethod = 1;
+	int $prefCbExpressSubdivision = 0;
+	int $prefIsgPreviewDivisionLevel = 0;
+	int $prefCbPreviewForRendering = 1;
+	int $prefIsgRenderDivisionLevel = 2;
+	int $prefOmBaseBorder = 2;
+	float $prefFsgContinuity = 1.0;
+	int $prefCbUVSmooth = 1;
+	int $prefCbSpreadOfEdgeHardness = 1;
+	string $prefRcMapBorder = "ET_ESM_rbInsideSmooth";
+	int $prefCbGeometoryBorder = 0;
+	int $prefCbHardEdge = 0;
+	
+	if ( ` optionVar -ex ET_ESM_rcTargetPref ` ){
+		$prefRcTarget = `optionVar -q ET_ESM_rcTargetPref`;
+	}
+	
+	if ( ` optionVar -ex ET_ESM_cbSmoothMeshPref ` ){
+		$prefCbSmoothMesh = `optionVar -q ET_ESM_cbSmoothMeshPref`;
+	}
+	
+	if ( ` optionVar -ex ET_ESM_cbExpressSubdivisionPref ` ){
+		$prefCbExpressSubdivision = `optionVar -q ET_ESM_cbExpressSubdivisionPref`;
+	}
+	
+	if ( ` optionVar -ex ET_ESM_isgPreviewDivisionLevelPref ` ){
+		$prefIsgPreviewDivisionLevel = `optionVar -q ET_ESM_isgPreviewDivisionLevelPref`;
+	}
+	
+	if ( ` optionVar -ex ET_ESM_cbPreviewForRenderingPref ` ){
+		$prefCbPreviewForRendering = `optionVar -q ET_ESM_cbPreviewForRenderingPref`;
+	}
+	
+	if ( ` optionVar -ex ET_ESM_isgRenderDivisionLevelPref ` ){
+		$prefIsgRenderDivisionLevel = `optionVar -q ET_ESM_isgRenderDivisionLevelPref`;
+	}
+	
+	if ( ` optionVar -ex ET_ESM_omBaseBorderPref ` ){
+		$prefOmBaseBorder = `optionVar -q ET_ESM_omBaseBorderPref`;
+	}
+	
+	if ( ` optionVar -ex ET_ESM_fsgContinuityPref ` ){
+		$prefFsgContinuity = `optionVar -q ET_ESM_fsgContinuityPref`;
+	}
+	
+	if ( ` optionVar -ex ET_ESM_cbUVSmoothPref ` ){
+		$prefCbUVSmooth = `optionVar -q ET_ESM_cbUVSmoothPref`;
+	}
+	
+	if ( ` optionVar -ex ET_ESM_cbSpreadOfEdgeHardnessPref ` ){
+		$prefCbSpreadOfEdgeHardness = `optionVar -q ET_ESM_cbSpreadOfEdgeHardnessPref`;
+	}
+	
+	if ( ` optionVar -ex ET_ESM_rcMapBorderPref ` ){
+		$prefRcMapBorder = `optionVar -q ET_ESM_rcMapBorderPref`;
+	}
+	
+	if ( ` optionVar -ex ET_ESM_cbGeometoryBorderPref ` ){
+		$prefCbGeometoryBorder = `optionVar -q ET_ESM_cbGeometoryBorderPref`;
+	}
+	
+	if ( ` optionVar -ex ET_ESM_cbHardEdgePref ` ){
+		$prefCbHardEdge = `optionVar -q ET_ESM_cbHardEdgePref`;
+	}
+	
+	if( $mVersion != "2013 x64" && $mVersion != "2013 x32" ){
+		
+		if ( ` optionVar -ex ET_ESM_cbUseGlobalSubdivisionMethodPref ` ){
+			$prefCbUseGlobalSubdivisionMethod = `optionVar -q ET_ESM_cbUseGlobalSubdivisionMethodPref`;
+		}
+		
+		if ( ` optionVar -ex ET_ESM_omSubdivisionMethodPref ` ){
+			$prefOmSubdivisionMethod = `optionVar -q ET_ESM_omSubdivisionMethodPref`;
+		}
+	}
+
+	
+	//ウインドウ作成
+	
+	string $title = "一括編集ツール";
+	string $version = "(v1.1)";
+	
+	window -title ( $title + $version ) ET_window;
+		setUITemplate -pst ET_uiTemp;
+		tabLayout -changeCommand "ET_ESM_saveSetting()" ET_tlAll;
+		
+			//スムーズメッシュ
+			frameLayout -labelVisible 0 -borderStyle etchedOut ET_ESM_flAll;
+				formLayout ET_ESM_folAll;
+					//対象
+					frameLayout -l "対象" -borderStyle etchedOut -w 350 ET_ESM_flTarget;
+						formLayout ET_ESM_folTarget;
+							radioCollection ET_ESM_rcTarget;
+								radioButton -l "すべてのメッシュ" -cc "ET_ESM_saveSetting()" ET_ESM_rbAllMesh;
+								radioButton -l "選択したメッシュ" -cc "ET_ESM_saveSetting()" -select ET_ESM_rbSelectMesh;
+								if( $prefRcTarget == "ET_ESM_rbAllMesh" ){
+									radioButton -e -sl ET_ESM_rbAllMesh;
+								}
+						setParent..;
+					setParent..;
+					//スムーズメッシュ
+					frameLayout -l "スムーズメッシュ" -borderStyle etchedOut -w 350 ET_ESM_flSmoothMesh;
+						formLayout ET_ESM_folSmoothMesh;
+							checkBox -l "スムーズメッシュ" -v $prefCbSmoothMesh -cc "ET_ESM_saveSetting()" ET_ESM_cbSmoothMesh;
+							button -l "適用" -c "ET_ESM_apply(\"ET_ESM_bSmoothMesh\")" ET_ESM_bSmoothMesh;
+							formLayout ET_ESM_folSmoothMeshAddUI;
+							
+							if( $mVersion != "2013 x64" && $mVersion != "2013 x32" ){
+								checkBox -l "グローバル サブディビジョン方法を使用" -cc "ET_ESM_saveSetting()" -v $prefCbUseGlobalSubdivisionMethod ET_ESM_cbUseGlobalSubdivisionMethod;
+								optionMenu -l "サブディビジョン方法" -cc "ET_ESM_saveSetting()" ET_ESM_omSubdivisionMethod;
+									menuItem -l "Maya Catmull-Clark" ET_ESM_miMayaCatmull;
+									menuItem -l "OpenSubdiv Catmull-Clark" ET_ESM_miOpenSubdivCatmull;
+									optionMenu -e -sl $prefOmSubdivisionMethod ET_ESM_omSubdivisionMethod;
+							
+								button -l "適用" -c "ET_ESM_apply(\"ET_ESM_bUseGlobalSubdivisionMethod\")" ET_ESM_bUseGlobalSubdivisionMethod;
+								button -l "適用" -c "ET_ESM_apply(\"ET_ESM_bSubdivisionMethod\")" ET_ESM_bSubdivisionMethod;
+								
+								formLayout ET_ESM_folSmoothMeshButton;
+									button -l "すべて適用" -c "ET_ESM_applySmoothMesh()" ET_ESM_bSmoothMeshApply;
+								setParent..;
+								
+							}
+						
+							setParent..;
+							
+						setParent..;
+					setParent..;
+					//サブディビジョン レベル
+					frameLayout -l "サブディビジョン レベル" -borderStyle etchedOut -w 350 ET_ESM_flSubdivisionLevel;
+						formLayout ET_ESM_folSubdivisionLevel;
+							checkBox -l "サブディビジョンの表示" -v $prefCbExpressSubdivision -cc "ET_ESM_saveSetting()" ET_ESM_cbExpressSubdivision;
+							intSliderGrp -l "プレビューの分割レベル" -v $prefIsgPreviewDivisionLevel -field 1 -min 0 -max 4 -cc "ET_ESM_saveSetting()" ET_ESM_isgPreviewDivisionLevel;
+							checkBox -l "レンダリングのためにプレビューを使用" -v $prefCbPreviewForRendering -cc "ET_ESM_saveSetting()" ET_ESM_cbPreviewForRendering;
+							intSliderGrp -l "レンダーの分割レベル" -v $prefIsgRenderDivisionLevel -field 1 -min 0 -max 4 -cc "ET_ESM_saveSetting()" ET_ESM_isgRenderDivisionLevel;
+							//ボタン
+							formLayout ET_ESM_folSubdivisionLevelButton;
+								button -l "すべて適用" -c "ET_ESM_applySubdivisionLevel()" ET_ESM_bSubdivisionLevelApply;
+							setParent..;
+							
+							button -l "適用" -c "ET_ESM_apply(\"ET_ESM_bExpressSubdivision\")" ET_ESM_bExpressSubdivision;
+							button -l "適用" -c "ET_ESM_apply(\"ET_ESM_bApplyPreviewDivisionLevel\")" ET_ESM_bApplyPreviewDivisionLevel;
+							button -l "適用" -c "ET_ESM_apply(\"ET_ESM_bApplyPreviewForRendering\")" ET_ESM_bApplyPreviewForRendering;
+							button -l "適用" -c "ET_ESM_apply(\"ET_ESM_bApplyRenderDivisionLevel\")" ET_ESM_bApplyRenderDivisionLevel;
+							
+						setParent..;
+					setParent..;
+					//追加のコントロール
+					frameLayout -l "追加のコントロール" -borderStyle etchedOut -w 350 ET_ESM_flAdditionalControl;
+						formLayout ET_ESM_folAdditionalControl;
+							optionMenu -l "境界の基準" -cc "ET_ESM_saveSetting()" ET_ESM_omBaseBorder;
+								menuItem -l "旧式" ET_ESM_miOldType;
+								menuItem -l "すべてに折り目をつける" ET_ESM_miCreaseAll;
+								menuItem -l "折り目エッジ" ET_ESM_miCreaseEdge;
+								optionMenu -e -sl $prefOmBaseBorder ET_ESM_omBaseBorder;
+							floatSliderGrp -l "連続性" -v $prefFsgContinuity -field 1 -min 0 -max 1 -cc "ET_ESM_saveSetting()" ET_ESM_fsgContinuity;
+							checkBox -l "ＵＶのスムーズ" -v $prefCbUVSmooth -cc "ET_ESM_saveSetting()" ET_ESM_cbUVSmooth;
+							checkBox -l "エッジ硬度の伝播" -v $prefCbSpreadOfEdgeHardness -cc "ET_ESM_saveSetting()" ET_ESM_cbSpreadOfEdgeHardness;
+							text -l "マップの境界" ET_ESM_tMapBorder;
+							radioCollection ET_ESM_rcMapBorder;
+								radioButton -l "スムーズしない" -cc "ET_ESM_saveSetting()" ET_ESM_rbNonSmooth;
+								radioButton -l "内部のスムーズ" -cc "ET_ESM_saveSetting()" -select ET_ESM_rbInsideSmooth;
+								radioButton -l "すべてのスムーズ" -cc "ET_ESM_saveSetting()" ET_ESM_rbAllSmooth;	
+								if( $prefRcMapBorder == "ET_ESM_rbNonSmooth" ){
+									radioButton -e -sl ET_ESM_rbNonSmooth;
+								}else if( $prefRcMapBorder == "ET_ESM_rbAllSmooth" ){
+									radioButton -e -sl ET_ESM_rbAllSmooth;
+								}
+							text -l "保持" ET_ESM_cbKeep;
+							checkBox -l "ジオメトリの境界" -v $prefCbGeometoryBorder -cc "ET_ESM_saveSetting()" ET_ESM_cbGeometoryBorder;
+							checkBox -l "ハードエッジ" -v $prefCbHardEdge -cc "ET_ESM_saveSetting()" ET_ESM_cbHardEdge;
+							//ボタン
+							formLayout ET_ESM_folAdditonalControlButton;
+								button -l "すべて適用" -c "ET_ESM_applyAdditionalControl()" ET_ESM_bAdditionalControlApply;
+							setParent..;
+						
+							button -l "適用" -c "ET_ESM_apply(\"ET_ESM_bApplyBaseBorder\")" ET_ESM_bApplyBaseBorder;
+							button -l "適用" -c "ET_ESM_apply(\"ET_ESM_bApplyContinuity\")" ET_ESM_bApplyContinuity;
+							button -l "適用" -c "ET_ESM_apply(\"ET_ESM_bApplyUVSmooth\")" ET_ESM_bApplyUVSmooth;
+							button -l "適用" -c "ET_ESM_apply(\"ET_ESM_bApplySpreadOfEdgeHardness\")" ET_ESM_bApplySpreadOfEdgeHardness;
+							button -l "適用" -c "ET_ESM_apply(\"ET_ESM_bApplyMapBorder\")" ET_ESM_bApplyMapBorder;
+							button -l "適用" -c "ET_ESM_apply(\"ET_ESM_bGeometoryBorder\")" ET_ESM_bGeometoryBorder;
+							button -l "適用" -c "ET_ESM_apply(\"ET_ESM_bHardEdge\")" ET_ESM_bHardEdge;
+			
+							
+						setParent..;
+					setParent..;
+
+				setParent..;
+			setParent..;
+			
+
+			//全体
+			formLayout -e
+			
+				-af	ET_ESM_flTarget						"top"			0
+				-af	ET_ESM_flTarget						"left"			0
+				-af	ET_ESM_flTarget						"right"		0
+				
+				-ac	ET_ESM_flSmoothMesh				"top"			0		ET_ESM_flTarget
+				-af	ET_ESM_flSmoothMesh				"left"			0
+				-af	ET_ESM_flSmoothMesh				"right"		0
+			
+				-ac	ET_ESM_flSubdivisionLevel			"top"			0		ET_ESM_flSmoothMesh
+				-af	ET_ESM_flSubdivisionLevel			"left"			0
+				-af	ET_ESM_flSubdivisionLevel			"right"		0
+				
+				-ac	ET_ESM_flAdditionalControl			"top"			0		ET_ESM_flSubdivisionLevel
+				-af	ET_ESM_flAdditionalControl			"left"			0
+				-af	ET_ESM_flAdditionalControl			"right"		0
+				-af	ET_ESM_flAdditionalControl			"bottom"	0				
+
+				ET_ESM_folAll;
+
+			
+			//対象
+			formLayout -e
+			
+				-af	ET_ESM_rbAllMesh				"left"		195
+				
+				-ac	ET_ESM_rbSelectMesh		"left"		50	ET_ESM_rbAllMesh
+				
+				ET_ESM_folTarget;
+				
+
+			int $left1 = 195;
+			int $left2 = 50;
+			int $left3 = 450;
+			
+			//スムーズメッシュ
+			
+			formLayout -e
+			
+				-af	ET_ESM_cbSmoothMesh						"top"		0
+				-af	ET_ESM_cbSmoothMesh						"left"		$left1
+				
+				-ac ET_ESM_folSmoothMeshAddUI				"top"		0	ET_ESM_cbSmoothMesh
+				-af ET_ESM_folSmoothMeshAddUI				"left"		0
+				-af ET_ESM_folSmoothMeshAddUI				"right"		0
+				
+
+				
+				//適用ボタン
+				
+				-af	ET_ESM_bSmoothMesh						"top"		0
+				-af	ET_ESM_bSmoothMesh						"left"		$left3
+				
+				ET_ESM_folSmoothMesh;
+				
+			
+			if( $mVersion != "2013 x64" && $mVersion != "2013 x32" ){
+			
+				formLayout -e
+					
+					-af ET_ESM_cbUseGlobalSubdivisionMethod		"top"		0
+					-af ET_ESM_cbUseGlobalSubdivisionMethod		"left"		$left1
+					
+					-ac ET_ESM_omSubdivisionMethod				"top"		0	ET_ESM_cbUseGlobalSubdivisionMethod
+					-af ET_ESM_omSubdivisionMethod				"left"		91
+					
+					-ac	ET_ESM_folSmoothMeshButton				"top"		5	ET_ESM_omSubdivisionMethod
+					-af	ET_ESM_folSmoothMeshButton				"left"		0
+					-af	ET_ESM_folSmoothMeshButton				"right"		0
+					
+					//適用ボタン
+
+					-af ET_ESM_bUseGlobalSubdivisionMethod		"top"		0
+					-af	ET_ESM_bUseGlobalSubdivisionMethod		"left"		$left3
+					
+					-ac	ET_ESM_bSubdivisionMethod				"top"		0	ET_ESM_bUseGlobalSubdivisionMethod
+					-af	ET_ESM_bSubdivisionMethod				"left"		$left3
+					
+					ET_ESM_folSmoothMeshAddUI;
+					
+			
+				//ボタン
+				
+				formLayout -e
+				
+					-af	ET_ESM_bSmoothMeshApply				"left"			0
+					-af	ET_ESM_bSmoothMeshApply				"right"			0
+					-af	ET_ESM_bSmoothMeshApply				"bottom"		0
+
+				
+					ET_ESM_folSmoothMeshButton;
+					
+			}
+			
+
+			//サブディビジョン レベル
+
+			formLayout -e
+			
+				-af	ET_ESM_cbExpressSubdivision				"top"		0
+				-af	ET_ESM_cbExpressSubdivision				"left"		$left1
+			
+				-ac	ET_ESM_isgPreviewDivisionLevel			"top"		0	ET_ESM_cbExpressSubdivision
+				-af	ET_ESM_isgPreviewDivisionLevel			"left"		$left2
+			
+				-ac	ET_ESM_cbPreviewForRendering			"top"		0	ET_ESM_isgPreviewDivisionLevel
+				-af	ET_ESM_cbPreviewForRendering			"left"		$left1
+				
+				-ac	ET_ESM_isgRenderDivisionLevel			"top"		0	ET_ESM_cbPreviewForRendering
+				-af	ET_ESM_isgRenderDivisionLevel			"left"		$left2
+			
+				-ac	ET_ESM_folSubdivisionLevelButton		"top"		5	ET_ESM_isgRenderDivisionLevel
+				-af	ET_ESM_folSubdivisionLevelButton		"left"		0
+				-af	ET_ESM_folSubdivisionLevelButton		"right"		0
+				
+				//適用ボタン
+				
+				-af	ET_ESM_bExpressSubdivision				"top"		0
+				-af	ET_ESM_bExpressSubdivision				"left"		$left3
+				
+				-ac	ET_ESM_bApplyPreviewDivisionLevel		"top"		0	ET_ESM_bExpressSubdivision
+				-af	ET_ESM_bApplyPreviewDivisionLevel		"left"		$left3
+				
+				-ac	ET_ESM_bApplyPreviewForRendering		"top"		0	ET_ESM_isgPreviewDivisionLevel
+				-af	ET_ESM_bApplyPreviewForRendering		"left"		$left3
+				
+				-ac	ET_ESM_bApplyRenderDivisionLevel		"top"		0	ET_ESM_cbPreviewForRendering
+				-af	ET_ESM_bApplyRenderDivisionLevel		"left"		$left3
+				
+				ET_ESM_folSubdivisionLevel;
+				
+			formLayout -e
+
+				-af	ET_ESM_bSubdivisionLevelApply			"left"		0
+				-af	ET_ESM_bSubdivisionLevelApply			"right"		0
+				-af	ET_ESM_bSubdivisionLevelApply			"bottom"	0
+				
+				ET_ESM_folSubdivisionLevelButton;
+
+				
+			//追加のコントロール
+
+			formLayout -e
+			
+				-af	ET_ESM_omBaseBorder						"top"		0
+				-af	ET_ESM_omBaseBorder						"left"		120
+				
+				-ac	ET_ESM_fsgContinuity					"top"		0	ET_ESM_omBaseBorder
+				-af	ET_ESM_fsgContinuity					"left"		$left2
+				
+				-ac	ET_ESM_cbUVSmooth						"top"		0	ET_ESM_fsgContinuity
+				-af	ET_ESM_cbUVSmooth						"left"		$left1
+				
+				-ac	ET_ESM_cbSpreadOfEdgeHardness			"top"		0	ET_ESM_cbUVSmooth
+				-af	ET_ESM_cbSpreadOfEdgeHardness			"left"		$left1
+
+				-ac	ET_ESM_tMapBorder						"top"		0	ET_ESM_cbSpreadOfEdgeHardness
+				-ac	ET_ESM_tMapBorder						"right"		0	ET_ESM_rbNonSmooth
+				
+				-ac	ET_ESM_rbNonSmooth						"top"		0	ET_ESM_cbSpreadOfEdgeHardness
+				-af	ET_ESM_rbNonSmooth						"left"		$left1
+				
+				-ac	ET_ESM_rbInsideSmooth					"top"		0	ET_ESM_rbNonSmooth
+				-af	ET_ESM_rbInsideSmooth					"left"		$left1
+				
+				-ac	ET_ESM_rbAllSmooth						"top"		0	ET_ESM_rbInsideSmooth
+				-af	ET_ESM_rbAllSmooth						"left"		$left1
+				
+				-ac	ET_ESM_cbKeep							"top"		0	ET_ESM_rbAllSmooth
+				-ac	ET_ESM_cbKeep							"right"		0	ET_ESM_cbGeometoryBorder
+				
+				-ac	ET_ESM_cbGeometoryBorder				"top"		0	ET_ESM_rbAllSmooth
+				-af	ET_ESM_cbGeometoryBorder				"left"		$left1
+				
+				-ac	ET_ESM_cbHardEdge						"top"		0	ET_ESM_cbGeometoryBorder
+				-af	ET_ESM_cbHardEdge						"left"		$left1
+
+				-ac	ET_ESM_folAdditonalControlButton		"top"		5	ET_ESM_cbHardEdge
+				-af	ET_ESM_folAdditonalControlButton		"left"		0
+				-af	ET_ESM_folAdditonalControlButton		"right"		0
+				
+				//適用ボタン				
+				
+				-af	ET_ESM_bApplyBaseBorder				"top"		0
+				-af	ET_ESM_bApplyBaseBorder				"left"		$left3
+				
+				-ac	ET_ESM_bApplyContinuity				"top"		0	ET_ESM_omBaseBorder
+				-af	ET_ESM_bApplyContinuity				"left"		$left3
+				
+				-ac	ET_ESM_bApplyUVSmooth					"top"		0	ET_ESM_fsgContinuity
+				-af	ET_ESM_bApplyUVSmooth					"left"		$left3
+				
+				-ac	ET_ESM_bApplySpreadOfEdgeHardness		"top"		0	ET_ESM_cbUVSmooth
+				-af	ET_ESM_bApplySpreadOfEdgeHardness		"left"		$left3
+				
+				-ac	ET_ESM_bApplyMapBorder					"top"		0	ET_ESM_cbSpreadOfEdgeHardness
+				-af	ET_ESM_bApplyMapBorder					"left"		$left3		
+				
+				-ac	ET_ESM_bGeometoryBorder					"top"		0	ET_ESM_rbAllSmooth
+				-af	ET_ESM_bGeometoryBorder					"left"		$left3
+				
+				-ac	ET_ESM_bHardEdge						"top"		0	ET_ESM_cbGeometoryBorder
+				-af	ET_ESM_bHardEdge						"left"		$left3
+
+
+				ET_ESM_folAdditionalControl;
+				
+				
+			//ボタン
+
+
+			formLayout -e
+
+				-af	ET_ESM_bAdditionalControlApply			"left"		0
+				-af	ET_ESM_bAdditionalControlApply			"right"		0
+				-af	ET_ESM_bAdditionalControlApply			"bottom"	0
+				
+				ET_ESM_folAdditonalControlButton;
+			
+			
+
+			//Contour 幅----------------------------------------------------------------------------------------------------------------------------------------------
+			
+			string $contType[] = {		"GN_SimpleContourShader" , "contour_shader_simple"			};
+													
+			string $cont[];
+			string $type;
+			for( $type in $contType ){
+
+				string $types[] = ` allNodeTypes `;
+				int $result = stringArrayContains( $type, $types );
+				
+				if( $result ){
+					string $c[] = `ls -type $type`;
+					$cont = stringArrayCatenate( $cont, $c );
+				}
+
+			}
+
+			$cont = `sort $cont`;
+			
+
+			
+			frameLayout -labelVisible 0 -borderStyle etchedOut ET_ECW_flAll;
+				formLayout ET_ECW_folAll;
+					columnLayout -adjustableColumn 1 -w 350  ET_ECW_clAll;
+						button -l "更新" -command "ET_ECW_editContour()" ET_ECW_bReload;
+					
+						string $widthText[];
+						string $widthFloatField[];
+						string $widthFormLayout[];
+						
+
+					
+						columnLayout -adjustableColumn 1 -w 350 ET_ECW_clAllApply;
+							frameLayout -labelVisible 0 -borderStyle etchedOut ET_ECW_flAllApply;
+								formLayout  ET_ECW_folAllApply;
+									text -l "すべてに適用" ET_ECW_tAllApply;
+									floatField -v 0.04 -w 60 -cc "ET_ESM_saveSetting()" ET_ECW_ffAllApply;
+									button -l "適用" -w 50 -command "ET_ECW_widthAllApply()" ET_ECW_bAllApply;
+								setParent..;
+							setParent..;
+							
+							
+							
+							int $left4 = 250;
+
+							formLayout -e
+								-af	ET_ECW_tAllApply		"top"				0
+								-ac	ET_ECW_tAllApply		"right"			3	ET_ECW_ffAllApply
+								-af	ET_ECW_tAllApply		"bottom"		0
+								
+								-af	ET_ECW_ffAllApply	"top"				0
+								-af	ET_ECW_ffAllApply	"left"				$left4
+								-af	ET_ECW_ffAllApply	"right"			50
+								-af	ET_ECW_ffAllApply	"bottom"		0
+								
+								-af	ET_ECW_bAllApply		"top"				0
+								-ac	ET_ECW_bAllApply		"left"				0	ET_ECW_ffAllApply
+								-af	ET_ECW_bAllApply		"bottom"		0
+								
+								ET_ECW_folAllApply;
+							
+						setParent..;
+					
+						
+						int $cnt = 1;
+						string $contOne;
+						for( $contOne in $cont ){
+							
+							string $widthFrameLayout = "ET_ECW_flContour" + $cnt;
+							string $widthColumnLayout = "ET_ECW_clContour" + $cnt;
+							int $size = `size $widthFormLayout`;
+							$widthFormLayout[$size] = "ET_ECW_folContour" + $cnt;
+							int $size = `size $widthText`;
+							$widthText[$size] = "ET_ECW_tContour" + $cnt;							
+							int $size = `size $widthFloatField`;
+							$widthFloatField[$size] = "ET_ECW_ffContour" + $cnt;
+							string $widthButton = "ET_ECW_bContour" + $cnt;
+							
+							frameLayout -labelVisible 0 -borderStyle etchedOut $widthFrameLayout;
+								columnLayout -adjustableColumn 1 $widthColumnLayout;
+									formLayout $widthFormLayout[$size];
+										float $width = `getAttr ( $contOne + ".width" )`;
+										text -l $contOne $widthText[$size];
+										floatField -v $width -w 60 $widthFloatField[$size];
+										string $command = "ET_ECW_widthApply(\"" + $cnt + "\")"; 
+										button -l "適用"	-w 50 -command $command $widthButton;
+									setParent..;
+								setParent..;
+							setParent..;
+
+							formLayout -e
+								-af	$widthText[$size]			"top"			0
+								-ac	$widthText[$size]			"right"		3	$widthFloatField[$size]
+								-af	$widthText[$size]			"bottom"	0
+								
+								-af	$widthFloatField[$size]	"top"			0
+								-af	$widthFloatField[$size]	"left"			$left4
+								-af	$widthFloatField[$size]	"right"		50
+								-af	$widthFloatField[$size]	"bottom"	0
+								
+								-af	$widthButton							"top"			0
+								-ac	$widthButton							"left"			0	$widthFloatField[$size]
+								-af	$widthButton							"bottom"	0
+								
+								$widthFormLayout[$size];
+								
+							
+							$cnt += 1;
+							
+
+						}
+
+						
+					setParent..;
+				setParent..;
+			setParent..;
+		
+
+	
+			//カラー----------------------------------------------------------------------------------------------------------------------------------------------
+
+			frameLayout -labelVisible 0 -borderStyle etchedOut ET_ECC_flAll;
+				formLayout ET_ECC_folAll;
+					columnLayout -adjustableColumn 1 -w 350  ET_ECC_clAll;
+						button -l "更新" -command "ET_ECC_editContour()" ET_ECC_bReload;
+					
+						string $colorText[];
+						string $colorSliderGrp[];
+						string $colorFormLayout[];
+						
+
+					
+						columnLayout -adjustableColumn 1 -w 350 ET_ECC_clAllApply;
+							frameLayout -labelVisible 0 -borderStyle etchedOut ET_ECC_flAllApply;
+								formLayout  ET_ECC_folAllApply;
+									text -l "すべてに適用" ET_ECC_tAllApply;
+									colorSliderGrp -rgbValue 0 0 0 -cc "ET_ESM_saveSetting()" ET_ECC_csgAllApply;
+									button -l "適用" -w 50 -command "ET_ECC_colorAllApply()" ET_ECC_bAllApply;
+								setParent..;
+							setParent..;
+							
+							
+							
+							int $left5 = 0;
+
+							formLayout -e
+								-af	ET_ECC_tAllApply		"top"				0
+								-ac	ET_ECC_tAllApply		"right"			3	ET_ECC_csgAllApply
+								-af	ET_ECC_tAllApply		"bottom"		0
+								
+								-af	ET_ECC_csgAllApply	"top"				0
+								-af	ET_ECC_csgAllApply	"left"				$left5
+								-af	ET_ECC_csgAllApply	"bottom"		0
+								
+								-af	ET_ECC_bAllApply		"top"				0
+								-ac	ET_ECC_bAllApply		"left"				0	ET_ECC_csgAllApply
+								-af	ET_ECC_bAllApply		"bottom"		0
+								
+								ET_ECC_folAllApply;
+							
+						setParent..;
+					
+						
+						int $cnt = 1;
+						string $contOne;
+						for( $contOne in $cont ){
+							
+							string $colorFrameLayout = "ET_ECC_flContour" + $cnt;
+							string $colorColumnLayout = "ET_ECC_clContour" + $cnt;
+							int $size = `size $colorFormLayout`;
+							$colorFormLayout[$size] = "ET_ECC_folContour" + $cnt;
+							int $size = `size $colorText`;
+							$colorText[$size] = "ET_ECC_tContour" + $cnt;							
+							int $size = `size $colorSliderGrp`;
+							$colorSliderGrp[$size] = "ET_ECC_csgContour" + $cnt;
+							string $colorButton = "ET_ECC_bContour" + $cnt;
+							
+							frameLayout -labelVisible 0 -borderStyle etchedOut $colorFrameLayout;
+								columnLayout -adjustableColumn 1 $colorColumnLayout;
+									formLayout $colorFormLayout[$size];
+										float $color[] = `getAttr ( $contOne + ".color" )`;
+										text -l $contOne $colorText[$size];
+										colorSliderGrp -rgbValue $color[0] $color[1] $color[2] $colorSliderGrp[$size];
+										string $command = "ET_ECC_colorApply(\"" + $cnt + "\")"; 
+										button -l "適用"	-w 50 -command $command $colorButton;
+									setParent..;
+								setParent..;
+							setParent..;
+
+							formLayout -e
+								-af	$colorText[$size]		"top"			0
+								-ac	$colorText[$size]		"right"		0	$colorSliderGrp[$size]
+								-af	$colorText[$size]		"bottom"	0
+								
+								-af	$colorSliderGrp[$size]	"top"			0
+								-af	$colorSliderGrp[$size]	"left"			$left5
+								-af	$colorSliderGrp[$size]	"bottom"	0
+								
+								-af	$colorButton				"top"			0
+								-ac	$colorButton				"left"			0	$colorSliderGrp[$size]
+								-af	$colorButton				"bottom"	0
+								
+								$colorFormLayout[$size];
+								
+							
+							$cnt += 1;
+							
+
+						}
+
+						
+					setParent..;
+				setParent..;
+			setParent..;
+			
+			formLayout -e
+			
+				-af	ET_ECW_clAll	"top"			0
+				-af	ET_ECW_clAll	"left"			0
+				-af	ET_ECW_clAll	"right"		0
+				-af	ET_ECW_clAll	"bottom"	0
+
+				ET_ECW_folAll;
+			
+			formLayout -e
+			
+				-af	ET_ECC_clAll	"top"			0
+				-af	ET_ECC_clAll	"left"			0
+				-af	ET_ECC_clAll	"right"		0
+				-af	ET_ECC_clAll	"bottom"	0
+
+				ET_ECC_folAll;
+
+			
+			
+			
+			int $maxLeft = 350;
+			for( $i=0; $i<size($widthText); $i++ ){
+				int $tWidth = `text -q -width $widthText[$i]`;
+				if( $maxLeft < $tWidth  ){
+					$maxLeft = $tWidth;
+				}
+			}	
+
+
+			formLayout -e
+				-af	ET_ECW_ffAllApply	"left"		$maxLeft
+				ET_ECW_folAllApply;
+				
+			int $size = `size $widthFloatField`;
+			for( $i=0; $i<$size; $i++ ){
+				formLayout -e
+					-af $widthFloatField[$i]	"left"		$maxLeft
+					$widthFormLayout[$i];
+			}
+			
+				
+			formLayout -e
+				-af	ET_ECC_csgAllApply	"left"		$maxLeft
+				ET_ECC_folAllApply;		
+			
+			int $size = `size $colorSliderGrp`;
+			for( $i=0; $i<$size; $i++ ){
+				formLayout -e
+					-af $colorSliderGrp[$i]	"left"		$maxLeft
+					$colorFormLayout[$i];
+			}
+					
+					
+				
+
+		setParent..;
+	
+		tabLayout	-e 	-tabLabel ET_ESM_flAll "スムーズメッシュ" ET_tlAll;
+
+		tabLayout	-e 	-tabLabel ET_ECW_flAll "幅" -tabLabel ET_ECC_flAll "カラー" ET_tlAll;
+
+
+						
+						
+						
+
+	showWindow;
+	
+
+
+}
+
+
+
+
+
+
+/*---------------------------------------------------------------
+
+	ET_ESM_apply
+	
+	各適用ボタンを実行します。
+
+---------------------------------------------------------------*/
+
+global proc ET_ESM_apply( string $item ){
+
+	string $mesh[] = ET_ESM_getMesh();
+
+	string $meshOne;
+	
+	switch( $item ){
+	
+		case "ET_ESM_bSmoothMesh":
+			int $ET_ESM_cbSmoothMesh = `checkBox -q -v ET_ESM_cbSmoothMesh`;
+			for( $meshOne in $mesh ){
+				if( $ET_ESM_cbSmoothMesh == 0 ){
+					displaySmoothness -divisionsU 0 -divisionsV 0 -pointsWire 4 -pointsShaded 1 -polygonObject 1 $meshOne;
+				}else if( $ET_ESM_cbSmoothMesh == 1 ){
+					displaySmoothness -divisionsU 3 -divisionsV 3 -pointsWire 16 -pointsShaded 4 -polygonObject 3 $meshOne;
+				}
+			}
+		break;
+		case "ET_ESM_bUseGlobalSubdivisionMethod":
+			int $ET_ESM_cbUseGlobalSubdivisionMethod = `checkBox -q -v ET_ESM_cbUseGlobalSubdivisionMethod`;
+			for( $meshOne in $mesh ){
+				if( $ET_ESM_cbUseGlobalSubdivisionMethod == 0 ){
+					setAttr ( $meshOne + ".useGlobalSmoothDrawType" ) 0;
+				}else if( $ET_ESM_cbUseGlobalSubdivisionMethod == 1 ){
+					setAttr ( $meshOne + ".useGlobalSmoothDrawType" ) 1;
+				}
+			}
+		break;
+		case "ET_ESM_bSubdivisionMethod":
+			int $ET_ESM_omSubdivisionMethod = `optionMenu -q -select ET_ESM_omSubdivisionMethod`;
+			for( $meshOne in $mesh ){
+				if( $ET_ESM_omSubdivisionMethod == 1 ){
+					setAttr ( $meshOne + ".smoothDrawType" ) 0;
+				}else if( $ET_ESM_omSubdivisionMethod == 2 ){
+					setAttr ( $meshOne + ".smoothDrawType" ) 2;
+				}
+			}
+		break;
+		case "ET_ESM_bExpressSubdivision":
+			int $ET_ESM_cbExpressSubdivision = `checkBox -q -v ET_ESM_cbExpressSubdivision`;
+			for( $meshOne in $mesh ){
+				int $lock = `getAttr -lock ($meshOne + ".displaySubdComps")`;
+				if( !$lock ){	
+					setAttr ($meshOne + ".displaySubdComps") $ET_ESM_cbExpressSubdivision;
+				}
+			}
+		break;
+		case "ET_ESM_bApplyPreviewDivisionLevel":
+			int $ET_ESM_isgPreviewDivisionLevel = `intSliderGrp -q -v ET_ESM_isgPreviewDivisionLevel`;
+			for( $meshOne in $mesh ){
+				int $lock = `getAttr -lock ($meshOne + ".smoothLevel")`;
+				if( !$lock ){	
+					setAttr ($meshOne + ".smoothLevel") $ET_ESM_isgPreviewDivisionLevel;
+				}
+			}
+		break;
+		case "ET_ESM_bApplyPreviewForRendering":
+			int $ET_ESM_cbPreviewForRendering = `checkBox -q -v ET_ESM_cbPreviewForRendering`;
+			for( $meshOne in $mesh ){
+				int $lock = `getAttr -lock ($meshOne + ".useSmoothPreviewForRender")`;
+				if( !$lock ){
+					setAttr ($meshOne + ".useSmoothPreviewForRender") $ET_ESM_cbPreviewForRendering;
+				}
+			}
+		break;
+		case "ET_ESM_bApplyRenderDivisionLevel":
+			int $ET_ESM_isgRenderDivisionLevel = `intSliderGrp -q -v ET_ESM_isgRenderDivisionLevel`;
+			for( $meshOne in $mesh ){
+				int $lock = `getAttr -lock ($meshOne + ".renderSmoothLevel")`;
+				if( !$lock ){
+					setAttr ($meshOne + ".renderSmoothLevel") $ET_ESM_isgRenderDivisionLevel;
+				}
+			}
+		break;
+		case "ET_ESM_bApplyBaseBorder":
+			int $ET_ESM_omBaseBorder = `optionMenu -q -select ET_ESM_omBaseBorder `;
+			for( $meshOne in $mesh ){
+				if( $ET_ESM_omBaseBorder == 1 ){
+					setAttr ( $meshOne + ".boundaryRule" ) 0;
+				}else if( $ET_ESM_omBaseBorder == 2 ){
+					setAttr ( $meshOne + ".boundaryRule" ) 1;
+				}else if( $ET_ESM_omBaseBorder == 3 ){
+					setAttr ( $meshOne + ".boundaryRule" ) 2;
+				}
+			}
+		break;
+		case "ET_ESM_bApplyContinuity":
+			float $ET_ESM_fsgContinuity = `floatSliderGrp -q -v ET_ESM_fsgContinuity`;
+			for( $meshOne in $mesh ){
+				int $lock = `getAttr -lock ($meshOne + ".continuity")`;
+				if( !$lock ){
+					setAttr ($meshOne + ".continuity") $ET_ESM_fsgContinuity;
+				}
+			}
+		break;
+		case "ET_ESM_bApplyUVSmooth":
+			int $ET_ESM_cbUVSmooth = `checkBox -q -v ET_ESM_cbUVSmooth`;
+			for( $meshOne in $mesh ){
+				int $lock = `getAttr -lock ($meshOne + ".smoothUVs")`;
+				if( !$lock ){
+					setAttr ($meshOne + ".smoothUVs") $ET_ESM_cbUVSmooth;
+				}
+			}
+		break;
+		case "ET_ESM_bApplySpreadOfEdgeHardness":
+			int $ET_ESM_cbSpreadOfEdgeHardness = `checkBox -q -v ET_ESM_cbSpreadOfEdgeHardness`;
+			for( $meshOne in $mesh ){
+				int $lock = `getAttr -lock ($meshOne + ".propagateEdgeHardness")`;
+				if( !$lock ){
+					setAttr ($meshOne + ".propagateEdgeHardness") $ET_ESM_cbSpreadOfEdgeHardness;
+				}
+			}
+		break;
+		case "ET_ESM_bApplyMapBorder":
+			string $ET_ESM_rcApplyMapBorderState = `radioCollection -q -sl ET_ESM_rcMapBorder`;
+			int $ET_ESM_rcApplyMapBorder;
+			if( $ET_ESM_rcApplyMapBorderState == "ET_ESM_rbNonSmooth" ){
+				$ET_ESM_rcApplyMapBorder = 2;
+			}else if( $ET_ESM_rcApplyMapBorderState == "ET_ESM_rbInsideSmooth" ){
+				$ET_ESM_rcApplyMapBorder = 1;
+			}else if( $ET_ESM_rcApplyMapBorderState == "ET_ESM_rbAllSmooth" ){
+				$ET_ESM_rcApplyMapBorder = 0;
+			}
+			for( $meshOne in $mesh ){
+				int $lock = `getAttr -lock ($meshOne + ".keepMapBorders")`;
+				if( !$lock ){
+					setAttr ($meshOne + ".keepMapBorders") $ET_ESM_rcApplyMapBorder;
+				}
+			}
+		break;
+		case "ET_ESM_bGeometoryBorder":
+			int $ET_ESM_cbGeometoryBorder = `checkBox -q -v ET_ESM_cbGeometoryBorder`;
+			for( $meshOne in $mesh ){
+				int $lock = `getAttr -lock ($meshOne + ".keepBorder")`;
+				if( !$lock ){
+					setAttr ($meshOne + ".keepBorder") $ET_ESM_cbGeometoryBorder;
+				}
+			}
+		break;
+		case "ET_ESM_bHardEdge":
+			int $ET_ESM_cbHardEdge = `checkBox -q -v ET_ESM_cbHardEdge`;
+			for( $meshOne in $mesh ){
+				int $lock = `getAttr -lock ($meshOne + ".keepHardEdge")`;
+				if( !$lock ){
+					setAttr ($meshOne + ".keepHardEdge") $ET_ESM_cbHardEdge;
+				}
+			}
+		break;
+		
+	}
+
+
+}
+
+
+
+
+/*-------------------------------------------------------------------------------------------------------------
+
+	ET_ESM_applySmoothMesh
+	
+	スムーズメッシュ、サブディビジョンレベルの適用ボタンすべてを実行します。
+
+-------------------------------------------------------------------------------------------------------------*/
+
+global proc ET_ESM_applySmoothMesh(){
+
+	ET_ESM_apply("ET_ESM_bSmoothMesh");
+	ET_ESM_apply("ET_ESM_bUseGlobalSubdivisionMethod");
+	ET_ESM_apply("ET_ESM_bSubdivisionMethod");
+
+}
+
+
+/*-------------------------------------------------------------------------------------------------------------
+
+	ET_ESM_applySubdivisionLevel
+	
+	スムーズメッシュ、サブディビジョンレベルの適用ボタンすべてを実行します。
+
+-------------------------------------------------------------------------------------------------------------*/
+
+global proc ET_ESM_applySubdivisionLevel(){
+
+	ET_ESM_apply("ET_ESM_bSmoothMesh");
+	ET_ESM_apply("ET_ESM_bExpressSubdivision");
+	ET_ESM_apply("ET_ESM_bApplyPreviewDivisionLevel");
+	ET_ESM_apply("ET_ESM_bApplyPreviewForRendering");
+	ET_ESM_apply("ET_ESM_bApplyRenderDivisionLevel");
+
+}
+
+
+
+/*---------------------------------------------------------------
+
+	ET_ESM_applyAdditionalControl
+	
+	追加のコントロールの適用ボタンすべてを実行します。
+
+---------------------------------------------------------------*/
+
+global proc ET_ESM_applyAdditionalControl(){
+
+	ET_ESM_apply("ET_ESM_bApplyBaseBorder");
+	ET_ESM_apply("ET_ESM_bApplyContinuity");
+	ET_ESM_apply("ET_ESM_bApplyUVSmooth");
+	ET_ESM_apply("ET_ESM_bApplySpreadOfEdgeHardness");
+	ET_ESM_apply("ET_ESM_bApplyMapBorder");
+	ET_ESM_apply("ET_ESM_bGeometoryBorder");
+	ET_ESM_apply("ET_ESM_bHardEdge");
+
+}
+
+
+
+/*---------------------------------------------------------------
+
+	ET_ESM_getMesh
+	
+	メッシュを取得します。
+
+---------------------------------------------------------------*/
+
+global proc string[] ET_ESM_getMesh(){
+
+	string $mesh[];
+	
+	string $rcState = `radioCollection -q -select ET_ESM_rcTarget`;
+	if( $rcState == "ET_ESM_rbAllMesh" ){
+		$mesh = `ls -type "mesh"`;
+	}else if( $rcState == "ET_ESM_rbSelectMesh" ){
+		string $select[] = `ls -sl`;
+		string $selectOne;
+		for( $selectOne in $select ){
+			string $result = `objectType $selectOne`;
+			if( $result == "mesh" ){
+				int $size = `size $mesh`;
+				$mesh[$size] = $selectOne;
+			}else{
+				string $shape[] = `listRelatives -shapes $selectOne`;
+				string $shapeOne;
+				for( $shapeOne in $shape ){
+					string $result = `objectType $shapeOne`;
+					if( $result == "mesh" ){
+						int $size = `size $mesh`;
+						$mesh[$size] = $selectOne;
+					}
+				}
+			}
+		}
+	}
+	
+	if( size($mesh) == 0 ){
+		error "メッシュがありません。\n";
+	}
+	
+	return $mesh;
+
+}
+
+
+
+
+/*---------------------------------------------------------------
+
+	ET_ECW_widthApply
+	
+	１つ単位のcontourの幅を調整します。
+
+---------------------------------------------------------------*/
+
+global proc ET_ECW_widthApply( string $id ){
+
+	float $width = `floatField -q -v ( "ET_ECW_ffContour" + $id )`;
+	string $name = `text -q -l ( "ET_ECW_tContour" + $id )`;
+	int $exists = `objExists $name`;
+	if( !$exists ){
+		error ( $name + "が見つかりません。\n" );
+	}
+
+
+	string $connect[] = `listConnections -source 1 -destination 0 -plugs 1 ( $name + ".width" )`;
+	
+	if( size($connect) == 0 ){
+		setAttr ( $name + ".width" ) $width;
+	}else{
+		setAttr $connect[0] $width;
+	}
+
+}
+
+
+
+/*---------------------------------------------------------------
+
+	ET_ECW_widthAllApply
+	
+	すべてのcontourの幅を調整します。
+
+---------------------------------------------------------------*/
+
+global proc ET_ECW_widthAllApply(){
+
+	float $width = `floatField -q -v ET_ECW_ffAllApply`;
+
+	int $size = `columnLayout -q -numberOfChildren ET_ECW_clAll`;
+	$size -= 1;
+	for( $i=1; $i<$size; $i++ ){
+		floatField -e -v $width ( "ET_ECW_ffContour" + $i );
+		string $name = `text -q -l ( "ET_ECW_tContour" + $i )`;
+		int $exists = `objExists $name`;
+		if( !$exists ){
+			error ( $name + "が見つかりません。\n" );
+		}
+		
+		string $connect[] = `listConnections -source 1 -destination 0 -plugs 1 ( $name + ".width" )`;
+		if( size($connect) == 0 ){
+			setAttr ( $name + ".width" ) $width;
+		}else{
+			setAttr $connect[0] $width;
+		}
+	
+	}
+	
+}
+
+
+
+/*---------------------------------------------------------------
+
+	ET_ECC_colorApply
+	
+	１つ単位のcontourのカラーを調整します。
+
+---------------------------------------------------------------*/
+
+global proc ET_ECC_colorApply( string $id ){
+
+	float $color[] = `colorSliderGrp -q -rgbValue ( "ET_ECC_csgContour" + $id )`;
+	string $name = `text -q -l ( "ET_ECC_tContour" + $id )`;
+	int $exists = `objExists $name`;
+	if( !$exists ){
+		error ( $name + "が見つかりません。\n" );
+	}
+
+	setAttr ( $name + ".color" ) -type double3 $color[0] $color[1] $color[2];
+
+
+}
+
+
+
+/*---------------------------------------------------------------
+
+	ET_ECC_colorAllApply
+	
+	すべてのcontourのカラーを調整します。
+
+---------------------------------------------------------------*/
+
+global proc ET_ECC_colorAllApply(){
+
+	float $color[] = `colorSliderGrp -q -rgbValue ET_ECC_csgAllApply`;
+
+	int $size = `columnLayout -q -numberOfChildren ET_ECC_clAll`;
+	$size -= 1;
+	for( $i=1; $i<$size; $i++ ){
+		colorSliderGrp -e -rgbValue $color[0] $color[1] $color[2] ( "ET_ECC_csgContour" + $i );
+		string $name = `text -q -l ( "ET_ECC_tContour" + $i )`;
+		int $exists = `objExists $name`;
+		if( !$exists ){
+			error ( $name + "が見つかりません。\n" );
+		}
+
+		setAttr ( $name + ".color" ) -type double3 $color[0] $color[1] $color[2];
+
+	}
+	
+}
+
+/*------------------------------------------------------------------------------------
+
+	ET_ESM_saveSetting
+
+	設定の保存
+	
+------------------------------------------------------------------------------------*/
+
+global proc ET_ESM_saveSetting(){
+
+
+
+	string $prefRcTarget = ` radioCollection -q -sl ET_ESM_rcTarget `;
+	int $prefCbSmoothMesh = ` checkBox -q -v ET_ESM_cbSmoothMesh `;
+	int $prefCbExpressSubdivision = ` checkBox -q -v ET_ESM_cbExpressSubdivision `;
+	int $prefIsgPreviewDivisionLevel = ` intSliderGrp -q -v ET_ESM_isgPreviewDivisionLevel `;
+	int $prefCbPreviewForRendering = ` checkBox -q -v ET_ESM_cbPreviewForRendering `;
+	int $prefIsgRenderDivisionLevel = ` intSliderGrp -q -v ET_ESM_isgRenderDivisionLevel `;
+	int $prefOmBaseBorder = ` optionMenu -q -sl ET_ESM_omBaseBorder `;
+	float $prefFsgContinuity = ` floatSliderGrp -q -v ET_ESM_fsgContinuity `;
+	int $prefCbUVSmooth = ` checkBox -q -v ET_ESM_cbUVSmooth `;
+	int $prefCbSpreadOfEdgeHardness = ` checkBox -q -v ET_ESM_cbSpreadOfEdgeHardness `;
+	string $prefRcMapBorder = ` radioCollection -q -sl ET_ESM_rcMapBorder `;
+	int $prefCbGeometoryBorder = ` checkBox -q -v ET_ESM_cbGeometoryBorder `;
+	int $prefCbHardEdge = ` checkBox -q -v ET_ESM_cbHardEdge `;
+	
+	
+	optionVar -sv ET_ESM_rcTargetPref $prefRcTarget;
+	optionVar -iv ET_ESM_cbSmoothMeshPref $prefCbSmoothMesh;
+	optionVar -iv ET_ESM_cbExpressSubdivisionPref $prefCbExpressSubdivision;
+	optionVar -iv ET_ESM_isgPreviewDivisionLevelPref $prefIsgPreviewDivisionLevel;
+	optionVar -iv ET_ESM_cbPreviewForRenderingPref $prefCbPreviewForRendering;
+	optionVar -iv ET_ESM_isgRenderDivisionLevelPref $prefIsgRenderDivisionLevel;
+	optionVar -iv ET_ESM_omBaseBorderPref $prefOmBaseBorder;
+	optionVar -fv ET_ESM_fsgContinuityPref $prefFsgContinuity;
+	optionVar -iv ET_ESM_cbUVSmoothPref $prefCbUVSmooth;
+	optionVar -iv ET_ESM_cbSpreadOfEdgeHardnessPref $prefCbSpreadOfEdgeHardness;
+	optionVar -sv ET_ESM_rcMapBorderPref $prefRcMapBorder;
+	optionVar -iv ET_ESM_cbGeometoryBorderPref $prefCbGeometoryBorder;
+	optionVar -iv ET_ESM_cbHardEdgePref $prefCbHardEdge;
+	
+	
+	//Mayaのバージョン
+	string $mVersion = ` about -v `;
+	
+	if( $mVersion != "2013 x64" && $mVersion != "2013 x32" ){
+		int $prefCbUseGlobalSubdivisionMethod = ` checkBox -q -v ET_ESM_cbUseGlobalSubdivisionMethod `;
+		int $prefOmSubdivisionMethod = ` optionMenu -q -sl ET_ESM_omSubdivisionMethod `;
+		optionVar -iv ET_ESM_cbUseGlobalSubdivisionMethodPref $prefCbUseGlobalSubdivisionMethod;
+		optionVar -iv ET_ESM_omSubdivisionMethodPref $prefOmSubdivisionMethod;
+	}
+	
+
+	
+}
+

@@ -1,0 +1,105 @@
+///////////////////////////////////////////////////////////////////////////////
+//	PSTC_PCC_pedalBikeFollowCam            //	自転車 追従カメラ 作成
+///////////////////////////////////////////////////////////////////////////////
+//
+//	AUTHOR: 		goto kazufumi
+//
+//	CREATION DATE:	2013_12_13
+//	UPDATED DATE:	2013_12_13
+//
+//	VERSION:			1.0
+//
+//	HOW TO USE:		run "PSTC_PCC_pedalBikeFollowCam();"
+//
+//////////////////////////////////////////////////////////////////
+
+global proc PSTC_PCC_pedalBikeFollowCam(){
+
+	string $select[] = ` ls -sl `;
+
+	if( size($select) != 0 ){
+		for( $selectOne in $select ){
+			//ネームスペース取得
+			string $parts01[];
+			int $token01 = ` tokenize $selectOne ":" $parts01`;
+			string $ns;
+			if( $token01 == 1 ){
+				$ns = "";
+			}else if( $token01 == 2 ){
+				$ns = $parts01[0];
+			}else if( $token01 > 2 ){
+				for( $i=0; $i<($token01-1); $i++ ){
+					if( $i==0 ){
+						$ns = $parts01[0];
+					}else{
+						$ns += ":";
+						$ns += $parts01[$i];
+					}
+				}
+			}
+
+			//コードネーム取得
+			string $parts02[];
+			int $token02 = ` tokenize $parts01[$token01-1] "_" $parts02`;
+			string $cn;
+			if( $token02 == 1 ){
+				$cn = "";
+			}else{
+				$cn = $parts02[0];
+			}
+
+			string $CTRL_crv;
+			if( $ns != "" ){
+				$CTRL_crv = $ns + ":" + $cn + "_world_CTRL_crv";
+			}else{
+				$CTRL_crv = $cn + "_world_CTRL_crv";
+			}
+			
+			int $exist = `objExists $CTRL_crv `;
+			if( $exist ){
+				float $pos[] = ` xform -q -ws -t $CTRL_crv `;
+				
+				string $newCam = $ns + "_" + $cn + "_cam";
+				$newCam = substituteAllString( $newCam , ":" , "_" );
+				int $exist = ` objExists $newCam `;
+				if( !$exist ){
+				
+					string $camera[] = ` camera -focalLength 35 `;
+					rename $camera[0] $newCam;
+					
+					string $newGrp = $ns + "_" + $cn + "_camGrp";
+					string $grp = ` group -em `;
+					rename $grp $newGrp;
+					
+					parent $newCam $newGrp ;
+					xform -ws -t $pos[0] $pos[1] $pos[2] $newGrp;
+					
+					
+					select -r $CTRL_crv $newGrp;
+					parentConstraint -mo -weight 1;
+					
+					setAttr ( $newCam + ".translateX" ) -470;
+					setAttr ( $newCam + ".translateY" ) 250;
+					setAttr ( $newCam + ".translateZ" ) 900;
+					setAttr ( $newCam + ".rotateX" ) -10;
+					setAttr ( $newCam + ".rotateY" ) -27;
+					setAttr ( $newCam + ".rotateZ" ) 0;
+					string $camShape[] = ` listRelatives -shapes $newCam `;
+					setAttr ( $camShape[0] + ".focalLength" ) 120;
+					setAttr ( $camShape[0] + ".nearClipPlane" ) 1;
+					setAttr ( $camShape[0] + ".farClipPlane" ) 10000000;
+				}
+			}
+		}
+	}
+}
+	
+	
+	
+	
+	
+
+
+
+
+

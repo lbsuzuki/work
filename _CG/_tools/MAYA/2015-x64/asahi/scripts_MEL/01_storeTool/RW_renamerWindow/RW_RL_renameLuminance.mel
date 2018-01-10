@@ -1,0 +1,34 @@
+//luminanceを接続先の名前を元にリネームします
+global proc RW_RL_renameLuminance(){
+	//変数を宣言
+	string $ignoreLumi[] ;
+	clear $ignoreLumi ;
+	string $warning = "" ;
+
+	//選択項目の中からluminanceを取得
+	string $selectLumi[] = `ls -sl -type "luminance"`;
+
+	for ( $slOne in $selectLumi ){
+		string $attrConnected = `connectionInfo -sfd ($slOne + ".value")` ;
+
+		//接続先テクスチャのタイプを取得
+		string $texNode = `plugNode $attrConnected` ;
+		string $nodeType = `nodeType $texNode` ;
+
+	   //接続先テクスチャのタイプがfileならリネーム
+		if ( $nodeType == "file" ){
+			string $nodeName = substituteAllString( $attrConnected, ".outColor", "_file" ) ;
+			string $newNodeName = `substitute "_file.*" $nodeName "_luminance"` ;
+			rename $slOne $newNodeName; 
+		}
+		
+		//接続先テクスチャのタイプがlayeredTextureならリネーム
+		if ( $nodeType == "layeredTexture" ){
+			string $nodeName = substituteAllString( $attrConnected, ".outColor", "_file" ) ;
+			string $newNodeName = `substitute "_lt.*" $nodeName "_luminance"` ;
+			rename $slOne $newNodeName; 
+		}
+
+	}
+
+}

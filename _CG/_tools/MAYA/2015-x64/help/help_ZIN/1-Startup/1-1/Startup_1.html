@@ -1,0 +1,147 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="ja">
+<head>
+
+	<meta http-equiv="Content-Type" content="text/html; charset=Shift_JIS">
+
+	<link rel="stylesheet" type="text/css" href="../../0-X/css/bodyTextStyle.css">
+	
+	<title>Bitmap Size チュートリアル</title>
+
+
+</head>
+
+<body>
+
+<h1></h1>
+
+	<p>
+	</p>
+
+		<div class="index">
+		
+			<h3 id="index">index</h3>
+		
+			<ul>
+		
+			<li><a href="#はじめに">はじめに</a></li>
+			<li><a href="#環境変数の変更-envファイルの場所">環境変数の変更-envファイルの場所</a></li>
+			<li><a href="#環境変数の変更-envファイルを編集">環境変数の変更-envファイルを編集</a></li>
+			<li><a href="#確認">確認</a></li>
+			
+			</ul>
+		
+		</div>
+
+
+<h2 id="はじめに">はじめに</h2>
+	<p>
+	旭プロダクションで開発したツール「仁ツール」の導入方法を解説いたします。<br>
+	ここではMAYA2015SP6を使用し、作業ドライブが『Iドライブ』に設定されていることを前提としております。<br>
+	MAYA2015以外、『Iドライブ』以外を使用されるときは弊社にお問い合わせください。
+	</p>
+
+	<p>
+	<a href="#index">topへ戻る</a>
+	</p>
+
+
+
+<h2 id="環境変数の変更-envファイルの場所">環境変数の変更-envファイルの場所</h2>
+
+	<p>
+	仁ツールを使用するにはMAYAの環境変数（Maya.env）の変更が必要となります。<br>
+	以下の場所から【ローカルのMaya.env】と【仁ツール用のMaya.env】を開きます。<br>
+	【仁ツール用のMaya.env】は社内と社外どちらも同じものになります。
+	</p>
+
+	<h3>ローカルのMaya.env</h3>
+		<p>
+		C:\Users\ユーザー名\Documents\maya\2015-x64\Maya.env
+		</p>
+		
+	<h3>仁ツール用のMaya.env</h3>
+		<p>
+		I:\work\_CG\_tools\MAYA\2015-x64\環境ファイル_Iドライブ版
+		</p>
+
+
+
+
+<h2 id="環境変数の変更-envファイルを編集">環境変数の変更-envファイルを編集</h2>
+
+	<p>
+	ローカルのMaya.envを仁ツール用のMaya.envに編集します。<br>
+	ここでは社内向けのMaya.envを使用して説明します。<br>
+	社外の方は各作品用に用意されたMaya.envを使用して編集をお願いします。<br>
+	編集にもローカルのMaya.envが【何も入力されていない場合】と【すでに変更されている場合】の２通りがあります。
+	</p>
+	
+
+	<h3>ローカルのMaya.envに何も入力されていない場合</h3>
+		<p>
+		『ローカルのMaya.env』に『仁ツール用のMaya.env』の文章をコピーし、保存してください。<br>
+		※ファイルを直接上書きしても問題ありません。<br>
+		<img src="pict/1_1_環境ファイル編集.jpg" border="0" alt="1_1_環境ファイル編集.jpg(127293 byte)" width="873" height="240"><br>
+		<img src="pict/1_2_環境ファイル編集.jpg" border="0" alt="1_2_環境ファイル編集.jpg(194612 byte)" width="873" height="240">
+		</p>
+		
+	<h3>ローカルのMaya.envがすでに変更されている場合</h3>
+		<p>
+		会社専用にMaya.envを変更しているとき、<br>
+		それぞれの環境変数に次の文章を追加してください。<br>
+		<img src="pict/1_3_環境ファイル編集.jpg" border="0" alt="1_3_環境ファイル編集.jpg(145994 byte)" width="873" height="240"><br>
+		
+		●ローカルのMaya.envの上のほうに変数文を追加<br>
+		ZIN_VERSION_PATH = I:\work\_CG\_tools\MAYA\2015-x64<br>
+		<img src="pict/1_4_環境ファイル編集.jpg" border="0" alt="1_4_環境ファイル編集.jpg(150272 byte)" width="873" height="240"><br>
+		
+		●MAYA_SCRIPT_PATHに追加する文章<br>
+		%ZIN_VERSION_PATH%\asahi\scripts_MEL;%ZIN_VERSION_PATH%\DL\scripts_MEL;<br>
+		<img src="pict/1_5_環境ファイル編集.jpg" border="0" alt="1_5_環境ファイル編集.jpg(161191 byte)" width="873" height="240"><br>
+		
+		●PYTHONPATHに追加する文章<br>
+		%ZIN_VERSION_PATH%\asahi\scripts_PYTHON;%ZIN_VERSION_PATH%\DL\scripts_PYTHON;<br>
+		<img src="pict/1_6_環境ファイル編集.jpg" border="0" alt="1_6_環境ファイル編集.jpg(168109 byte)" width="873" height="240"><br>
+		
+		●MAYA_PLUG_IN_PATHに追加する文章<br>
+		%ZIN_VERSION_PATH%\asahi\plugins;%ZIN_VERSION_PATH%\DL\plugins;<br>
+		<img src="pict/1_7_環境ファイル編集.jpg" border="0" alt="1_7_環境ファイル編集.jpg(180331 byte)" width="873" height="240"><br>
+		
+		●MAYA_FILE_ICON_PATHに追加する文章<br>
+		%ZIN_VERSION_PATH%\asahi\icons;%ZIN_VERSION_PATH%\DL\icons;<br>
+		<img src="pict/1_8_環境ファイル編集.jpg" border="0" alt="1_8_環境ファイル編集.jpg(177238 byte)" width="873" height="240"><br><br>
+		
+		上記のことができましたらローカルのMaya.envを保存してください。
+		
+		
+		</p>
+
+
+	<p>
+	<a href="#index">topへ戻る</a>
+	</p>
+
+<h2 id="確認">確認</h2>
+
+	<p>
+	Maya2015を開き仁ツールがメニューに表示されているのを確認してください。<br>
+	仁ツールの設定によっては【仁】もしくは【ZIN】と表示されます。<br><br>
+	<img src="pict/2_1_確認_.jpg" border="0" alt="2_1_確認_.jpg(68806 byte)" width="1122" height="222">
+	</p>
+
+	<p>
+	<a href="#index">topへ戻る</a>
+	</p>
+
+	
+
+
+
+
+
+
+</body>
+
+
+</html>

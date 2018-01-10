@@ -1,0 +1,86 @@
+///////////////////////////////////////////////////////////////////////////////
+//	PSTR_A_arrangeAdjustElbow            //	肘の調整リグの調整
+///////////////////////////////////////////////////////////////////////////////
+//
+//	AUTHOR: 		goto kazufumi
+//
+//	CREATION DATE:	2013_09_07
+//	UPDATED DATE:	2013_10_11
+//
+//	VERSION:			1.1
+//
+//	HOW TO USE:		run "PSTR_A_arrangeAdjustElbow();"
+//
+//////////////////////////////////////////////////////////////////
+
+global proc PSTR_A_arrangeAdjustElbow(){
+
+	string $code = `textField -q -text PST_tfCordName`;
+	int $size = `size $code`;
+	if( $size != 0 ){
+		string $last = `substring $code $size $size`;
+		if( $last != "_" ){
+			if( $last != ":" ){
+				$code += "_";
+			}
+		}
+	}
+	
+	//ロケータのペアレント再現
+	PSTR_ALP_arrangeLocatorParent;
+	
+	string $lct[] = {		"L_adjustElbow_jnt_ALct",
+								"R_adjustElbow_jnt_ALct"							};
+
+	string $rig[] = {		"L_adjustElbow_link",
+								"R_adjustElbow_link"									};
+
+	for( $i=0; $i<size($lct); $i++ ){
+		$lct[$i] = $code + $lct[$i];
+		$rig[$i] = $code + $rig[$i];
+		int $result = 0;
+		$result = `objExists $rig[$i]`;
+		if( $result ){
+			float $pos[] = YP_RD_returnDefferenceXYZ( $lct[$i] , $rig[$i] );
+			move -r $pos[0] $pos[1] $pos[2] $rig[$i];
+		}
+	}
+	
+	//adjustElbow
+	string $L_adjustElbow_link = $code + "L_adjustElbow_link";
+	int $result = 0;
+	$result = `objExists $L_adjustElbow_link`;
+	if( $result ){
+		string $L_adjustElbow_link_paC[] = `listConnections -source 1 -destination 0 -type "parentConstraint" $L_adjustElbow_link`;
+		if( size($L_adjustElbow_link_paC) != 0 ){
+			delete $L_adjustElbow_link_paC[0];
+		}
+		
+		string $L_adjustElbow_jnt_ALct = $code + "L_adjustElbow_jnt_ALct";
+		float $pos[] = YP_RD_returnDefferenceXYZ( $L_adjustElbow_jnt_ALct , $L_adjustElbow_link );
+		move -r $pos[0] $pos[1] $pos[2] $L_adjustElbow_link;
+
+	}
+	
+	string $R_adjustElbow_link = $code + "R_adjustElbow_link";
+	int $result = 0;
+	$result = `objExists $R_adjustElbow_link`;
+	if( $result ){
+		string $R_adjustElbow_link = $code + "R_adjustElbow_link";
+		string $R_adjustElbow_link_paC[] = `listConnections -source 1 -destination 0 -type "parentConstraint" $R_adjustElbow_link`;
+		if( size($R_adjustElbow_link_paC) != 0 ){
+			delete $R_adjustElbow_link_paC[0];
+		}
+
+		string $R_adjustElbow_jnt_ALct = $code + "R_adjustElbow_jnt_ALct";
+		float $pos[] = YP_RD_returnDefferenceXYZ( $R_adjustElbow_jnt_ALct , $R_adjustElbow_link );
+		move -r $pos[0] $pos[1] $pos[2] $R_adjustElbow_link;
+
+	}
+}
+
+
+
+
+
+

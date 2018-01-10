@@ -1,0 +1,1909 @@
+////////////////////////////////////////////////////////////////////////////
+//	STW_storeToolWindow            //     　ストアツールウィンドウ　　 //
+////////////////////////////////////////////////////////////////////////////
+//
+//	AUTHOR: 		goto kazufumi
+//
+//	CREATION DATE: 	2016_03_14
+//	UPDATED DATE:		2016_07_05
+//
+//	VERSION:		1.3
+//
+//	HOW TO USE:		run "STW_storeToolWindow();"
+//
+//////////////////////////////////////////////////////////////////
+
+/*=====================================================
+
+	特定のフォルダにあるMelファイルをボタンとして表示します
+
+=====================================================*/
+
+/*------------------------------------------------------------------------------------------------
+
+	更新:
+	
+		v1.3		【ナイスネームファイルの編集】ウィンドウをFix
+					ボタンのラベルをなくし、ボタン自体に色がつくようにしました
+		v1.2		コード取得にネームボタン、コードボタン、両方取得ボタンを追加しました
+		v1.1		ポップアップメニューを増やしボタンの編集を可能にしました
+	
+
+------------------------------------------------------------------------------------------------*/
+
+
+/*------------------------------------------------------------------------------------------------
+
+	STW_storeToolWindow
+
+	ストア ツール ウインドウを開きます。
+
+------------------------------------------------------------------------------------------------*/
+
+global proc STW_storeToolWindow(){
+
+	string $title = "ストア ツール";
+	string $version = "(v1.3)";
+	string $source;
+	
+	//テンプレート定義
+	if( !` uiTemplate -exists STW_uiTempInput ` ){
+		uiTemplate STW_uiTempInput;
+	}
+	frameLayout -dt STW_uiTempInput -w 1;
+	
+	//ウインドウ重複回避
+	if(`window -exists STW_window`) deleteUI STW_window;
+	if(`dockControl -exists STW_docAll`) deleteUI STW_docAll;
+	
+	
+	//オプションバーに保存した設定の読込
+	string $docAll = "left";
+	string $omTitlePref = "";
+	string $tfPathPref = "";
+	string $tfCordName = "";
+	
+	if( ` optionVar -exists STW_docAll ` ){
+		$docAll = ` optionVar -q STW_docAll `;
+	}
+	
+	if( ` optionVar -exists STW_omTitle ` ){
+		$omTitlePref = ` optionVar -q STW_omTitle `;
+	}
+	
+	if( ` optionVar -exists STW_tfPath ` ){
+		$tfPathPref = ` optionVar -q STW_tfPath `;
+	}
+	
+	if( ` optionVar -exists PST_tfCordName ` ){
+		$tfCordName = ` optionVar -q PST_tfCordName `;
+	}
+	
+
+	
+	
+	
+	//ウインドウ作成
+	window	-title ( $title + " " + $version ) -menuBar 1 STW_window;
+		
+		setUITemplate -pst STW_uiTempInput;
+		
+		menu -l "ヘルプ" STW_mHelp;
+			menuItem -l "melファイルを編集" -c "ZIN_OM_openMel( ` whatIs STW_storeToolWindow ` )" STW_miOpenMel;
+			menuItem -l "ツールフォルダを開く" -c "ZIN_OMF_openMelFolder( ` whatIs STW_storeToolWindow ` )" STW_miOpenMelFolder;
+	
+		formLayout STW_folAll;
+			columnLayout -adjustableColumn 1 STW_clTitle;
+				frameLayout -labelVisible 0 -borderStyle "etchedOut" STW_flTitle;
+					formLayout STW_folTitle;
+						text -label "作品名: " -h 25 STW_tTitle;
+						optionMenu -cc "STW_saveSetting();STW_inputPath();" -h 25 STW_omTitle;
+						button -l "起動" -h 25 -c "STW_saveSetting();deleteUI STW_docAll;STW_storeToolWindow();STW_titleRun(`optionMenu -q -v STW_omTitle`)" STW_btnTitle;
+						text -label "パス: " -h 25 STW_tPath;
+						textField -tx $tfPathPref -cc "STW_saveSetting()" -h 25 STW_tfPath;
+						button -l "開く" -height 25 -command "STW_openTfPath()" STW_btnOpenTfPath;
+						text -label "コード: " -height 25 STW_tCordName;
+						textField -tx $tfCordName -height 25 -cc "STW_saveSetting()" PST_tfCordName;
+						button -l "ネーム" -height 25 -w 50 -command "STW_getNS()" STW_btnGetNS;
+						button -l "コード" -height 25 -w 50 -command "STW_getCN()" STW_btnGetCN;
+						button -l "両方取得" -height 25 -w 50 -command "STW_getCNNS()" STW_btnGetCNNS;
+						
+						dockControl	-label ( $title + " " + $version )
+											-area $docAll
+											-content STW_window
+											-allowedArea "left"
+											-allowedArea "right"
+											-fcc "STW_saveSetting()"
+											-w 300
+											STW_docAll;
+
+					setParent..;
+				setParent..;
+			setParent..;
+		setParent..;
+	showWindow;
+	
+	formLayout -e
+		-af STW_clTitle 	"top"			0
+		-af STW_clTitle 	"left"			0
+		-af STW_clTitle 	"right"			0
+		
+	STW_folAll;
+		
+	formLayout -e
+	
+		-af	STW_tTitle			"top"			5
+		-ac	STW_tTitle			"right"		5	STW_omTitle
+		
+		-af	STW_omTitle			"top"			5
+		-af	STW_omTitle			"left"			55
+		-af	STW_omTitle			"right"		55
+		
+		-af	STW_btnTitle		"top"				5
+		-ac	STW_btnTitle		"left"				0	STW_omTitle
+		-af	STW_btnTitle		"right"			5
+		
+		
+		-ac	STW_tPath			"top"			5	STW_btnTitle
+		-ac	STW_tPath			"right"		5	STW_tfPath
+		
+		-ac	STW_tfPath			"top"			5	STW_btnTitle
+		-af	STW_tfPath			"left"			55
+		-af	STW_tfPath			"right"		55
+		
+		-ac	STW_btnOpenTfPath	"top"		5	STW_btnTitle
+		-ac	STW_btnOpenTfPath	"left"		0	STW_tfPath
+		-af	STW_btnOpenTfPath	"right"	5
+		
+		
+		-ac	STW_tCordName		"top"			5	STW_tfPath
+		-ac	STW_tCordName		"right"		5	PST_tfCordName
+		-af	STW_tCordName		"bottom"	5
+		
+		-ac	PST_tfCordName		"top"			5	STW_tfPath
+		-af	PST_tfCordName		"left"			55
+		-af	PST_tfCordName		"right"		155
+		-af	PST_tfCordName		"bottom"	5
+		
+		-ac	STW_btnGetNS			"top"			5	STW_tfPath
+		-ac	STW_btnGetNS			"left"			0	PST_tfCordName
+		-af	STW_btnGetNS			"bottom"	5
+		
+		-ac	STW_btnGetCN			"top"			5	STW_tfPath
+		-ac	STW_btnGetCN			"left"			0	STW_btnGetNS
+		-ac	STW_btnGetCN			"right"		0	STW_btnGetCNNS
+		-af	STW_btnGetCN			"bottom"	5
+		
+		-ac	STW_btnGetCNNS		"top"			5	STW_tfPath
+		-af	STW_btnGetCNNS		"right"		5
+		-af	STW_btnGetCNNS		"bottom"	5
+		
+	STW_folTitle;
+	
+	//「ZIN_setup.mel」が保存されているディレクトリを取得
+	//「ZIN_setup.mel」を含むフルパスが取得されます。
+	string $setupPath = `whatIs ZIN_setup.mel`;
+	int $size = size($setupPath);
+	$setupPath = `substring $setupPath 18 $size`;
+	
+	//「ZIN_setup.mel」以外のフルパスを取得
+	string $scriptPath = `dirname $setupPath`;
+	
+	//ストアフォルダー内のフォルダー名を取得し作品フォルダーに登録
+	string $storeFolder = $scriptPath + "/05_storeTool/";
+	string $getFolder[] = `getFileList -folder $storeFolder`;
+	
+	$getFolder = sort($getFolder);
+	
+	if( size($getFolder) != 0 ){
+		int $n = 1;
+		for( $one in $getFolder ){
+			menuItem -l $one -parent STW_omTitle ( "STW_title" + string($n) );
+			$n += 1;
+		}
+	}
+	
+	//登録したフォルダー名と保存されていた設定とを比較し、該当するものがあれば初期を保存されていた設定にする
+	string $item[] = ` optionMenu -q -itemListShort STW_omTitle `;
+	int $ex = 0;
+	for( $one in $item ){
+		string $value = ` menuItem -q -l $one `;
+		if( $value == $omTitlePref ){
+			optionMenu -e -value $omTitlePref STW_omTitle;
+			$ex = 1;
+		}
+	}
+	if( $ex ){
+		STW_titleRun($omTitlePref);
+	}
+
+}
+
+
+/*------------------------------------------------------------------------------------------------
+
+	STW_saveSetting
+
+	
+
+------------------------------------------------------------------------------------------------*/
+
+global proc STW_saveSetting(){
+
+	string $docAll = ` dockControl -q -area STW_docAll `;
+	string $omTitle = ` optionMenu -q -value STW_omTitle `;
+	string $tfPath = ` textField -q -tx STW_tfPath `;
+	string $tfCordName =` textField -q -tx PST_tfCordName `;
+	
+	if( ` tabLayout -q -exists STW_tlAll ` ){
+		int $slTabIndex = ` tabLayout -q -selectTabIndex STW_tlAll `;
+		string $tabLabel[] = ` tabLayout -q -tabLabel STW_tlAll `;
+		string $slTabLabel = $tabLabel[$slTabIndex-1];
+		optionVar -stringValue STW_selectTabLabel $slTabLabel;
+	}
+	
+	optionVar -stringValue STW_docAll $docAll;
+	optionVar -stringValue STW_omTitle $omTitle;
+	optionVar -stringValue STW_tfPath $tfPath;
+	optionVar -stringValue PST_tfCordName $tfCordName;
+	
+	
+
+}
+
+
+/*------------------------------------------------------------------------------------------------
+
+	STW_storeFolderPath(string タブ名)
+
+	引数のタブ名をもとにフォルダまでのパスを返します
+
+------------------------------------------------------------------------------------------------*/
+
+global proc string STW_storeFolderPath( string $title ){
+
+	//「ZIN_setup.mel」が保存されているディレクトリを取得
+	//「ZIN_setup.mel」を含むフルパスが取得されます。
+	string $setupPath = `whatIs ZIN_setup.mel`;
+	int $size = size($setupPath);
+	$setupPath = `substring $setupPath 18 $size`;
+	
+	//「ZIN_setup.mel」以外のフルパスを取得
+	string $scriptPath = `dirname $setupPath`;
+	
+	//ストアフォルダー内のフォルダー名を取得し作品フォルダーに登録
+	string $storeFolder = $scriptPath + "/05_storeTool/" + $title + "/";
+	
+	return $storeFolder;
+
+}
+
+/*------------------------------------------------------------------------------------------------
+
+	STW_inputPath
+
+	
+
+------------------------------------------------------------------------------------------------*/
+
+global proc STW_inputPath(){
+
+	string $title = `optionMenu -q -v STW_omTitle`;
+	string $storeFolder = STW_storeFolderPath($title);
+	textField -e -tx $storeFolder STW_tfPath;
+	
+}
+
+
+/*------------------------------------------------------------------------------------------------
+
+	STW_openTfPath
+
+	
+
+------------------------------------------------------------------------------------------------*/
+
+global proc STW_openTfPath(){
+
+	string $path = ` textField -q -tx STW_tfPath `;
+	if( !` filetest -e $path ` ){
+		error ( "フォルダが存在しません。" + $path );
+	}
+	system ( "load " + $path );
+	
+}
+
+
+/*------------------------------------------------------------------------------------------------
+
+	STW_titleRun（　string 作品名　）
+
+	作品名オプションメニューをもとにツールを表示します
+
+------------------------------------------------------------------------------------------------*/
+
+global proc STW_titleRun( string $title ){
+
+	if( ` scrollLayout -exists STW_slAll ` ){
+		deleteUI STW_slAll;
+	}
+
+	string $source;
+
+	if( size($title) != 0 ){
+	
+		string $selectTab;
+		if( ` optionVar -exists STW_selectTabLabel ` ){
+			$selectTab = ` optionVar -q STW_selectTabLabel `;
+		}
+
+		scrollLayout -cr 1 -parent STW_folAll STW_slAll;
+			tabLayout -cc "STW_saveSetting()" STW_tlAll;
+			
+				string $pm = $title + "_pmEditNice";
+				popupMenu	-parent STW_tlAll
+							-button 3
+							$pm;
+			
+				string $storeFolder = STW_storeFolderPath($title);
+				textField -e -tx $storeFolder STW_tfPath;
+				
+				string $getTabFolder[] = `getFileList -folder $storeFolder`;
+				$getTabFolder = ` sort $getTabFolder `;
+				for( $i=0; $i<size($getTabFolder); $i++ ){
+					
+					string $titleName = "STW_cl" + string($i);
+					
+					columnLayout -adjustableColumn 1 $titleName;
+					
+						string $addSource = STW_storeTool( $title , $getTabFolder[$i] );
+						$source += $addSource;
+						
+						tabLayout -e	-tabLabel $titleName $getTabFolder[$i]
+										STW_tlAll;
+										
+
+									
+						string $miOpenExp = $title + "_miOpenNice" + string($i);
+						string $miEditExp = $title + "_miEditNice" + string($i);
+						string $miSep = $title + "_miSep" + string($i);
+						menuItem	-parent $pm
+									-label ($getTabFolder[$i] + "  ナイスネームファイルを直接開く")
+									-c ("STW_editNiceNameFile(\"" + $title + "/" + $getTabFolder[$i] + "\")")
+									$miOpenExp;
+						menuItem	-parent $pm
+									-label ($getTabFolder[$i] + "  ナイスネームファイルを編集")
+									-c ("STW_EN_editNiceNameWindow(\"" + $title + "/" + $getTabFolder[$i] + "\")")
+									$miEditExp;
+						menuItem	-parent $pm
+									-label "-------------------------------------------"
+									$miSep;
+					setParent..;
+					
+				}
+				
+				string $createTab = $title + "_miCreateTab";
+				menuItem	-parent $pm
+								-label "新規タブ作成"
+								-c "STW_CT_createTabWindow()"
+								$createTab;
+								
+				string $createTab = $title + "_miRemoveTab";
+				menuItem	-parent $pm
+								-label "タブ削除"
+								-c "STW_RT_removeTabWindow()"
+								$createTab;
+					
+			setParent..;
+		setParent..;
+		
+		formLayout -e
+			-ac STW_slAll "top"			0 STW_clTitle
+			-af STW_slAll "left"		0
+			-af STW_slAll "right"		0
+			-af STW_slAll "bottom"		0
+			STW_folAll;
+			
+		if( ` size $selectTab ` != 0 ){
+		
+			string $tabLabel[] = ` tabLayout -q -tabLabel STW_tlAll `;
+			string $tabChild[] = ` tabLayout -q -childArray STW_tlAll `;
+			for( $i=0; $i<size($tabChild); $i++ ){
+				
+				if( $selectTab == $tabLabel[$i] ){
+					tabLayout -e -selectTab $tabChild[$i] STW_tlAll;
+					break;
+				}
+			}
+		}
+	}
+	
+	eval $source;
+	
+}
+
+
+
+/*------------------------------------------------------------------------------------------------
+
+	STW_createTab
+
+	タブを新規作成するウインドウを表示します
+
+------------------------------------------------------------------------------------------------*/
+global proc STW_CT_createTabWindow(){
+	
+	if( ` window -q -exists STW_CT_window ` ){
+		deleteUI STW_CT_window;
+	}
+	
+	//テンプレート定義
+	if( !` uiTemplate -exists STW_CT_uiTempInput ` ){
+		uiTemplate STW_CT_uiTempInput;
+	}
+	text -dt STW_CT_uiTempInput -h 25;
+	textField -dt STW_CT_uiTempInput -h 25;
+	frameLayout -dt STW_CT_uiTempInput -w 50;
+	
+	window -title "新規タブ作成" STW_CT_window;
+	
+		setUITemplate -pst STW_CT_uiTempInput;
+	
+		frameLayout -l "新規タブ作成" -bs etchedOut STW_CT_flAll;
+			formLayout STW_CT_folAll;
+				text -l "新しいタブの名前を入力" STW_CT_tExp1;
+				text -l "タブ名" STW_CT_tName;
+				textField -w 200 STW_CT_tfName;
+				button -l "Create" -c "STW_createTab()" STW_CT_btnCreate;
+				button -l "Cancel" -c "deleteUI STW_CT_window;" STW_CT_btnCancel;
+			setParent..;
+		setParent..;
+	showWindow;
+	
+	formLayout -e
+	
+		-af	STW_CT_tExp1			"top"			5
+		-af	STW_CT_tExp1			"left"			120
+		
+		-ac	STW_CT_tName			"top"			5	STW_CT_tExp1
+		-ac	STW_CT_tName			"right"		5	STW_CT_tfName
+		
+		-ac	STW_CT_tfName		"top"			5	STW_CT_tExp1
+		-af	STW_CT_tfName		"left"			120
+		
+		-af	STW_CT_btnCreate	"left"			0
+		-ap	STW_CT_btnCreate	"right"		0	50
+		-af	STW_CT_btnCreate	"bottom"	0
+		
+		-ap	STW_CT_btnCancel	"left"			0	50
+		-af	STW_CT_btnCancel	"right"		0
+		-af	STW_CT_btnCancel	"bottom"	0
+	
+		STW_CT_folAll;
+		
+		
+}
+
+
+
+/*------------------------------------------------------------------------------------------------
+
+	STW_createTab
+		
+	タブを新規作成します。
+
+------------------------------------------------------------------------------------------------*/
+
+global proc STW_createTab(){
+	
+	string $path = ` textField -q -tx STW_tfPath `;
+	string $tab = ` textField -q -tx STW_CT_tfName `;
+	
+	$path += $tab;
+	
+	if( !`filetest -e $path` ){
+		sysFile -md $path;
+		STW_storeToolWindow;
+		print ( $tab + "を作成しました。\n");
+	}else{
+		error "すでに同じ名前のタブが存在しています。\n";
+	}
+
+}
+
+/*------------------------------------------------------------------------------------------------
+
+	STW_RT_removeTabWindow
+	
+	タブ削除ウインドウを表示します
+
+------------------------------------------------------------------------------------------------*/
+
+global proc STW_RT_removeTabWindow(){
+
+	if( ` window -q -exists STW_RT_window ` ){
+		deleteUI STW_RT_window;
+	}
+	
+	//テンプレート定義
+	if( !` uiTemplate -exists STW_RT_uiTempInput ` ){
+		uiTemplate STW_RT_uiTempInput;
+	}
+	text -dt STW_RT_uiTempInput -h 25;
+	textField -dt STW_RT_uiTempInput -h 25;
+	frameLayout -dt STW_RT_uiTempInput -w 50;
+	
+	window -title "タブ削除" STW_RT_window;
+	
+		setUITemplate -pst STW_RT_uiTempInput;
+	
+		frameLayout -l "タブ削除" -bs etchedOut STW_RT_flAll;
+			formLayout STW_RT_folAll;
+				text -l "リストから削除するタブを選択" STW_RT_tExp1;
+				textScrollList -ams 0 STW_RT_tslTabList;
+				button -l "更新" -c "STW_RT_removeTabWindow()" STW_RT_btnReload;
+				text -l "一度削除すると戻すことができませんのでご注意ください。" STW_RT_tExp2;
+				button -l "Remove" -c "STW_RT_removeTabConfirm()" STW_RT_btnRemove;
+				button -l "Cancel" -c "deleteUI STW_RT_window;" STW_RT_btnCancel;
+			setParent..;
+		setParent..;
+	showWindow;
+	
+	formLayout -e
+	
+		-af	STW_RT_tExp1			"top"			0
+		-af	STW_RT_tExp1			"left"			0
+		-af	STW_RT_tExp1			"right"		0
+	
+		-ac	STW_RT_tslTabList		"top"			5	STW_RT_tExp1
+		-af	STW_RT_tslTabList		"left"			20
+		-af	STW_RT_tslTabList		"right"		20
+		
+		-ac	STW_RT_btnReload	"top"			0	STW_RT_tslTabList
+		-af	STW_RT_btnReload	"left"			20
+		-af	STW_RT_btnReload	"right"		20
+		
+		-ac	STW_RT_tExp2			"top"			5	STW_RT_btnReload
+		-af	STW_RT_tExp2			"left"			0
+		-af	STW_RT_tExp2			"right"		0
+		
+		-af	STW_RT_btnRemove	"left"			0
+		-ap	STW_RT_btnRemove	"right"		0	50
+		-af	STW_RT_btnRemove	"bottom"	0
+		
+		-ap	STW_RT_btnCancel	"left"			0	50
+		-af	STW_RT_btnCancel	"right"		0
+		-af	STW_RT_btnCancel	"bottom"	0
+		
+		STW_RT_folAll;
+		
+		
+		string $path = ` textField -q -tx STW_tfPath `;
+		string $folder[] = ` getFileList -folder $path `;
+		$folder = ` sort $folder `;
+		for( $one in $folder ){
+			textScrollList -e -append $one STW_RT_tslTabList;
+		}
+
+		
+}
+
+
+/*------------------------------------------------------------------------------------------------
+
+	STW_RT_removeTabConfirm
+	
+	
+
+------------------------------------------------------------------------------------------------*/
+
+global proc STW_RT_removeTabConfirm(){
+	
+	string $sl[] = ` textScrollList -q -si STW_RT_tslTabList `;
+	
+	if( size($sl) == 0 ){
+		error "リストから削除するタブを1つ選択してください。\n";
+	}else{
+	
+		string $confirm = `	confirmDialog	-title "Confirm"
+																-message "リストで選択したタブを削除してもよろしいですか？\n※削除しますと元に戻すことができません"
+																-button "OK"
+																-button "Cancel" 
+																-defaultButton "Cancel"
+																-cancelButton "Cancel"
+																-dismissString "Cancel"	`;
+																
+		if( $confirm == "OK" ){
+			string $path = ` textField -q -tx STW_tfPath `;
+			$path += $sl[0];
+			
+			if( `filetest -e $path` ){
+				
+				string $file[] = ` getFileList -folder $path `;
+				if( size($file) != 0 ){
+					for( $one in $file ){
+						string $delete = $path + "/" + $one;
+						sysFile -delete $delete;
+					}
+				}
+				sysFile -removeEmptyDir $path;
+				
+				textScrollList -e -removeAll STW_RT_tslTabList;
+				string $titlePath = ` textField -q -tx STW_tfPath `;
+				string $folder[] = ` getFileList -folder $titlePath `;
+				$folder = ` sort $folder `;
+				for( $one in $folder ){
+					textScrollList -e -append $one STW_RT_tslTabList;
+				}
+				
+				STW_storeToolWindow;
+				print ( $sl[0] + "を削除しました。\n");
+				
+			}else{
+				error "タブは既に削除されています。\n";
+			}
+		}
+	}
+}
+
+
+
+
+/*------------------------------------------------------------------------------------------------
+
+	STW_editNiceNameFile
+
+	タブのナイスネームファイルを開きます
+
+------------------------------------------------------------------------------------------------*/
+
+global proc STW_editNiceNameFile( string $title ){
+
+	string $niceNamePath = STW_storeFolderPath($title);
+	$niceNamePath += "_niceName.txt";
+	if( !` filetest -f $niceNamePath ` ){
+		int $id = ` fopen $niceNamePath "w" `;
+		fclose $id;
+	}
+	
+	system ( "load " + $niceNamePath );
+
+}
+
+
+
+/*------------------------------------------------------------------------------------------------
+
+	STW_getCN
+
+	選択しているオブジェクトのコードネームを取得します
+
+------------------------------------------------------------------------------------------------*/
+
+global proc STW_getCN(){
+
+	string $select[] = ` ls -sl `;
+	
+	string $CN = ZIN_getCordName($select[0]);
+	
+	string $parts[];
+	int $token = ` tokenize $select[0] "_" $parts `;
+	
+	if( $token <= 1 ){
+	
+		error "最初に選択したオブジェクトにコードネームが存在しません。";
+		
+	}
+	
+	string $tx = ` textField -q -tx PST_tfCordName `;
+	
+	int $size = `size $tx`;
+	string $last = substring($tx,$size,$size);
+	if( $last == ":" ){
+		$CN = $tx + $CN;
+	}
+	
+	textField -e -text $CN PST_tfCordName;
+
+
+}
+
+
+/*------------------------------------------------------------------------------------------------
+
+	STW_getNS
+
+	選択しているオブジェクトのコードネームを取得します
+
+------------------------------------------------------------------------------------------------*/
+
+global proc STW_getNS(){
+
+	string $select[] = ` ls -sl `;
+	
+	string $NS = ZIN_getNamespace($select[0]);
+	
+	if( size($NS) != 0){
+		
+		int $size = `size $NS`;
+		string $last = `substring $NS $size $size`;
+		if( $last != ":" ){
+			$NS += ":";
+		}
+
+		textField -e -text $NS PST_tfCordName;
+	
+	}else{
+		textField -e -text "" PST_tfCordName;
+	}
+	
+}
+
+/*------------------------------------------------------------------------------------------------
+
+	STW_getCNNS
+
+	選択しているオブジェクトのコードネームとネームスペースを取得します
+
+------------------------------------------------------------------------------------------------*/
+
+global proc STW_getCNNS(){
+
+	string $select[] = ` ls -sl `;
+	
+	string $NS = ZIN_getNamespace($select[0]);
+	string $CN = ZIN_getCordName($select[0]);
+	
+	string $parts[];
+	int $token = ` tokenize $select[0] "_" $parts `;
+	
+	string $CNNS;
+	
+	if( $token <= 1 ){
+	
+		error "最初に選択したオブジェクトにコードネームが存在しません。";
+		
+	}else if( size($NS) == 0 ){
+		
+		$CNNS = $CN;
+		
+	}else if( size($NS) != 0){
+	
+		$CNNS = $NS + ":" + $CN;
+	
+	}
+	
+	textField -e -text $CNNS PST_tfCordName;
+
+
+}
+
+
+
+
+/*---------------------------------------------------------------------------------------------
+
+	STW_storeTool( string 作品名 , string フォルダ名 )
+
+---------------------------------------------------------------------------------------------*/
+
+global proc string STW_storeTool( string $title , string $folder ){
+
+	string $source;
+	string $warning;
+
+	//「ZIN_setup.mel」が保存されているディレクトリを取得
+	//「ZIN_setup.mel」を含むフルパスが取得されます。
+	string $setupPath = `whatIs ZIN_setup.mel`;
+	
+	int $size = size($setupPath);
+	$setupPath = `substring $setupPath 18 $size`;	
+	
+	//「ZIN_setup.mel」以外のフルパスを取得
+	string $scriptPath = `dirname $setupPath`;
+	
+	//$scriptPath＋storeToolフォルダ＋タイトルまでのパス
+	string $researchFolder = $scriptPath + "/05_storeTool/" + $title + "/";
+	
+	//ツールカテゴリフォルダを取得
+	string $getFolder[] = `getFileList -folder $researchFolder`;
+	
+	//ツールカテゴリフォルダが引数のフォルダ名と一致するかを調査
+	int $result = 0;
+	for( $getFolderOne in $getFolder ){
+		if( $folder == $getFolderOne ){
+			$result = 1;
+		}
+	}
+	
+	//引数の$titleの後ろにアンダーバーをつけたものを$titlesに取得
+	string $titles;
+	int $size = `size $title`;
+	string $last = `substring $title $size $size`;
+	if( $last != "_" ){
+		$titles += "_";
+	}
+	
+	//ツールカテゴリフォルダが引数のフォルダ名と一致したとき
+	if( $result ){
+	
+		//スクリプトパス内の　/05_storeTool/PSTW_setupTool　フォルダまでのパスを取得
+		string $STFolder = $scriptPath + "/05_storeTool/" + $title + "/" + $folder + "/";
+		
+		//引数のフォルダ内のmelファイルのリストを取得
+		string $mel[] = `getFileList -folder $STFolder -filespec "*.mel"`;
+		
+		//melファイルの有無
+		if( size($mel) != 0 ){
+			//ソート
+			$mel = ` sort $mel `;
+			
+			//ナイスネームを保存した_niceName.txtから文章を取得
+			string $niceNameFile = $STFolder + "_niceName.txt";
+			int $exist = ` filetest -e $niceNameFile `;
+			string $line[];
+			if( $exist ){
+				int $ID = ` fopen $niceNameFile "r" `;
+				while( !`feof $ID` ){
+					string $add = ` fgetline $ID `;
+					int $size = ` size $line `;
+					$line[$size] = $add;
+				}
+				fclose $ID;
+			}
+			
+			string $tool[];
+			string $nice[];
+			string $RGB[];
+			
+			//文章の有無
+			if( size($line) != 0 ){
+				//行数ぶん繰り返し
+				string $lineOne;
+				for( $lineOne in $line ){
+				
+					//改行なしの文章を格納するための変数
+					string $nonNewline[];
+					//改行削除分解
+					tokenize $lineOne "\n" $nonNewline;
+					string $parts[];
+					//>>を削除分解
+					int $token = ` tokenize $nonNewline[0] ">>" $parts `;
+					
+					//分解後が2つ以上に分かれたとき
+					if( $token >= 2 ){
+					
+						//ツール名取得
+						int $size = ` size $tool `;
+						$tool[$size] = $parts[0];
+						
+						//ナイスネーム取得
+						int $size = ` size $nice `;
+						$nice[$size] = $parts[1];
+
+						//RGB値取得
+						int $size = ` size $RGB `;
+						$RGB[$size] = $parts[2];
+
+					
+					}else{
+					
+						
+						string $nonSpace[];
+						tokenize $nonNewline[0] " " $nonSpace;
+					
+						if( size($nonSpace[0]) != 0 ){
+						
+							$warning += "warning (\"";
+							$warning += "ナイスネームの読み込みに失敗しました。  " ;
+							$warning += $niceNameFile;
+							$warning += "    ";
+							$warning += $nonNewline[0];
+							$warning += "\");\n";
+							
+						}
+					}
+				}
+			}
+
+			//ナイスネームファイルに記述があるツールの名前を格納
+			string $withNiceMel[];
+			string $toolOne;
+			for( $toolOne in $tool ){
+				string $melOne;
+				string $basenameMel;
+				for( $melOne in $mel ){
+					$basenameMel = ` basenameEx $melOne `;
+					if( $basenameMel == $toolOne ){
+						int $size = ` size $withNiceMel `;
+						$withNiceMel[$size] = $basenameMel;
+					}
+				}
+			}
+			
+			//ナイスネームファイルに記述がないツールの名前を格納
+			string $nonNiceMel[];
+			string $melOne;
+			for( $melOne in $mel ){
+				$basenameMel = ` basenameEx $melOne `;
+				if( stringArrayContains( $basenameMel , $tool) == 0 ){
+					int $size = ` size $nonNiceMel `;
+					$nonNiceMel[$size] = $basenameMel;
+				}
+			}
+
+			//ナイスネームを持つツールをボタン化
+			string $withNiceMelOne;
+			for( $withNiceMelOne in $withNiceMel ){
+				string $label = $withNiceMelOne;
+				string $command = $withNiceMelOne;
+				string $colorStr[];
+				float $color[];
+				int $existColor = 1;
+				for( $i=0; $i<size($tool); $i++ ){
+					if( $tool[$i] == $label ){
+						$label = $nice[$i];
+						int $token = ` tokenize $RGB[$i] " " $colorStr `;
+						if( $token < 3 ){
+							$warning += "ボタン色指定情報の読み込みに失敗しました。デフォルトの色を指定します。  ";
+							$warning += $niceNameFile;
+							$warning += "    ";
+							$warning += $RGB[$i];
+							$warning += "\");\n";
+
+							$existColor = 0;
+							
+							$color[0] = 99.0/255;
+							$color[1] = 99.0/255;
+							$color[2] = 99.0/255;
+							
+						}else{
+							
+							$color[0] = float($colorStr[0])/255;
+							$color[1] = float($colorStr[1])/255;
+							$color[2] = float($colorStr[2])/255;
+							
+						}
+					}
+				}
+				
+				string $button = $titles + $command;
+
+				button	-label $label
+							-backgroundColor $color[0] $color[1] $color[2]
+							-command $command
+							$button;
+				
+				
+				string $pm = $titles + "pm" + $command;
+				popupMenu	-parent $button
+									-button 3
+									$pm;
+									
+				string $miEditExp = $titles + "miEditExp" + $command;
+				menuItem	-parent $pm
+							-label "説明文を編集"
+							-c ("STW_editExpFile(\"" + $folder + "\",\"" + $command + "\")")
+							$miEditExp;
+							
+				string $miEditMel = $titles + "miEditMel" + $command;
+				menuItem	-parent $pm
+							-label "MELを編集"
+							-c ("STW_editMelFile(\"" + $folder + "\",\"" + $command + "\")")
+							$miEditMel;
+			
+				string $txt = $command + ".txt";
+				string $txtPath = $STFolder + $txt;
+				int $exists = ` filetest -e $txtPath `;
+				string $line[];
+				clear $line;
+				if( $exists ){
+					int $ID = ` fopen $txtPath "r" `;
+					while( !`feof $ID` ){
+						string $addLine = ` fgetline $ID `;
+						int $size = ` size $line `;
+						$line[$size] = $addLine;
+					}
+					fclose $ID;
+					
+					string $mi = $titles + "mi" + $command;
+					string $lineOne;
+					int $cnt = 0;
+					for( $lineOne in $line ){
+						menuItem -parent  $pm
+										-label $lineOne
+										($mi + string($cnt));
+						$cnt += 1;
+					}
+					
+
+				}
+								
+				$source = ($source + "source " + "\"" + $STFolder + $withNiceMelOne + ".mel\";\n" );
+				
+			}
+
+			
+			//ナイスネームを持たないツールをボタン化
+			string $nonNiceMelOne;
+			for( $nonNiceMelOne in $nonNiceMel ){
+				string $label = $nonNiceMelOne;
+				string $command = $nonNiceMelOne;
+				for( $i=0; $i<size($tool); $i++ ){
+					if( $tool[$i] == $label ){
+						$label = $nice[$i];
+					}
+				}
+				string $button = $titles + $command;
+	
+				button	-label $label
+							-command $command
+							$button;
+					
+				string $pm = $titles + "pm" + $command;
+				popupMenu	-parent $button
+									-button 3
+									$pm;
+									
+				string $miEditExp = $titles + "miEditExp" + $command;
+				menuItem	-parent $pm
+							-label "説明文を編集"
+							-c ("STW_editExpFile(\"" + $folder + "\",\"" + $command + "\")")
+							$miEditExp;
+							
+				string $miEditMel = $titles + "miEditMel" + $command;
+				menuItem	-parent $pm
+							-label "MELを編集"
+							-c ("STW_editMelFile(\"" + $folder + "\",\"" + $command + "\")")
+							$miEditMel;
+				
+				string $txt = $command + ".txt";
+				string $txtPath = $STFolder + $txt;
+				int $exists = ` filetest -e $txtPath `;
+				string $line[];
+				clear $line;
+				if( $exists ){
+					int $ID = ` fopen $txtPath "r" `;
+					while( !`feof $ID` ){
+						string $addLine = ` fgetline $ID `;
+						int $size = ` size $line `;
+						$line[$size] = $addLine;
+					}
+					fclose $ID;
+					
+					string $mi = $titles + "mi" + $command;
+					string $lineOne;
+					int $cnt = 0;
+					for( $lineOne in $line ){
+						menuItem -parent  $pm
+										-label $lineOne
+										($mi + string($cnt));
+						$cnt += 1;
+					}
+				}
+								
+				$source = ($source + "source " + "\"" + $STFolder + $nonNiceMelOne + ".mel\";\n" );
+				
+			}
+		}
+	}
+	
+	if( size($warning) != 0 ){
+		$source += $warning ;
+	}
+	
+	return $source;
+}
+
+
+/*------------------------------------------------------------------------------------------------
+
+	STW_editExpFile
+
+	説明文ファイルを開きます
+
+------------------------------------------------------------------------------------------------*/
+
+global proc STW_editExpFile( string $tab , string $mel ){
+
+	string $path = ` textField -q -tx STW_tfPath `;
+	$path += $tab;
+	$path += "/";
+	$path += $mel;
+	
+	int $size = size($mel);
+	string $substring = ` substring $mel ($size-3) $size `;
+	if( $substring != ".txt" ){
+		$path += ".txt";
+	}
+	
+	if( !` filetest -f $path ` ){
+		int $id = ` fopen $path "w" `;
+		string $text;
+		$text += "======================================================\r\n";
+		$text += "■説明\r\n\r\n";
+		$text += "======================================================";
+		fwrite $id $text;
+		fclose $id;
+	}
+	
+	system ( "load " + $path );
+
+}
+
+
+/*------------------------------------------------------------------------------------------------
+
+	STW_editMelFile
+
+	melファイルを開きます
+
+------------------------------------------------------------------------------------------------*/
+
+global proc STW_editMelFile( string $tab , string $mel ){
+
+	string $path = ` textField -q -tx STW_tfPath `;
+	$path += $tab;
+	$path += "/";
+	$path += $mel;
+	
+	int $size = size($mel);
+	string $substring = ` substring $mel ($size-3) $size `;
+	if( $substring != ".mel" ){
+		$path += ".mel";
+	}
+	
+	if( !` filetest -f $path ` ){
+		error ( "ファイルが存在しません。" + $path );
+	}
+	
+	system ( "load " + $path );
+
+}
+
+
+
+/*------------------------------------------------------------------------------------------------
+
+	STW_EN_editNiceNameWindow
+
+	ナイスネームファイル編集ウインドウを開きます
+
+------------------------------------------------------------------------------------------------*/
+
+global proc STW_EN_editNiceNameWindow( string $title ){
+	
+	string $window = "ナイスネームファイルの編集";
+	
+	//重複ウィンドウ調査
+	if( ` window -q -exists STW_EN_window ` ){
+		deleteUI STW_EN_window;
+	}
+	
+	//ナイスネームファイルまでのパス
+	string $niceNamePath = STW_storeFolderPath($title);
+	$niceNamePath += "_niceName.txt";
+	if( !` filetest -f $niceNamePath ` ){
+		int $id = ` fopen $niceNamePath "w" `;
+		fclose $id;
+	}
+	
+	//ナイスネームファイルの中身を取得
+	string $lines[] = STW_EN_loadLine( $niceNamePath );
+	
+	//テンプレート定義
+	if( !` uiTemplate -exists STW_EN_uiTempInput ` ){
+		uiTemplate STW_EN_uiTempInput;
+	}
+	
+	text -dt STW_EN_uiTempInput -h 25;
+	button -dt STW_EN_uiTempInput -w 40 -h 25;
+	textField -dt STW_EN_uiTempInput -h 25 -w 150;
+	radioButton -dt STW_EN_uiTempInput -h 25;
+	
+	window -title $window STW_EN_window;
+	
+		setUITemplate -pst STW_EN_uiTempInput;
+	
+		frameLayout -l $title STW_EN_flAll;
+			formLayout STW_EN_folAll;
+				formLayout STW_EN_folOrder;
+					
+					button -l "▲" -c "STW_EN_upDown(\"up\")" STW_EN_btnUp;
+					button -l "▼" -c "STW_EN_upDown(\"down\")" STW_EN_btnDown;
+					
+					formLayout -e
+						-af STW_EN_btnUp		"top"		0
+						-af STW_EN_btnUp		"left"		0
+						-ap STW_EN_btnUp		"bottom"	0	50
+						
+						-ap STW_EN_btnDown		"top"		0	50
+						-af STW_EN_btnDown		"left"		0
+						-af STW_EN_btnDown		"bottom"	0
+						
+						STW_EN_folOrder;
+					
+				setParent..;
+				scrollLayout -cr 1 STW_EN_slCategoryEdit;
+					formLayout STW_EN_folCategoryEdit;
+						formLayout STW_EN_folCategory;
+							formLayout STW_EN_folCategoryStretch;
+								text -bgc 0 0.5 0 -al left -l " ( Mel )" STW_EN_tCategory1;
+								text -bgc 0 0.5 0 -al left -l " ( NiceName )" STW_EN_tCategory2;
+							setParent..;
+							text -bgc 0 0.5 0 -al left -l " ( Color )" STW_EN_tCategory3;
+						setParent..;
+						
+						//カテゴリ伸縮側のレイアウト
+						formLayout -e
+							-af STW_EN_tCategory1 "top"			0
+							-af STW_EN_tCategory1 "left"		0
+							-ap STW_EN_tCategory1 "right"		0	60
+							
+							-af STW_EN_tCategory2 "top"			0
+							-ap STW_EN_tCategory2 "left"		0	40
+							-af STW_EN_tCategory2 "right"		0
+							
+							STW_EN_folCategoryStretch;
+							
+						//カテゴリ固定側のレイアウト
+						formLayout -e
+							-af STW_EN_folCategoryStretch	"top"		0
+							-af STW_EN_folCategoryStretch	"left"		0
+							-af STW_EN_folCategoryStretch	"right"		80
+						
+							-af STW_EN_tCategory3 			"top"		0
+							-ac STW_EN_tCategory3			"left"		0	STW_EN_folCategoryStretch
+							-af STW_EN_tCategory3 			"right"		0
+							
+							STW_EN_folCategory;
+							
+						
+						//テキストをもとに編集コントローラを作成
+						formLayout STW_EN_folEdit;
+
+							formLayout STW_EN_folEditStretch;
+							
+								radioCollection STW_EN_rcTarget;
+							
+								formLayout -e
+				
+									-af STW_EN_folEditStretch	"top"		0
+									-af STW_EN_folEditStretch	"left"		0
+									-af STW_EN_folEditStretch	"right"		80
+									-af STW_EN_folEditStretch	"bottom"	0
+									
+									STW_EN_folEdit;
+									
+							setParent..;
+						
+							if( `size $lines` != 0 ){
+								
+								int $m = 0;
+								for( $line in $lines ){
+									string $parts[];
+									tokenize $line ">>" $parts;
+
+									string $rbTarget = "STW_EN_rb_" + string($m);
+									string $tfMelFile = "STW_EN_textParts1_" + string($m);
+									string $tfNiceName = "STW_EN_textParts2_" + string($m);
+									string $btnColor = "STW_EN_textParts3_" + string($m);
+									string $miCopyColor = "STW_EN_mi1_" + string($m);
+									string $miPasteColor = "STW_EN_mi2_" + string($m);
+									string $pm = "STW_EN_pm_" + string($m);
+									
+									
+									int $top = 30*$m;
+
+							
+									
+									//melファイル名
+									textField -tx $parts[0] -parent STW_EN_folEditStretch $tfMelFile;
+									formLayout -e
+										-af $tfMelFile		"top"	$top
+										-af $tfMelFile		"left"	20
+										-ap $tfMelFile		"right"	0	60
+										STW_EN_folEditStretch;
+										
+									//ラジオボタン
+									radioButton -l "" -parent STW_EN_folEditStretch $rbTarget;
+									formLayout -e
+										-af $rbTarget		"top"	$top
+										-af $rbTarget		"left"	0
+										-ac $rbTarget		"right"	0	$tfMelFile
+										STW_EN_folEditStretch;
+
+									//ナイスネーム
+									textField -tx $parts[1] -parent STW_EN_folEditStretch $tfNiceName;
+									formLayout -e
+										-af $tfNiceName		"top"	$top
+										-ap $tfNiceName		"left"	0	40
+										-af $tfNiceName		"right"	0
+										STW_EN_folEditStretch;
+
+
+									//カラー
+									string $colorTx = substituteAllString( $parts[2] , "\n" , "" );
+									string $colorParts[];
+									int $token = ` tokenize $parts[2] " " $colorParts `;
+									float $color[];
+									if( $token == 3 ){
+										
+										$color[0] = float($colorParts[0])/255;
+										$color[1] = float($colorParts[1])/255;
+										$color[2] = float($colorParts[2])/255;
+
+									}else{
+									
+										$color[0] = 99.0/255;
+										$color[1] = 99.0/255;
+										$color[2] = 99.0/255;
+									
+									}
+									
+									button	-l "" -bgc $color[0] $color[1] $color[2] 
+											-parent STW_EN_folEdit
+											-c ( "STW_EN_changeBtnColor(\"" + $btnColor + "\")" )
+											$btnColor;
+											
+									popupMenu	-parent $btnColor
+														-button 3
+														$pm;
+										
+										menuItem -l "コピー" -c ( "STW_EN_copyColor(\"" + $btnColor + "\")") $miCopyColor;
+										menuItem -l "ペースト" -c ( "STW_EN_pasteColor(\"" + $btnColor + "\")") $miPasteColor;
+										
+	
+									formLayout -e
+										-af $btnColor		"top"	$top
+										-ac $btnColor		"left"		0	STW_EN_folEditStretch
+										-af $btnColor		"right"	0
+										STW_EN_folEdit;
+									
+									$m += 1;
+									
+								}
+								
+								formLayout -e
+									-af STW_EN_folCategoryStretch	"top"		0
+									-af STW_EN_folCategoryStretch	"left"			0
+									-af STW_EN_folCategoryStretch	"right"		80
+								
+									-af STW_EN_tCategory3 			"top"		0
+									-ac STW_EN_tCategory3			"left"			0	STW_EN_folCategoryStretch
+									-af STW_EN_tCategory3 			"right"		0
+									
+									STW_EN_folCategory;
+
+
+							}
+						
+						setParent..;
+					setParent..;
+				setParent..;
+				
+				formLayout STW_EN_folButton;
+					button -l "新規" -c "STW_EN_newLine()" STW_EN_btnNew;
+					button -l "削除" -c "STW_EN_removeLine()" STW_EN_btnRemove;
+					button -l "OK" -c "STW_EN_run(\"OK\")" STW_EN_btnOK;
+					button -l "Apply" -c "STW_EN_run(\"Apply\")" STW_EN_btnApply;
+					button -l "Cancel" -c "STW_EN_run(\"Cancel\")" STW_EN_btnCancel;
+				setParent..;
+				
+			setParent..;
+		setParent..;
+	showWindow;
+	
+	formLayout -e
+		
+		-af STW_EN_folCategory	"top"		0
+		-af STW_EN_folCategory	"left"		0
+		-af STW_EN_folCategory	"right"		0
+		
+		-ac STW_EN_folEdit		"top"		0	STW_EN_folCategory
+		-af STW_EN_folEdit		"left"		0
+		-af STW_EN_folEdit		"right"		0
+
+		STW_EN_folCategoryEdit;
+		
+		
+	formLayout -e
+		
+		-af STW_EN_folOrder			"top"		0
+		-af STW_EN_folOrder			"left"		0
+		-ac STW_EN_folOrder			"right"		0	STW_EN_slCategoryEdit
+		-af STW_EN_folOrder			"bottom"	0
+		
+		-af STW_EN_slCategoryEdit	"top"		0
+		-af STW_EN_slCategoryEdit	"left"		40
+		-af STW_EN_slCategoryEdit	"right"		0
+		-ac STW_EN_slCategoryEdit	"bottom"	0	STW_EN_folButton
+		
+		-af STW_EN_folButton			"left"		0
+		-af STW_EN_folButton			"right"		0
+		-af STW_EN_folButton			"bottom"	0
+
+		STW_EN_folAll;
+		
+	formLayout -e
+	
+		-af STW_EN_btnNew		"top"		0
+		-af STW_EN_btnNew		"left"		0
+		-ap STW_EN_btnNew		"right"		0	33
+		-ac STW_EN_btnNew		"bottom"	0	STW_EN_btnOK
+		
+		-af STW_EN_btnRemove		"top"		0
+		-ap STW_EN_btnRemove		"left"		0	33
+		-ap STW_EN_btnRemove		"right"		0	66
+		-ac STW_EN_btnRemove		"bottom"	0	STW_EN_btnOK
+	
+		-af STW_EN_btnOK		"left"		0
+		-ap STW_EN_btnOK		"right"		0	33
+		-af STW_EN_btnOK		"bottom"	0
+		
+		-ap STW_EN_btnApply		"left"		0	33
+		-ap STW_EN_btnApply		"right"		0	66
+		-af STW_EN_btnApply		"bottom"	0
+		
+		-ap STW_EN_btnCancel	"left"		0	66
+		-af STW_EN_btnCancel	"right"		0
+		-af STW_EN_btnCancel	"bottom"	0
+		
+		STW_EN_folButton;
+	
+	
+	
+}
+
+
+/*------------------------------------------------------------------------------------------------
+
+	STW_EN_loadLine( string ナイスネームファイルまでのフルパス )
+
+	戻り値：string[] ナイスネームファイルの中身
+	
+	ナイスネームファイルの中身を返します。
+
+------------------------------------------------------------------------------------------------*/
+
+global proc string[] STW_EN_loadLine( string $path ){
+
+	string $return[];
+
+	if( size($path) != 0 ){
+
+		int $id = ` fopen $path "r" `;
+		while( !` feof $id ` ){
+			string $line = ` fgetline $id `;
+			if( size($line) ){
+				$return[size($return)] = $line;
+			}
+		}
+	
+		fclose $id;
+		
+	}
+	
+	return $return;
+	
+}
+
+/*------------------------------------------------------------------------------------------------
+
+	STW_EN_changeBtnColor( string ボタン名 )
+
+	編集ウインドウのボタンの色を変更します
+
+------------------------------------------------------------------------------------------------*/
+
+global proc STW_EN_changeBtnColor( string $button ){
+
+	int $posEdge[] = ` window -q -topLeftCorner STW_EN_window `;
+	float $startRgb[] = ` button -q -bgc $button `;
+	
+	string $colors = ` colorEditor -rgbValue $startRgb[0] $startRgb[1] $startRgb[2] -position $posEdge[1] $posEdge[0] `;
+	
+	string $color[];
+	tokenize $colors " " $color;
+	
+	if( $color[3] == "1" ){
+	
+		float $r = float($color[0]);
+		float $g = float($color[1]);
+		float $b = float($color[2]);
+		button -e -bgc $r $g $b $button;
+	
+	}
+}
+
+/*------------------------------------------------------------------------------------------------
+
+	STW_EN_run( string OK,Apply,Cancelのいずれか )
+
+	OK,Apply,Cancelの指示に従ってそれぞれ固有の動作をします
+	
+------------------------------------------------------------------------------------------------*/
+
+global proc STW_EN_run( string $order ){
+
+	switch( $order ){
+	
+		case "OK":
+			STW_EN_apply();
+			deleteUI STW_EN_window;
+			break;
+		case "Apply":
+			STW_EN_apply();
+			break;
+		case "Cancel":
+			deleteUI STW_EN_window;
+			break;
+			
+	}
+}
+
+/*------------------------------------------------------------------------------------------------
+
+	STW_EN_apply
+	
+	編集ウインドウをもとにナイスネームファイルに結果を記述します。
+	同時にストアツールウインドウを再起動します。
+	
+------------------------------------------------------------------------------------------------*/
+
+global proc STW_EN_apply(){
+
+	string $children[] = ` formLayout -q -childArray STW_EN_folEditStretch `;
+	int $size = ` size $children `;
+	int $num = $size/3;
+	
+	string $text;
+	
+	for( $i=0; $i<$num; $i++ ){
+	
+		string $con1 = "STW_EN_textParts1_" + string($i);
+		string $con2 = "STW_EN_textParts2_" + string($i);
+		string $con3 = "STW_EN_textParts3_" + string($i);
+		
+		string $textParts1 = ` textField -q -tx $con1 `;
+		string $textParts2 = ` textField -q -tx $con2 `;
+		float $colorFloat[] = ` button -q -bgc $con3 `;
+		
+		int $color[];
+		$color[0] = $colorFloat[0]*255;
+		$color[1] = $colorFloat[1]*255;
+		$color[2] = $colorFloat[2]*255;
+		
+		string $textParts3 = string($color[0]) + " " + string($color[1]) + " " + string($color[2]);
+		string $add;
+		$add = $textParts1 + ">>" + $textParts2 + ">>" + $textParts3 + "\r\n";
+		$text += $add;
+	
+	
+	}
+	
+	if( size($text) != 0 ){
+	
+		string $title = ` frameLayout -q -l STW_EN_flAll `;
+		
+		string $niceNamePath = STW_storeFolderPath($title);
+		$niceNamePath += "_niceName.txt";
+	
+		int $id = ` fopen $niceNamePath "w" `;
+		fwrite $id $text;
+		
+		fclose $id;
+		
+		STW_titleRun(`optionMenu -q -v STW_omTitle`);
+		
+	}
+
+}
+
+
+/*------------------------------------------------------------------------------------------------
+
+	STW_EN_upDown( string up,downのいずれか )
+
+	編集ウインドウの項目の順番を入れ替えます
+	
+------------------------------------------------------------------------------------------------*/
+
+global proc STW_EN_upDown( string $upDown ){
+
+	string $rbSl = ` radioCollection -q -sl STW_EN_rcTarget `;
+	
+	if( size($rbSl) != 0 ){
+	
+		int $item = ` radioCollection -q -numberOfCollectionItems STW_EN_rcTarget `;
+		int $max = $item-1;
+	
+		string $parts[];
+		int $token = ` tokenize $rbSl "_" $parts `;
+		string $num1 = $parts[$token-1];
+		
+		string $num2;
+		int $result = 1;
+		if( $upDown == "up" ){
+			if( $num1 != "0" ){
+		
+				int $a = int($num1);
+				int $a = $a-1;
+				$num2 = string($a);
+			
+			}else{
+				$result = 0;
+			}
+		}else if( $upDown == "down" ){
+			if( int($num1) < $max ){
+		
+				int $a = int($num1);
+				int $a = $a+1;
+				$num2 = string($a);
+	
+			}else{
+				$result = 0;
+			}
+			
+		}
+		
+		if( $result ){
+		
+			//num1のコントロール名と値
+			string $con1_1 = "STW_EN_textParts1_" + $num1;
+			string $con1_2 = "STW_EN_textParts2_" + $num1;
+			string $con1_3 = "STW_EN_textParts3_" + $num1;
+			
+			string $con1_1V = ` textField -q -tx $con1_1 `;
+			string $con1_2V = ` textField -q -tx $con1_2 `;
+			float $con1_3V[] = ` button -q -bgc $con1_3 `;
+			
+			
+
+			//num2のコントロール名と値
+			string $con2_1 = "STW_EN_textParts1_" + $num2;
+			string $con2_2 = "STW_EN_textParts2_" + $num2;
+			string $con2_3 = "STW_EN_textParts3_" + $num2;
+			
+			string $con2_1V = ` textField -q -tx $con2_1 `;
+			string $con2_2V = ` textField -q -tx $con2_2 `;
+			float $con2_3V[] = ` button -q -bgc $con2_3 `;
+			
+			//num1 から num2　へ
+			textField -e -tx $con2_1V $con1_1;
+			textField -e -tx $con2_2V $con1_2;
+			button -e -bgc $con2_3V[0] $con2_3V[1] $con2_3V[2] $con1_3;
+			
+			//num2 から num1　へ
+			textField -e -tx $con1_1V $con2_1;
+			textField -e -tx $con1_2V $con2_2;
+			button -e -bgc $con1_3V[0] $con1_3V[1] $con1_3V[2] $con2_3;
+			
+			
+			//ラジオボタン
+			string $nextRb = "STW_EN_rb_" + $num2;
+			radioButton -e -sl $nextRb;
+			
+
+
+		}
+	
+	}
+
+}
+
+
+/*------------------------------------------------------------------------------------------------
+
+	STW_EN_copyColor( string ボタン名 )
+
+	ボタンのRGB値をコピーします
+	
+------------------------------------------------------------------------------------------------*/
+
+global proc STW_EN_copyColor( string $btn ){
+	
+	float $color[] = ` button -q -bgc $btn `;
+	
+	optionVar -floatValue STW_EN_colorR $color[0];
+	optionVar -floatValue STW_EN_colorG $color[1];
+	optionVar -floatValue STW_EN_colorB $color[2];
+	
+}
+
+
+/*------------------------------------------------------------------------------------------------
+
+	STW_EN_pasteColor( string ボタン名 )
+
+	RGB値を対象のボタンの色としてペーストします
+	
+------------------------------------------------------------------------------------------------*/
+
+global proc STW_EN_pasteColor( string $btn ){
+	
+	float $r = 0.0;
+	float $g = 0.0;
+	float $b = 0.0;
+	
+	if( ` optionVar -exists STW_EN_colorR `) $r = ` optionVar -q STW_EN_colorR `;
+	if( ` optionVar -exists STW_EN_colorG `) $g = ` optionVar -q STW_EN_colorG `;
+	if( ` optionVar -exists STW_EN_colorB `) $b = ` optionVar -q STW_EN_colorB `;
+	
+	button -e -bgc $r $g $b $btn;
+	
+	
+}
+
+/*------------------------------------------------------------------------------------------------
+	
+	STW_EN_newLine
+	
+	新しいナイスネーム項目を増やします
+	
+------------------------------------------------------------------------------------------------*/
+
+global proc STW_EN_newLine(){
+
+	int $item = ` radioCollection -q -numberOfCollectionItems STW_EN_rcTarget `;
+
+	string $rbTarget = "STW_EN_rb_" + string($item);
+	string $tfMelFile = "STW_EN_textParts1_" + string($item);
+	string $tfNiceName = "STW_EN_textParts2_" + string($item);
+	string $btnColor = "STW_EN_textParts3_" + string($item);
+	string $miCopyColor = "STW_EN_mi1_" + string($item);
+	string $miPasteColor = "STW_EN_mi2_" + string($item);
+	string $pm = "STW_EN_pm_" + string($item);
+			
+	int $top = 30*$item;
+			
+	//melファイル名
+	textField -parent STW_EN_folEditStretch $tfMelFile;
+	formLayout -e
+		-af $tfMelFile		"top"	$top
+		-af $tfMelFile		"left"	20
+		-ap $tfMelFile		"right"	0	60
+		STW_EN_folEditStretch;
+		
+	//ラジオボタン
+	radioButton -l "" -parent STW_EN_folEditStretch $rbTarget;
+	formLayout -e
+		-af $rbTarget		"top"	$top
+		-af $rbTarget		"left"	0
+		-ac $rbTarget		"right"	0	$tfMelFile
+		STW_EN_folEditStretch;
+
+	//ナイスネーム
+	textField -parent STW_EN_folEditStretch $tfNiceName;
+	formLayout -e
+		-af $tfNiceName		"top"	$top
+		-ap $tfNiceName		"left"	0	40
+		-af $tfNiceName		"right"	0
+		STW_EN_folEditStretch;
+		
+	//カラー
+	float $color[];
+	$color[0] = 99.0/255;
+	$color[1] = 99.0/255;
+	$color[2] = 99.0/255;
+
+	button	-l "" -bgc $color[0] $color[1] $color[2] 
+			-parent STW_EN_folEdit
+			-c ( "STW_EN_changeBtnColor(\"" + $btnColor + "\")" )
+			$btnColor;
+			
+	popupMenu	-parent $btnColor
+						-button 3
+						$pm;
+		
+		menuItem -l "コピー" -c ( "STW_EN_copyColor(\"" + $btnColor + "\")") $miCopyColor;
+		menuItem -l "ペースト" -c ( "STW_EN_pasteColor(\"" + $btnColor + "\")") $miPasteColor;
+		
+
+	formLayout -e
+		-af $btnColor		"top"	$top
+		-ac $btnColor		"left"		0	STW_EN_folEditStretch
+		-af $btnColor		"right"	0
+		STW_EN_folEdit;
+
+}
+
+
+/*------------------------------------------------------------------------------------------------
+	
+	STW_EN_removeLine
+	
+	ラジオボタンで選択しているナイスネーム項目を削除します
+	
+------------------------------------------------------------------------------------------------*/
+
+global proc STW_EN_removeLine(){
+	
+	int $item = ` radioCollection -q -numberOfCollectionItems STW_EN_rcTarget `;
+	
+	string $sl = ` radioCollection -q -select STW_EN_rcTarget `;
+	
+	string $parts[];
+	int $token = ` tokenize $sl "_" $parts `;
+	int $n = int($parts[$token-1]);
+	
+	
+	for( $i=$n+1; $i<$item-1; $i++ ){
+
+		
+			//num1のコントロール名と値
+			string $con1_1 = "STW_EN_textParts1_" + string($i);
+			string $con1_2 = "STW_EN_textParts2_" + string($i);
+			string $con1_3 = "STW_EN_textParts3_" + string($i);
+			
+			string $con1_1V = ` textField -q -tx $con1_1 `;
+			string $con1_2V = ` textField -q -tx $con1_2 `;
+			float $con1_3V[] = ` button -q -bgc $con1_3 `;
+			
+			//num2のコントロール名と値
+			string $con2_1 = "STW_EN_textParts1_" + string($i-1);
+			string $con2_2 = "STW_EN_textParts2_" + string($i-1);
+			string $con2_3 = "STW_EN_textParts3_" + string($i-1);
+			
+			textField -e -tx $con1_1V $con2_1;
+			textField -e -tx $con1_2V $con2_2;
+			button -e -bgc $con1_3V[0] $con1_3V[1] $con1_3V[2] $con2_3;
+
+	}
+	
+	
+	string $rbTarget = "STW_EN_rb_" + string($item-1);
+	string $tfMelFile = "STW_EN_textParts1_" + string($item-1);
+	string $tfNiceName = "STW_EN_textParts2_" + string($item-1);
+	string $btnColor = "STW_EN_textParts3_" + string($item-1);
+	
+	deleteUI $rbTarget;
+	deleteUI $tfMelFile;
+	deleteUI $tfNiceName;
+	deleteUI $btnColor;
+	
+	
+	
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

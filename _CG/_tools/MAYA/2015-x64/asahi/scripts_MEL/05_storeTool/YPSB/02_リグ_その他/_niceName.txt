@@ -1,0 +1,16 @@
+PSTRO_ALF_arrangeLocatorFacial>>表情リグの中心にロケータを配置>>240 206 125
+PSTRO_ALU_arrangeLocatorUnparent>>表情ロケータのペアレント解除>>240 206 125
+PSTRO_ALP_arrangeLocatorParent>>表情ロケータのペアレント再現>>240 206 125
+PSTRO_M_mirrorLocatorFacial>>表情ロケータのミラー（左基準）>>240 206 125
+PSTRO_A_arrangeFacial>>表情リグの位置調整>>240 206 125
+PSTRO_CFPV_changeFacialPivotVisible>>表情リグのピボット可視の切り替え>>240 206 125
+PSTRO_RSA_rigScaleAddition>>カーブの大きさ調整 加算>>108 171 209
+PSTRO_RSA_rigScaleSubstraction>>カーブの大きさ調整 減算>>108 171 209
+PSTRO_renameAttrWeight>>コンストレイントのウェイト名リネーム>>108 171 209
+PSTRO_CDC_connectDevToConstlink>>CTRL_crvからコンストリンクに接続>>245 145 151
+PSTRO_CDIK_connectDevToIK>>developerCTRL_crvからIKハンドルに接続>>245 145 151
+PSTRO_CC_connectContour>>CTRL_crv から contour_shader_simple に接続>>245 145 151
+PSTRO_PLC_printLtColor>>レイヤーテクスチャの色をスクリプトエディタに表示>>108 171 209
+PSTRO_RRC_rigReleaseConstraint>>リグのコンストレイント解除>>108 171 209
+PSTRO_RRC_rigRestorationConstraint>>リグのコンストレイント復元>>108 171 209
+ 

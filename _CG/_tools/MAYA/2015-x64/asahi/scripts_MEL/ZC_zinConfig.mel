@@ -1,0 +1,135 @@
+///////////////////////////////////////////////////////////////////////////////
+//	ZC_zinConfig	//	設定	
+///////////////////////////////////////////////////////////////////////////////
+//
+//	AUTHOR: 		goto kazufumi
+//
+//	CREATION DATE:	2013_12_05
+//	UPDATED DATE:	2013_12_05
+//
+//	VERSION:				1.0
+//
+//	HOW TO USE:		run "ZC_zinConfig"
+//
+//////////////////////////////////////////////////////////////////
+
+/*================================================================
+
+	仁メニュー『設定』のウインドウを表示します。
+	現在、編集できる設定
+	
+		・言語設定		…デフォルト値『English』
+
+================================================================*/
+
+
+/*================================================================
+
+	更新内容
+
+================================================================*/
+
+
+/*----------------------------------------------------------------------
+	
+	ZC_zinConfig
+	
+	『設定』ウインドウを表示します
+	
+----------------------------------------------------------------------*/
+
+global proc ZC_zinConfig(){
+
+	int $language = 1;
+	if( ` optionVar -ex ZC_omLanguage ` ){
+		$language = ` optionVar -q ZC_omLanguage `;
+	}
+
+	if( `window -q -ex ZC_winMain` ){
+		deleteUI ZC_winMain;
+	}
+
+	window -t (uiRes("zm_ZC.winMain"))
+				ZC_winMain;
+		frameLayout -lv 0 -bs etchedOut ZC_flAll;
+			formLayout ZC_folAll;
+				frameLayout -l (uiRes("zm_ZC.flLanguage")) -bs etchedOut ZC_flLanguage;
+					formLayout ZC_folLanguage;
+						optionMenu -l (uiRes("zm_ZC.omLanguage")) -w 150 ZC_omLanguage;
+							menuItem -l "English";
+							menuItem -l "Japanese";
+					setParent..;
+				setParent..;
+				button -l (uiRes("zm_ZC.btnApply")) -c "ZC_apply()" ZC_btnApply;
+			setParent..;
+		setParent..;
+	showWindow;
+
+	formLayout -e
+	
+		-af	ZC_flLanguage		"top"			0
+		-af	ZC_flLanguage		"left"			0
+		-af	ZC_flLanguage		"right"		0
+		-ac	ZC_flLanguage		"bottom"	0	ZC_btnApply
+		
+		-af	ZC_btnApply			"left"			0
+		-af	ZC_btnApply			"right"		0
+		-af	ZC_btnApply			"bottom"	0
+		
+		ZC_folAll;
+		
+		
+	formLayout -e
+	
+		-af	ZC_omLanguage	"top"			20
+		-af	ZC_omLanguage	"left"			80
+		
+		ZC_folLanguage;
+		
+	optionMenu -e -select $language ZC_omLanguage;
+	
+}
+
+
+
+/*----------------------------------------------------------------------
+	
+	ZC_apply
+	
+	設定をもとに適用します
+	仁メニューは一度再起動されます
+	
+----------------------------------------------------------------------*/
+
+global proc ZC_apply(){
+
+	int $omLanguage = ` optionMenu -q -sl ZC_omLanguage `;
+	optionVar -intValue ZC_omLanguage $omLanguage;
+
+	ZIN_sourceRes();
+	deleteUI ZIN_S_mMain;
+	ZIN_setup();
+	ZC_zinConfig();
+
+}
+
+
+
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+
+

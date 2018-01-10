@@ -1,0 +1,110 @@
+///////////////////////////////////////////////////////////////////////////////
+//	PSTR_A_arrangeSpine            //	背骨から頭部にかけてのリグ調整
+///////////////////////////////////////////////////////////////////////////////
+//
+//	AUTHOR: 		goto kazufumi
+//
+//	CREATION DATE:	2013_04_15
+//	UPDATED DATE:	2013_10_11
+//
+//	VERSION:			1.1
+//
+//	HOW TO USE:		run "PSTR_A_arrangeSpine();"
+//
+//////////////////////////////////////////////////////////////////
+
+global proc PSTR_A_arrangeSpine(){
+
+	string $code = `textField -q -text PST_tfCordName`;
+	int $size = `size $code`;
+	if( $size != 0 ){
+		string $last = `substring $code $size $size`;
+		if( $last != "_" ){
+			if( $last != ":" ){
+				$code += "_";
+			}
+		}
+	}
+	
+	//ロケータのペアレント再現
+	PSTR_ALP_arrangeLocatorParent;
+	
+	//コンストレイント削除
+	string $chin02_jnt = $code + "chin02_jnt";
+	string $chin02_jnt_paC[] = `listConnections -source 1 -destination 0 -type "parentConstraint" $chin02_jnt`;
+	delete $chin02_jnt_paC[0];
+	string $chin02_jnt_scC[] = `listConnections -source 1 -destination 0 -type "scaleConstraint" $chin02_jnt`;
+	delete $chin02_jnt_scC[0];
+	
+	//ペアレント解除
+	string $co_rig_grp = $code + "co_rig_grp";
+	
+	string $L_leg01_link = $code + "L_leg01_link";
+	string $R_leg01_link = $code + "R_leg01_link";
+	parent $L_leg01_link $co_rig_grp;
+	parent $R_leg01_link $co_rig_grp;
+	
+	string $L_shoulder01_link = $code + "L_shoulder01_link";
+	string $R_shoulder01_link = $code + "R_shoulder01_link";
+	parent $L_shoulder01_link $co_rig_grp;
+	parent $R_shoulder01_link $co_rig_grp;
+	
+	
+	
+	
+	
+	string $lct[] = {		"waist_jnt_ALct",
+								"spine01_jnt_ALct",
+								"spine02_jnt_ALct",
+								"spine03_jnt_ALct",
+								"neck_jnt_ALct",
+								"head01_jnt_ALct",
+								"chin01_jnt_ALct",
+								"chin02_jnt_ALct",
+								"chin01_jnt_ALct",
+								"head02_end_ALct"								};
+								
+	string $rig[] = {		"waist_link",
+									"spine01_link",
+									"spine02_link",
+									"spine03_link",
+									"neck_link",
+									"head01_link",
+									"chin01_jnt",
+									"chin02_jnt",
+									"chin_crv",
+									"head02_end"									};
+	
+	for( $i=0; $i<size($lct); $i++ ){
+	
+		$lct[$i] = $code + $lct[$i];
+		$rig[$i] = $code + $rig[$i];
+	
+		float $pos[] = YP_RD_returnDefferenceXYZ( $lct[$i] , $rig[$i] );
+		move -r $pos[0] $pos[1] $pos[2] $rig[$i];
+		
+	}
+	
+	//トランスフォームのフリーズ
+	string $chin_crv = $code + "chin_crv";
+	makeIdentity -apply 1 -t 1 -r 0 -s 0 -n 0 $chin_crv;
+	
+	//コンストレイント復元
+	select -r $chin_crv $chin02_jnt;
+	parentConstraint -mo -weight 1;
+	scaleConstraint -mo -weight 1;
+	
+	//ペアレント復元
+	string $hip_crv = $code + "hip_crv";
+	parent $L_leg01_link $hip_crv;
+	parent $R_leg01_link $hip_crv;
+	
+	string $spine03_crv = $code + "spine03_crv";
+	parent $L_shoulder01_link $spine03_crv;
+	parent $R_shoulder01_link $spine03_crv;
+	
+	//
+	YP_RAW_renameAttrWeight();
+
+	
+}
